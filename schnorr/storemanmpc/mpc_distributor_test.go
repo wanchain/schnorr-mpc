@@ -1,10 +1,10 @@
 package storemanmpc
 
 import (
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/p2p/discover"
-	mpccrypto "github.com/wanchain/go-wanchain/schnorr/storemanmpc/crypto"
-	mpcprotocol "github.com/wanchain/go-wanchain/schnorr/storemanmpc/protocol"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/p2p/discover"
+	mpccrypto "github.com/wanchain/schnorr-mpc/schnorr/storemanmpc/crypto"
+	mpcprotocol "github.com/wanchain/schnorr-mpc/schnorr/storemanmpc/protocol"
 	"math/big"
 	"testing"
 )

@@ -24,8 +24,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wanchain/go-wanchain/log"
-	"github.com/wanchain/go-wanchain/p2p/discover"
+	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/p2p/discover"
 )
 
 //a map of mocker names to its function

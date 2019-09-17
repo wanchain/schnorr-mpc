@@ -32,7 +32,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/wanchain/go-wanchain/log"
+	"github.com/wanchain/schnorr-mpc/log"
 )
 
 var (

@@ -21,7 +21,7 @@ import (
 	"encoding/hex"
 	"math/big"
 	"testing"
-	// "github.com/wanchain/go-wanchain/common"
+	// "github.com/wanchain/schnorr-mpc/common"
 )
 
 func TestHexOrDecimal256(t *testing.T) {

@@ -30,9 +30,9 @@ import (
 	"github.com/mattn/go-colorable"
 	"github.com/peterh/liner"
 	"github.com/robertkrimen/otto"
-	"github.com/wanchain/go-wanchain/internal/jsre"
-	"github.com/wanchain/go-wanchain/internal/web3ext"
-	"github.com/wanchain/go-wanchain/rpc"
+	"github.com/wanchain/schnorr-mpc/internal/jsre"
+	"github.com/wanchain/schnorr-mpc/internal/web3ext"
+	"github.com/wanchain/schnorr-mpc/rpc"
 )
 
 var (

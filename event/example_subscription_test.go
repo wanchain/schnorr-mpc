@@ -19,7 +19,7 @@ package event_test
 import (
 	"fmt"
 
-	"github.com/wanchain/go-wanchain/event"
+	"github.com/wanchain/schnorr-mpc/event"
 )
 
 func ExampleNewSubscription() {

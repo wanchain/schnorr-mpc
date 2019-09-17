@@ -25,7 +25,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/wanchain/go-wanchain/log"
+	"github.com/wanchain/schnorr-mpc/log"
 )
 
 const (

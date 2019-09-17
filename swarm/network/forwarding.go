@@ -21,8 +21,8 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/wanchain/go-wanchain/log"
-	"github.com/wanchain/go-wanchain/swarm/storage"
+	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/swarm/storage"
 )
 
 const requesterCount = 3

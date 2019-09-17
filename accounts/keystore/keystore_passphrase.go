@@ -38,10 +38,10 @@ import (
 	"path/filepath"
 
 	"github.com/pborman/uuid"
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/common/math"
-	"github.com/wanchain/go-wanchain/crypto"
-	"github.com/wanchain/go-wanchain/crypto/randentropy"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/common/math"
+	"github.com/wanchain/schnorr-mpc/crypto"
+	"github.com/wanchain/schnorr-mpc/crypto/randentropy"
 	"golang.org/x/crypto/pbkdf2"
 	"golang.org/x/crypto/scrypt"
 )

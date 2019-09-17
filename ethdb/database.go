@@ -27,8 +27,8 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/filter"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/opt"
-	"github.com/wanchain/go-wanchain/log"
-	"github.com/wanchain/go-wanchain/metrics"
+	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/metrics"
 
 	gometrics "github.com/rcrowley/go-metrics"
 )

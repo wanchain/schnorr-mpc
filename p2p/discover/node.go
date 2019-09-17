@@ -31,9 +31,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/crypto"
-	"github.com/wanchain/go-wanchain/crypto/secp256k1"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/crypto"
+	"github.com/wanchain/schnorr-mpc/crypto/secp256k1"
 )
 
 const NodeIDBits = 512

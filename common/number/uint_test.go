@@ -20,7 +20,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/wanchain/go-wanchain/common"
+	"github.com/wanchain/schnorr-mpc/common"
 )
 
 func TestSet(t *testing.T) {

@@ -36,10 +36,10 @@ import (
 	"time"
 
 	"github.com/rs/cors"
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/log"
-	"github.com/wanchain/go-wanchain/swarm/api"
-	"github.com/wanchain/go-wanchain/swarm/storage"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/swarm/api"
+	"github.com/wanchain/schnorr-mpc/swarm/storage"
 )
 
 // ServerConfig is the basic configuration needed for the HTTP server and also

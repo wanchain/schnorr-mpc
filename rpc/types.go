@@ -23,7 +23,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/wanchain/go-wanchain/common/hexutil"
+	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"gopkg.in/fatih/set.v0"
 )
 

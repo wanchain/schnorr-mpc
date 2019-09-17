@@ -20,15 +20,15 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"github.com/wanchain/go-wanchain/rlp"
+	"github.com/wanchain/schnorr-mpc/rlp"
 	"log"
 	"math/big"
 	"reflect"
 	"strings"
 	"testing"
 
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/crypto"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/crypto"
 )
 
 // formatSilceOutput add padding to the value and adds a size

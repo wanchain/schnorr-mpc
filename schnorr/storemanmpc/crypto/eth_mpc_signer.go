@@ -1,11 +1,11 @@
 package crypto
 
 import (
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/core/types"
-	"github.com/wanchain/go-wanchain/rlp"
-	"github.com/wanchain/go-wanchain/schnorr/storemanmpc/crypto/ethtrans"
-	"github.com/wanchain/go-wanchain/log"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/core/types"
+	"github.com/wanchain/schnorr-mpc/rlp"
+	"github.com/wanchain/schnorr-mpc/schnorr/storemanmpc/crypto/ethtrans"
+	"github.com/wanchain/schnorr-mpc/log"
 	"math/big"
 )
 

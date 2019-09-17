@@ -2,7 +2,7 @@ package protocol
 
 import (
 	"bytes"
-	"github.com/wanchain/go-wanchain/p2p/discover"
+	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	"math/big"
 	"time"
 	"strconv"

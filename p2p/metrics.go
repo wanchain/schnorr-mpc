@@ -21,7 +21,7 @@ package p2p
 import (
 	"net"
 
-	"github.com/wanchain/go-wanchain/metrics"
+	"github.com/wanchain/schnorr-mpc/metrics"
 )
 
 var (

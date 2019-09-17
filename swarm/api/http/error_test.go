@@ -24,7 +24,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/wanchain/go-wanchain/swarm/testutil"
+	"github.com/wanchain/schnorr-mpc/swarm/testutil"
 )
 
 func TestError(t *testing.T) {

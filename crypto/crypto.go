@@ -32,17 +32,17 @@ import (
 	"math/big"
 	"os"
 
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/common/hexutil"
-	"github.com/wanchain/go-wanchain/common/math"
-	"github.com/wanchain/go-wanchain/crypto/sha3"
-	"github.com/wanchain/go-wanchain/rlp"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/common/hexutil"
+	"github.com/wanchain/schnorr-mpc/common/math"
+	"github.com/wanchain/schnorr-mpc/crypto/sha3"
+	"github.com/wanchain/schnorr-mpc/rlp"
 
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rsa"
 	
-	"github.com/wanchain/go-wanchain/log"
+	"github.com/wanchain/schnorr-mpc/log"
 
 )
 

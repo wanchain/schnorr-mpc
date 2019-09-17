@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/wanchain/go-wanchain/event"
+	"github.com/wanchain/schnorr-mpc/event"
 )
 
 // This example demonstrates how SubscriptionScope can be used to control the lifetime of

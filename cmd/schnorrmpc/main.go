@@ -20,19 +20,19 @@ package main
 
 import (
 	"fmt"
-	"github.com/wanchain/go-wanchain/internal/debug"
+	"github.com/wanchain/schnorr-mpc/internal/debug"
 	"os"
 	"runtime"
 	"sort"
 	"strings"
 	"time"
 
-	"github.com/wanchain/go-wanchain/accounts/keystore"
-	"github.com/wanchain/go-wanchain/cmd/utils"
-	"github.com/wanchain/go-wanchain/console"
-	"github.com/wanchain/go-wanchain/log"
-	"github.com/wanchain/go-wanchain/metrics"
-	"github.com/wanchain/go-wanchain/node"
+	"github.com/wanchain/schnorr-mpc/accounts/keystore"
+	"github.com/wanchain/schnorr-mpc/cmd/utils"
+	"github.com/wanchain/schnorr-mpc/console"
+	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/metrics"
+	"github.com/wanchain/schnorr-mpc/node"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -46,7 +46,7 @@ var (
 	// Ethereum address of the Geth release oracle.
 	//relOracle = common.HexToAddress("0x6b4683cafa549d9f4c06815a2397cef5a540b919")
 	// The app that holds all commands and flags.
-	app = utils.NewApp(gitCommit, "the go-wanchain command line interface")
+	app = utils.NewApp(gitCommit, "the schnorr-mpc command line interface")
 	// flags that configure the node
 	nodeFlags = []cli.Flag{
 		//utils.IdentityFlag,

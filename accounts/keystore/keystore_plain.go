@@ -22,7 +22,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/wanchain/go-wanchain/common"
+	"github.com/wanchain/schnorr-mpc/common"
 )
 
 type keyStorePlain struct {

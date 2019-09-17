@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/wanchain/go-wanchain/common/math"
+	"github.com/wanchain/schnorr-mpc/common/math"
 )
 
 func TestBlockNumberJSONUnmarshal(t *testing.T) {

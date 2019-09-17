@@ -1,11 +1,11 @@
 package storemanmpc
 
 import (
-	mpcprotocol "github.com/wanchain/go-wanchain/schnorr/storemanmpc/protocol"
-	"github.com/wanchain/go-wanchain/log"
-	"github.com/wanchain/go-wanchain/schnorr/storemanmpc/step"
-	"github.com/wanchain/go-wanchain/rlp"
-	"github.com/wanchain/go-wanchain/schnorr/btc"
+	mpcprotocol "github.com/wanchain/schnorr-mpc/schnorr/storemanmpc/protocol"
+	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/schnorr/storemanmpc/step"
+	"github.com/wanchain/schnorr-mpc/rlp"
+	"github.com/wanchain/schnorr-mpc/schnorr/btc"
 )
 
 //send create LockAccount from leader

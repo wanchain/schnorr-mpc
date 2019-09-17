@@ -24,9 +24,9 @@ import (
 	"io"
 	"sync"
 
-	"github.com/wanchain/go-wanchain/bmt"
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/crypto/sha3"
+	"github.com/wanchain/schnorr-mpc/bmt"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/crypto/sha3"
 )
 
 type Hasher func() hash.Hash

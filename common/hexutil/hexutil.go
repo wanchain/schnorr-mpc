@@ -37,7 +37,7 @@ import (
 	"math/big"
 	"strconv"
 
-	"github.com/wanchain/go-wanchain/common/math"
+	"github.com/wanchain/schnorr-mpc/common/math"
 )
 
 const uintBits = 32 << (uint64(^uint(0)) >> 63)

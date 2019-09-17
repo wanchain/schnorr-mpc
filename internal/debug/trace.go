@@ -23,7 +23,7 @@ import (
 	"os"
 	"runtime/trace"
 
-	"github.com/wanchain/go-wanchain/log"
+	"github.com/wanchain/schnorr-mpc/log"
 )
 
 // StartGoTrace turns on tracing, writing to the given file.

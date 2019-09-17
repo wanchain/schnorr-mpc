@@ -23,12 +23,12 @@ import (
 	"math/big"
 	"sync/atomic"
 
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/common/hexutil"
-	"github.com/wanchain/go-wanchain/core/types"
-	"github.com/wanchain/go-wanchain/crypto"
-	"github.com/wanchain/go-wanchain/crypto/sha3"
-	"github.com/wanchain/go-wanchain/rlp"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/common/hexutil"
+	"github.com/wanchain/schnorr-mpc/core/types"
+	"github.com/wanchain/schnorr-mpc/crypto"
+	"github.com/wanchain/schnorr-mpc/crypto/sha3"
+	"github.com/wanchain/schnorr-mpc/rlp"
 )
 
 //go:generate gencodec -type txdata -field-override txdataMarshaling -out gen_tx_json.go

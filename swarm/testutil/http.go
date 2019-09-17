@@ -22,9 +22,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/wanchain/go-wanchain/swarm/api"
-	httpapi "github.com/wanchain/go-wanchain/swarm/api/http"
-	"github.com/wanchain/go-wanchain/swarm/storage"
+	"github.com/wanchain/schnorr-mpc/swarm/api"
+	httpapi "github.com/wanchain/schnorr-mpc/swarm/api/http"
+	"github.com/wanchain/schnorr-mpc/swarm/storage"
 )
 
 func NewTestSwarmServer(t *testing.T) *TestSwarmServer {

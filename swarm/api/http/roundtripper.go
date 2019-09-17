@@ -20,17 +20,17 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/wanchain/go-wanchain/log"
+	"github.com/wanchain/schnorr-mpc/log"
 )
 
 /*
 http roundtripper to register for bzz url scheme
-see https://github.com/wanchain/go-wanchain/issues/2040
+see https://github.com/wanchain/schnorr-mpc/issues/2040
 Usage:
 
 import (
- "github.com/wanchain/go-wanchain/common/httpclient"
- "github.com/wanchain/go-wanchain/swarm/api/http"
+ "github.com/wanchain/schnorr-mpc/common/httpclient"
+ "github.com/wanchain/schnorr-mpc/swarm/api/http"
 )
 client := httpclient.New()
 // for (private) swarm proxy running locally

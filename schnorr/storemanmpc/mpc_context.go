@@ -1,9 +1,9 @@
 package storemanmpc
 
 import (
-	"github.com/wanchain/go-wanchain/p2p/discover"
-	mpcprotocol "github.com/wanchain/go-wanchain/schnorr/storemanmpc/protocol"
-	"github.com/wanchain/go-wanchain/log"
+	"github.com/wanchain/schnorr-mpc/p2p/discover"
+	mpcprotocol "github.com/wanchain/schnorr-mpc/schnorr/storemanmpc/protocol"
+	"github.com/wanchain/schnorr-mpc/log"
 	"sync"
 )
 

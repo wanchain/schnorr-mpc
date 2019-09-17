@@ -25,11 +25,11 @@ import (
 	"os"
 
 	"github.com/docker/docker/pkg/reexec"
-	"github.com/wanchain/go-wanchain/crypto"
-	"github.com/wanchain/go-wanchain/node"
-	"github.com/wanchain/go-wanchain/p2p"
-	"github.com/wanchain/go-wanchain/p2p/discover"
-	"github.com/wanchain/go-wanchain/rpc"
+	"github.com/wanchain/schnorr-mpc/crypto"
+	"github.com/wanchain/schnorr-mpc/node"
+	"github.com/wanchain/schnorr-mpc/p2p"
+	"github.com/wanchain/schnorr-mpc/p2p/discover"
+	"github.com/wanchain/schnorr-mpc/rpc"
 )
 
 // Node represents a node in a simulation network which is created by a

@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"runtime"
 
-	"github.com/wanchain/go-wanchain/log"
+	"github.com/wanchain/schnorr-mpc/log"
 )
 
 // Trace Functions

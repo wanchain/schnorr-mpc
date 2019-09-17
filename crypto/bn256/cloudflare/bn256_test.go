@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/binary"
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/rlp"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/rlp"
 	"math/big"
 	"testing"
 )

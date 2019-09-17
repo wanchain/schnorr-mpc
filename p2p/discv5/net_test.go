@@ -22,8 +22,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/crypto"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/crypto"
 )
 
 func TestNetwork_Lookup(t *testing.T) {

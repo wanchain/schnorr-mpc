@@ -26,8 +26,8 @@ import (
 	"fmt"
 
 	"github.com/pborman/uuid"
-	"github.com/wanchain/go-wanchain/accounts"
-	"github.com/wanchain/go-wanchain/crypto"
+	"github.com/wanchain/schnorr-mpc/accounts"
+	"github.com/wanchain/schnorr-mpc/crypto"
 	"golang.org/x/crypto/pbkdf2"
 )
 

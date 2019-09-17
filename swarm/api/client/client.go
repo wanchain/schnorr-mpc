@@ -33,7 +33,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/wanchain/go-wanchain/swarm/api"
+	"github.com/wanchain/schnorr-mpc/swarm/api"
 )
 
 var (

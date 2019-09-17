@@ -22,7 +22,7 @@ import (
 	"math/big"
 	"reflect"
 
-	"github.com/wanchain/go-wanchain/common"
+	"github.com/wanchain/schnorr-mpc/common"
 )
 var (
 	maxUint256 = big.NewInt(0).Add(

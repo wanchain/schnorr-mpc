@@ -5,7 +5,7 @@ package whisperv5
 import (
 	"encoding/json"
 
-	"github.com/wanchain/go-wanchain/common/hexutil"
+	"github.com/wanchain/schnorr-mpc/common/hexutil"
 )
 
 var _ = (*newMessageOverride)(nil)

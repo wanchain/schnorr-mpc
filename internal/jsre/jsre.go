@@ -27,8 +27,8 @@ import (
 	"time"
 
 	"github.com/robertkrimen/otto"
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/internal/jsre/deps"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/internal/jsre/deps"
 )
 
 var (

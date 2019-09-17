@@ -19,9 +19,9 @@ package keystore
 
 import (
 	"errors"
-	ethereum "github.com/wanchain/go-wanchain"
-	"github.com/wanchain/go-wanchain/accounts"
-	"github.com/wanchain/go-wanchain/common"
+	ethereum "github.com/wanchain/schnorr-mpc"
+	"github.com/wanchain/schnorr-mpc/accounts"
+	"github.com/wanchain/schnorr-mpc/common"
 )
 
 // keystoreWallet implements the accounts.Wallet interface for the original

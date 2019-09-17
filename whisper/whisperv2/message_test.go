@@ -22,7 +22,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wanchain/go-wanchain/crypto"
+	"github.com/wanchain/schnorr-mpc/crypto"
 )
 
 // Tests whether a message can be wrapped without any identity or encryption.

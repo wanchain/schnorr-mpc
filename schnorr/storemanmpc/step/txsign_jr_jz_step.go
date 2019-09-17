@@ -1,9 +1,9 @@
 package step
 
 import (
-	"github.com/wanchain/go-wanchain/crypto"
-	mpcprotocol "github.com/wanchain/go-wanchain/schnorr/storemanmpc/protocol"
-	"github.com/wanchain/go-wanchain/log"
+	"github.com/wanchain/schnorr-mpc/crypto"
+	mpcprotocol "github.com/wanchain/schnorr-mpc/schnorr/storemanmpc/protocol"
+	"github.com/wanchain/schnorr-mpc/log"
 	"math/big"
 	"strconv"
 )

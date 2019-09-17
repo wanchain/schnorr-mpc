@@ -22,8 +22,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/wanchain/go-wanchain/log"
-	"github.com/wanchain/go-wanchain/swarm/storage"
+	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/swarm/storage"
 )
 
 // syncer parameters (global, not peer specific) default values

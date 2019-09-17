@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/wanchain/go-wanchain/log"
+	"github.com/wanchain/schnorr-mpc/log"
 )
 
 const (

@@ -11,10 +11,10 @@ fi
 workspace="$PWD/build/_workspace"
 root="$PWD"
 ethdir="$workspace/src/github.com/wanchain"
-if [ ! -L "$ethdir/go-wanchain" ]; then
+if [ ! -L "$ethdir/schnorr-mpc" ]; then
     mkdir -p "$ethdir"
     cd "$ethdir"
-    ln -s ../../../../../. go-wanchain
+    ln -s ../../../../../. schnorr-mpc
     cd "$root"
 fi
 
@@ -23,8 +23,8 @@ GOPATH="$workspace"
 export GOPATH
 
 # Run the command inside the workspace.
-cd "$ethdir/go-wanchain"
-PWD="$ethdir/go-wanchain"
+cd "$ethdir/schnorr-mpc"
+PWD="$ethdir/schnorr-mpc"
 
 # Launch the arguments with the configured environment.
 exec "$@"

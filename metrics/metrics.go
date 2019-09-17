@@ -25,7 +25,7 @@ import (
 
 	"github.com/rcrowley/go-metrics"
 	"github.com/rcrowley/go-metrics/exp"
-	"github.com/wanchain/go-wanchain/log"
+	"github.com/wanchain/schnorr-mpc/log"
 )
 
 // MetricsEnabledFlag is the CLI flag name to use to enable metrics collections.

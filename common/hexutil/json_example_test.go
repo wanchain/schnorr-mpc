@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/wanchain/go-wanchain/common/hexutil"
+	"github.com/wanchain/schnorr-mpc/common/hexutil"
 )
 
 type MyType [5]byte

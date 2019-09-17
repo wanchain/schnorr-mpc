@@ -22,8 +22,8 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/wanchain/go-wanchain/p2p"
-	"github.com/wanchain/go-wanchain/p2p/nat"
+	"github.com/wanchain/schnorr-mpc/p2p"
+	"github.com/wanchain/schnorr-mpc/p2p/nat"
 )
 
 const (

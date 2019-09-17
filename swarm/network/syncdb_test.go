@@ -25,9 +25,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wanchain/go-wanchain/crypto"
-	"github.com/wanchain/go-wanchain/log"
-	"github.com/wanchain/go-wanchain/swarm/storage"
+	"github.com/wanchain/schnorr-mpc/crypto"
+	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/swarm/storage"
 )
 
 func init() {

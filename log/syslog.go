@@ -5,7 +5,7 @@ package log
 import (
 	"errors"
 	"fmt"
-	"github.com/wanchain/go-wanchain/event"
+	"github.com/wanchain/schnorr-mpc/event"
 	"log/syslog"
 )
 

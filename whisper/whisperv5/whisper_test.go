@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wanchain/go-wanchain/common"
+	"github.com/wanchain/schnorr-mpc/common"
 )
 
 func TestWhisperBasic(t *testing.T) {

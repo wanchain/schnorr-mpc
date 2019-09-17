@@ -18,7 +18,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/wanchain/go-wanchain/rlp"
+	"github.com/wanchain/schnorr-mpc/rlp"
 	"io"
 	"math/big"
 )

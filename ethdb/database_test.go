@@ -25,7 +25,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/wanchain/go-wanchain/ethdb"
+	"github.com/wanchain/schnorr-mpc/ethdb"
 )
 
 func newTestLDB() (*ethdb.LDBDatabase, func()) {

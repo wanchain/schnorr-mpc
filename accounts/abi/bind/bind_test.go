@@ -26,7 +26,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/wanchain/go-wanchain/common"
+	"github.com/wanchain/schnorr-mpc/common"
 	"golang.org/x/tools/imports"
 )
 

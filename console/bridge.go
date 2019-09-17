@@ -24,8 +24,8 @@ import (
 	"time"
 
 	"github.com/robertkrimen/otto"
-	"github.com/wanchain/go-wanchain/log"
-	"github.com/wanchain/go-wanchain/rpc"
+	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/rpc"
 )
 
 // bridge is a collection of JavaScript utility methods to bride the .js runtime

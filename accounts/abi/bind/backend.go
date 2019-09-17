@@ -21,9 +21,9 @@ import (
 	"errors"
 	"math/big"
 
-	"github.com/wanchain/go-wanchain"
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/core/types"
+	"github.com/wanchain/schnorr-mpc"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/core/types"
 )
 
 var (

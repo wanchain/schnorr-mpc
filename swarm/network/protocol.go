@@ -37,12 +37,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/wanchain/go-wanchain/contracts/chequebook"
-	"github.com/wanchain/go-wanchain/log"
-	"github.com/wanchain/go-wanchain/p2p"
-	bzzswap "github.com/wanchain/go-wanchain/swarm/services/swap"
-	"github.com/wanchain/go-wanchain/swarm/services/swap/swap"
-	"github.com/wanchain/go-wanchain/swarm/storage"
+	"github.com/wanchain/schnorr-mpc/contracts/chequebook"
+	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/p2p"
+	bzzswap "github.com/wanchain/schnorr-mpc/swarm/services/swap"
+	"github.com/wanchain/schnorr-mpc/swarm/services/swap/swap"
+	"github.com/wanchain/schnorr-mpc/swarm/storage"
 )
 
 const (

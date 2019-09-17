@@ -40,7 +40,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/wanchain/go-wanchain/crypto"
+	"github.com/wanchain/schnorr-mpc/crypto"
 )
 
 var dumpEnc bool

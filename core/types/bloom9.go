@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/wanchain/go-wanchain/common/hexutil"
-	"github.com/wanchain/go-wanchain/crypto"
+	"github.com/wanchain/schnorr-mpc/common/hexutil"
+	"github.com/wanchain/schnorr-mpc/crypto"
 )
 
 type bytesBacked interface {

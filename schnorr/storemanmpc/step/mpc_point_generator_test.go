@@ -2,10 +2,10 @@ package step
 
 import (
 	"testing"
-	"github.com/wanchain/go-wanchain/p2p/discover"
-	mpcprotocol "github.com/wanchain/go-wanchain/schnorr/storemanmpc/protocol"
+	"github.com/wanchain/schnorr-mpc/p2p/discover"
+	mpcprotocol "github.com/wanchain/schnorr-mpc/schnorr/storemanmpc/protocol"
 	"math/big"
-	"github.com/wanchain/go-wanchain/crypto"
+	"github.com/wanchain/schnorr-mpc/crypto"
 )
 
 

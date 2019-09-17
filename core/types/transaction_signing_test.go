@@ -20,10 +20,10 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/crypto"
-	// "github.com/wanchain/go-wanchain/rlp"
-	"github.com/wanchain/go-wanchain/rlp"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/crypto"
+	// "github.com/wanchain/schnorr-mpc/rlp"
+	"github.com/wanchain/schnorr-mpc/rlp"
 )
 
 func TestEIP155Signing(t *testing.T) {

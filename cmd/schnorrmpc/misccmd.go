@@ -22,9 +22,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/wanchain/go-wanchain/cmd/utils"
-	//"github.com/wanchain/go-wanchain/eth"
-	"github.com/wanchain/go-wanchain/params"
+	"github.com/wanchain/schnorr-mpc/cmd/utils"
+	//"github.com/wanchain/schnorr-mpc/eth"
+	"github.com/wanchain/schnorr-mpc/params"
 	"gopkg.in/urfave/cli.v1"
 )
 

@@ -19,11 +19,11 @@ package node
 import (
 	"reflect"
 
-	"github.com/wanchain/go-wanchain/accounts"
-	"github.com/wanchain/go-wanchain/ethdb"
-	"github.com/wanchain/go-wanchain/event"
-	"github.com/wanchain/go-wanchain/p2p"
-	"github.com/wanchain/go-wanchain/rpc"
+	"github.com/wanchain/schnorr-mpc/accounts"
+	"github.com/wanchain/schnorr-mpc/ethdb"
+	"github.com/wanchain/schnorr-mpc/event"
+	"github.com/wanchain/schnorr-mpc/p2p"
+	"github.com/wanchain/schnorr-mpc/rpc"
 )
 
 // ServiceContext is a collection of service independent options inherited from

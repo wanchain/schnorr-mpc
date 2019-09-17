@@ -29,11 +29,11 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/wanchain/go-wanchain/event"
-	"github.com/wanchain/go-wanchain/p2p"
-	"github.com/wanchain/go-wanchain/p2p/discover"
-	"github.com/wanchain/go-wanchain/p2p/simulations/adapters"
-	"github.com/wanchain/go-wanchain/rpc"
+	"github.com/wanchain/schnorr-mpc/event"
+	"github.com/wanchain/schnorr-mpc/p2p"
+	"github.com/wanchain/schnorr-mpc/p2p/discover"
+	"github.com/wanchain/schnorr-mpc/p2p/simulations/adapters"
+	"github.com/wanchain/schnorr-mpc/rpc"
 	"github.com/julienschmidt/httprouter"
 	"golang.org/x/net/websocket"
 )

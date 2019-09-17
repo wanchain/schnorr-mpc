@@ -23,8 +23,8 @@ import (
 	"crypto/elliptic"
 	"fmt"
 
-	"github.com/wanchain/go-wanchain/common/math"
-	"github.com/wanchain/go-wanchain/crypto/secp256k1"
+	"github.com/wanchain/schnorr-mpc/common/math"
+	"github.com/wanchain/schnorr-mpc/crypto/secp256k1"
 )
 
 func Ecrecover(hash, sig []byte) ([]byte, error) {

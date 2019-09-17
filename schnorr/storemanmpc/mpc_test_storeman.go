@@ -1,6 +1,6 @@
 package storemanmpc
 
-import "github.com/wanchain/go-wanchain/p2p/discover"
+import "github.com/wanchain/schnorr-mpc/p2p/discover"
 
 type testP2pMessager struct {
 }

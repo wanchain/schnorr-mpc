@@ -20,7 +20,7 @@ import (
 	"html/template"
 	"path"
 
-	"github.com/wanchain/go-wanchain/swarm/api"
+	"github.com/wanchain/schnorr-mpc/swarm/api"
 )
 
 type htmlListData struct {

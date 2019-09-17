@@ -22,12 +22,12 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/log"
-	"github.com/wanchain/go-wanchain/p2p/discover"
-	"github.com/wanchain/go-wanchain/p2p/netutil"
-	"github.com/wanchain/go-wanchain/swarm/network/kademlia"
-	"github.com/wanchain/go-wanchain/swarm/storage"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/p2p/discover"
+	"github.com/wanchain/schnorr-mpc/p2p/netutil"
+	"github.com/wanchain/schnorr-mpc/swarm/network/kademlia"
+	"github.com/wanchain/schnorr-mpc/swarm/storage"
 )
 
 // Hive is the logistic manager of the swarm

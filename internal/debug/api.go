@@ -33,7 +33,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wanchain/go-wanchain/log"
+	"github.com/wanchain/schnorr-mpc/log"
 )
 
 // Handler is the global debugging handler.

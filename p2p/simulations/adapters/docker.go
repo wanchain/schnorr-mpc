@@ -28,8 +28,8 @@ import (
 	"strings"
 
 	"github.com/docker/docker/pkg/reexec"
-	"github.com/wanchain/go-wanchain/node"
-	"github.com/wanchain/go-wanchain/p2p/discover"
+	"github.com/wanchain/schnorr-mpc/node"
+	"github.com/wanchain/schnorr-mpc/p2p/discover"
 )
 
 // DockerAdapter is a NodeAdapter which runs simulation nodes inside Docker

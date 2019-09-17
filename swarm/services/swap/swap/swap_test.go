@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wanchain/go-wanchain/common"
+	"github.com/wanchain/schnorr-mpc/common"
 )
 
 type testInPayment struct {

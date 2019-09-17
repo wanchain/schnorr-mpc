@@ -24,18 +24,10 @@ import (
 	"sync"
 	"time"
 
-	ethereum "github.com/wanchain/go-wanchain"
-	"github.com/wanchain/go-wanchain/accounts/abi/bind"
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/common/math"
-	"github.com/wanchain/go-wanchain/consensus/ethash"
-	"github.com/wanchain/go-wanchain/core"
-	"github.com/wanchain/go-wanchain/core/state"
-	"github.com/wanchain/go-wanchain/core/types"
-	"github.com/wanchain/go-wanchain/core/vm"
-	"github.com/wanchain/go-wanchain/crypto"
-	"github.com/wanchain/go-wanchain/ethdb"
-	"github.com/wanchain/go-wanchain/params"
+	ethereum "github.com/wanchain/schnorr-mpc"
+	"github.com/wanchain/schnorr-mpc/accounts/abi/bind"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/common/math"
 )
 
 // This nil assignment ensures compile time that SimulatedBackend implements bind.ContractBackend.

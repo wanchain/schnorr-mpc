@@ -23,9 +23,9 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
-	"github.com/wanchain/go-wanchain/internal/debug"
-	"github.com/wanchain/go-wanchain/log"
-	"github.com/wanchain/go-wanchain/node"
+	"github.com/wanchain/schnorr-mpc/internal/debug"
+	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/node"
 )
 
 const (

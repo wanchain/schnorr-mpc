@@ -1,8 +1,8 @@
 package storemanmpc
 
 import (
-	"github.com/wanchain/go-wanchain/common"
-	mpcprotocol "github.com/wanchain/go-wanchain/schnorr/storemanmpc/protocol"
+	"github.com/wanchain/schnorr-mpc/common"
+	mpcprotocol "github.com/wanchain/schnorr-mpc/schnorr/storemanmpc/protocol"
 	"testing"
 )
 

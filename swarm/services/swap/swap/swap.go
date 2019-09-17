@@ -22,7 +22,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wanchain/go-wanchain/log"
+	"github.com/wanchain/schnorr-mpc/log"
 )
 
 // SwAP Swarm Accounting Protocol with

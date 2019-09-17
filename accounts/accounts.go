@@ -19,9 +19,9 @@
 package accounts
 
 import (
-	ethereum "github.com/wanchain/go-wanchain"
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/event"
+	ethereum "github.com/wanchain/schnorr-mpc"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/event"
 )
 
 // Account represents an Ethereum account located at a specific location defined

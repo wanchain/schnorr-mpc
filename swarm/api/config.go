@@ -24,12 +24,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/contracts/ens"
-	"github.com/wanchain/go-wanchain/crypto"
-	"github.com/wanchain/go-wanchain/swarm/network"
-	"github.com/wanchain/go-wanchain/swarm/services/swap"
-	"github.com/wanchain/go-wanchain/swarm/storage"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/contracts/ens"
+	"github.com/wanchain/schnorr-mpc/crypto"
+	"github.com/wanchain/schnorr-mpc/swarm/network"
+	"github.com/wanchain/schnorr-mpc/swarm/services/swap"
+	"github.com/wanchain/schnorr-mpc/swarm/storage"
 )
 
 const (

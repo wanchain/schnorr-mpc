@@ -22,12 +22,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wanchain/go-wanchain/accounts/abi/bind"
-	"github.com/wanchain/go-wanchain/accounts/abi/bind/backends"
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/core/types"
-	"github.com/wanchain/go-wanchain/crypto"
-	"github.com/wanchain/go-wanchain/pos/epochLeader"
+	"github.com/wanchain/schnorr-mpc/accounts/abi/bind"
+	"github.com/wanchain/schnorr-mpc/accounts/abi/bind/backends"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/core/types"
+	"github.com/wanchain/schnorr-mpc/crypto"
+	"github.com/wanchain/schnorr-mpc/pos/epochLeader"
 )
 
 var testKey, _ = crypto.HexToECDSA("f1572f76b75b40a7da72d6f2ee7fda3d1189c2d28f0a2f096347055abe344d7f")

@@ -29,9 +29,9 @@ import (
 
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/log"
-	"github.com/wanchain/go-wanchain/swarm/api"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/swarm/api"
 )
 
 var (

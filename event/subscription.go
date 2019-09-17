@@ -21,7 +21,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wanchain/go-wanchain/common/mclock"
+	"github.com/wanchain/schnorr-mpc/common/mclock"
 )
 
 // Subscription represents a stream of events. The carrier of the events is typically a

@@ -18,17 +18,17 @@ package main
 
 import (
 	"fmt"
-	"github.com/wanchain/go-wanchain/awskms"
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/crypto"
+	"github.com/wanchain/schnorr-mpc/awskms"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/crypto"
 	"io/ioutil"
 	"strings"
 
-	"github.com/wanchain/go-wanchain/accounts"
-	"github.com/wanchain/go-wanchain/accounts/keystore"
-	"github.com/wanchain/go-wanchain/cmd/utils"
-	"github.com/wanchain/go-wanchain/console"
-	"github.com/wanchain/go-wanchain/log"
+	"github.com/wanchain/schnorr-mpc/accounts"
+	"github.com/wanchain/schnorr-mpc/accounts/keystore"
+	"github.com/wanchain/schnorr-mpc/cmd/utils"
+	"github.com/wanchain/schnorr-mpc/console"
+	"github.com/wanchain/schnorr-mpc/log"
 	"gopkg.in/urfave/cli.v1"
 )
 

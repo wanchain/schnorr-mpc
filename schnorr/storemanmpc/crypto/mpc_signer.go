@@ -1,8 +1,8 @@
 package crypto
 
 import (
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/core/types"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/core/types"
 	"math/big"
 )
 

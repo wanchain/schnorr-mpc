@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/core/types"
-	"github.com/wanchain/go-wanchain/log"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/core/types"
+	"github.com/wanchain/schnorr-mpc/log"
 )
 
 // WaitMined waits for tx to be mined on the blockchain.

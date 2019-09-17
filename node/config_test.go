@@ -24,8 +24,8 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/wanchain/go-wanchain/crypto"
-	"github.com/wanchain/go-wanchain/p2p"
+	"github.com/wanchain/schnorr-mpc/crypto"
+	"github.com/wanchain/schnorr-mpc/p2p"
 )
 
 // Tests that datadirs can be successfully created, be them manually configured

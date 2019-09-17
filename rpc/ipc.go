@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/wanchain/go-wanchain/log"
+	"github.com/wanchain/schnorr-mpc/log"
 )
 
 // CreateIPCListener creates an listener, on Unix platforms this is a unix socket, on

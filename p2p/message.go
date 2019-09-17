@@ -20,15 +20,15 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/wanchain/go-wanchain/log"
+	"github.com/wanchain/schnorr-mpc/log"
 	"io"
 	"io/ioutil"
 	"sync/atomic"
 	"time"
 
-	"github.com/wanchain/go-wanchain/event"
-	"github.com/wanchain/go-wanchain/p2p/discover"
-	"github.com/wanchain/go-wanchain/rlp"
+	"github.com/wanchain/schnorr-mpc/event"
+	"github.com/wanchain/schnorr-mpc/p2p/discover"
+	"github.com/wanchain/schnorr-mpc/rlp"
 )
 
 // Msg defines the structure of a p2p message.

@@ -22,10 +22,10 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/wanchain/go-wanchain/accounts/keystore"
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/core/types"
-	"github.com/wanchain/go-wanchain/crypto"
+	"github.com/wanchain/schnorr-mpc/accounts/keystore"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/core/types"
+	"github.com/wanchain/schnorr-mpc/crypto"
 )
 
 // NewTransactor is a utility method to easily create a transaction signer from

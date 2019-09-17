@@ -21,10 +21,10 @@ import (
 	"os/signal"
 	"strings"
 
-	"github.com/wanchain/go-wanchain/cmd/utils"
-	"github.com/wanchain/go-wanchain/console"
-	"github.com/wanchain/go-wanchain/node"
-	"github.com/wanchain/go-wanchain/rpc"
+	"github.com/wanchain/schnorr-mpc/cmd/utils"
+	"github.com/wanchain/schnorr-mpc/console"
+	"github.com/wanchain/schnorr-mpc/node"
+	"github.com/wanchain/schnorr-mpc/rpc"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -40,7 +40,7 @@ var (
 		Description: `
 The Geth console is an interactive shell for the JavaScript runtime environment
 which exposes a node admin interface as well as the Ðapp JavaScript API.
-See https://github.com/wanchain/go-wanchain/wiki/Javascipt-Console.`,
+See https://github.com/wanchain/schnorr-mpc/wiki/Javascipt-Console.`,
 	}
 
 	attachCommand = cli.Command{
@@ -53,7 +53,7 @@ See https://github.com/wanchain/go-wanchain/wiki/Javascipt-Console.`,
 		Description: `
 The Geth console is an interactive shell for the JavaScript runtime environment
 which exposes a node admin interface as well as the Ðapp JavaScript API.
-See https://github.com/wanchain/go-wanchain/wiki/Javascipt-Console.
+See https://github.com/wanchain/schnorr-mpc/wiki/Javascipt-Console.
 This command allows to open a console on a running geth node.`,
 	}
 
@@ -66,7 +66,7 @@ This command allows to open a console on a running geth node.`,
 		Category:  "CONSOLE COMMANDS",
 		Description: `
 The JavaScript VM exposes a node admin interface as well as the Ðapp
-JavaScript API. See https://github.com/wanchain/go-wanchain/wiki/Javascipt-Console`,
+JavaScript API. See https://github.com/wanchain/schnorr-mpc/wiki/Javascipt-Console`,
 	}
 )
 

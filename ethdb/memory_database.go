@@ -20,7 +20,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/wanchain/go-wanchain/common"
+	"github.com/wanchain/schnorr-mpc/common"
 )
 
 /*

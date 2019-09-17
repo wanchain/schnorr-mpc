@@ -21,7 +21,7 @@ import (
 	"context"
 	"errors"
 	"math/big"
-	"github.com/wanchain/go-wanchain/common"
+	"github.com/wanchain/schnorr-mpc/common"
 )
 
 // NotFound is returned by API methods if the requested item does not exist.

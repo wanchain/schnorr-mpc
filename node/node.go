@@ -27,13 +27,13 @@ import (
 	"sync"
 
 	"github.com/prometheus/prometheus/util/flock"
-	"github.com/wanchain/go-wanchain/accounts"
-	"github.com/wanchain/go-wanchain/ethdb"
-	"github.com/wanchain/go-wanchain/event"
-	"github.com/wanchain/go-wanchain/internal/debug"
-	"github.com/wanchain/go-wanchain/log"
-	"github.com/wanchain/go-wanchain/p2p"
-	"github.com/wanchain/go-wanchain/rpc"
+	"github.com/wanchain/schnorr-mpc/accounts"
+	"github.com/wanchain/schnorr-mpc/ethdb"
+	"github.com/wanchain/schnorr-mpc/event"
+	"github.com/wanchain/schnorr-mpc/internal/debug"
+	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/p2p"
+	"github.com/wanchain/schnorr-mpc/rpc"
 )
 
 // Node is a container on which services can be registered.

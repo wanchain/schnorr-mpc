@@ -42,7 +42,7 @@ import (
 	"fmt"
 	"hash"
 
-	ethcrypto "github.com/wanchain/go-wanchain/crypto"
+	ethcrypto "github.com/wanchain/schnorr-mpc/crypto"
 )
 
 var (

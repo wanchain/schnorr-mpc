@@ -1,6 +1,6 @@
 package step
 
-import mpcprotocol "github.com/wanchain/go-wanchain/schnorr/storemanmpc/protocol"
+import mpcprotocol "github.com/wanchain/schnorr-mpc/schnorr/storemanmpc/protocol"
 
 type MpcAddressStep struct {
 	MpcPoint_Step

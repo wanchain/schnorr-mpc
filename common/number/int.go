@@ -19,7 +19,7 @@ package number
 import (
 	"math/big"
 
-	"github.com/wanchain/go-wanchain/common"
+	"github.com/wanchain/schnorr-mpc/common"
 )
 
 var tt256 = new(big.Int).Lsh(big.NewInt(1), 256)

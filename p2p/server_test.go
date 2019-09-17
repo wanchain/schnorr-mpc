@@ -25,10 +25,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wanchain/go-wanchain/crypto"
-	"github.com/wanchain/go-wanchain/crypto/sha3"
-	"github.com/wanchain/go-wanchain/log"
-	"github.com/wanchain/go-wanchain/p2p/discover"
+	"github.com/wanchain/schnorr-mpc/crypto"
+	"github.com/wanchain/schnorr-mpc/crypto/sha3"
+	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/p2p/discover"
 )
 
 func init() {

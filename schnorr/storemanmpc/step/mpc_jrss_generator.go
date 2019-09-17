@@ -1,13 +1,13 @@
 package step
 
 import (
-	"github.com/wanchain/go-wanchain/crypto"
-	mpccrypto "github.com/wanchain/go-wanchain/schnorr/storemanmpc/crypto"
-	mpcprotocol "github.com/wanchain/go-wanchain/schnorr/storemanmpc/protocol"
-	"github.com/wanchain/go-wanchain/log"
+	"github.com/wanchain/schnorr-mpc/crypto"
+	mpccrypto "github.com/wanchain/schnorr-mpc/schnorr/storemanmpc/crypto"
+	mpcprotocol "github.com/wanchain/schnorr-mpc/schnorr/storemanmpc/protocol"
+	"github.com/wanchain/schnorr-mpc/log"
 	"math/big"
-	//"github.com/wanchain/go-wanchain/log"
-	//"github.com/wanchain/go-wanchain/common"
+	//"github.com/wanchain/schnorr-mpc/log"
+	//"github.com/wanchain/schnorr-mpc/common"
 )
 
 type RandomPolynomialValue struct {

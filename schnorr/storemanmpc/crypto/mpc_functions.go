@@ -4,10 +4,10 @@ import (
 	"crypto/ecdsa"
 	"crypto/rand"
 	"errors"
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/common/math"
-	"github.com/wanchain/go-wanchain/crypto"
-	"github.com/wanchain/go-wanchain/log"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/common/math"
+	"github.com/wanchain/schnorr-mpc/crypto"
+	"github.com/wanchain/schnorr-mpc/log"
 	"math/big"
 )
 

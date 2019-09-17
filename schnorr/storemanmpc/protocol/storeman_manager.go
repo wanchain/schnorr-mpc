@@ -1,7 +1,7 @@
 package protocol
 
 import (
-	"github.com/wanchain/go-wanchain/p2p/discover"
+	"github.com/wanchain/schnorr-mpc/p2p/discover"
 )
 
 type StoremanManager interface {

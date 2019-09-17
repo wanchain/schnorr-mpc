@@ -26,11 +26,11 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/swarm/api"
-	swarm "github.com/wanchain/go-wanchain/swarm/api/client"
-	"github.com/wanchain/go-wanchain/swarm/storage"
-	"github.com/wanchain/go-wanchain/swarm/testutil"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/swarm/api"
+	swarm "github.com/wanchain/schnorr-mpc/swarm/api/client"
+	"github.com/wanchain/schnorr-mpc/swarm/storage"
+	"github.com/wanchain/schnorr-mpc/swarm/testutil"
 )
 
 func TestBzzrGetPath(t *testing.T) {

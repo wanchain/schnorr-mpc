@@ -24,8 +24,8 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/wanchain/go-wanchain/common/math"
-	"github.com/wanchain/go-wanchain/crypto/randentropy"
+	"github.com/wanchain/schnorr-mpc/common/math"
+	"github.com/wanchain/schnorr-mpc/crypto/randentropy"
 )
 
 const TestCount = 1000

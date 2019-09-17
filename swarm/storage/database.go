@@ -25,7 +25,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/opt"
-	"github.com/wanchain/go-wanchain/compression/rle"
+	"github.com/wanchain/schnorr-mpc/compression/rle"
 )
 
 const openFileLimit = 128

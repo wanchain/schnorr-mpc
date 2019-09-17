@@ -24,11 +24,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wanchain/go-wanchain/common/mclock"
-	"github.com/wanchain/go-wanchain/event"
-	"github.com/wanchain/go-wanchain/log"
-	"github.com/wanchain/go-wanchain/p2p/discover"
-	"github.com/wanchain/go-wanchain/rlp"
+	"github.com/wanchain/schnorr-mpc/common/mclock"
+	"github.com/wanchain/schnorr-mpc/event"
+	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/p2p/discover"
+	"github.com/wanchain/schnorr-mpc/rlp"
 )
 
 const (

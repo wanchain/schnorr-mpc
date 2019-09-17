@@ -27,7 +27,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/wanchain/go-wanchain/common/math"
+	"github.com/wanchain/schnorr-mpc/common/math"
 	"gopkg.in/urfave/cli.v1"
 )
 

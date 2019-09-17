@@ -24,7 +24,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/wanchain/go-wanchain/log"
+	"github.com/wanchain/schnorr-mpc/log"
 )
 
 type brokenLimitedReader struct {

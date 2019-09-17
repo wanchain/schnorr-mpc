@@ -26,9 +26,9 @@ import (
 	"time"
 
 	"github.com/gizak/termui"
-	"github.com/wanchain/go-wanchain/cmd/utils"
-	"github.com/wanchain/go-wanchain/node"
-	"github.com/wanchain/go-wanchain/rpc"
+	"github.com/wanchain/schnorr-mpc/cmd/utils"
+	"github.com/wanchain/schnorr-mpc/node"
+	"github.com/wanchain/schnorr-mpc/rpc"
 	"gopkg.in/urfave/cli.v1"
 )
 

@@ -21,11 +21,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/wanchain/go-wanchain/accounts/keystore"
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/log"
-	"github.com/wanchain/go-wanchain/schnorr"
-	"github.com/wanchain/go-wanchain/schnorr/storemanmpc"
+	"github.com/wanchain/schnorr-mpc/accounts/keystore"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/schnorr"
+	"github.com/wanchain/schnorr-mpc/schnorr/storemanmpc"
 	"golang.org/x/crypto/ssh/terminal"
 	"io"
 	"os"
@@ -36,13 +36,13 @@ import (
 	"gopkg.in/urfave/cli.v1"
 
 	"github.com/naoina/toml"
-	"github.com/wanchain/go-wanchain/cmd/utils"
-	//"github.com/wanchain/go-wanchain/eth"
-	"github.com/wanchain/go-wanchain/node"
-	"github.com/wanchain/go-wanchain/params"
-	//"github.com/wanchain/go-wanchain/pos/posconfig"
+	"github.com/wanchain/schnorr-mpc/cmd/utils"
+	//"github.com/wanchain/schnorr-mpc/eth"
+	"github.com/wanchain/schnorr-mpc/node"
+	"github.com/wanchain/schnorr-mpc/params"
+	//"github.com/wanchain/schnorr-mpc/pos/posconfig"
 
-	whisper "github.com/wanchain/go-wanchain/whisper/whisperv5"
+	whisper "github.com/wanchain/schnorr-mpc/whisper/whisperv5"
 )
 
 var (

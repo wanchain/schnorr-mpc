@@ -20,18 +20,18 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/wanchain/go-wanchain/pos/posconfig"
+	"github.com/wanchain/schnorr-mpc/pos/posconfig"
 	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/core"
-	"github.com/wanchain/go-wanchain/eth"
-	"github.com/wanchain/go-wanchain/internal/jsre"
-	"github.com/wanchain/go-wanchain/node"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/core"
+	"github.com/wanchain/schnorr-mpc/eth"
+	"github.com/wanchain/schnorr-mpc/internal/jsre"
+	"github.com/wanchain/schnorr-mpc/node"
 )
 
 const (

@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/wanchain/go-wanchain/crypto"
+	"github.com/wanchain/schnorr-mpc/crypto"
 )
 // Method represents a callable given a `Name` and whether the method is a constant.
 // If the method is `Const` no transaction needs to be created for this

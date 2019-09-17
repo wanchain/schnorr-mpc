@@ -24,9 +24,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wanchain/go-wanchain/crypto"
-	"github.com/wanchain/go-wanchain/p2p"
-	"github.com/wanchain/go-wanchain/rpc"
+	"github.com/wanchain/schnorr-mpc/crypto"
+	"github.com/wanchain/schnorr-mpc/p2p"
+	"github.com/wanchain/schnorr-mpc/rpc"
 )
 
 var (

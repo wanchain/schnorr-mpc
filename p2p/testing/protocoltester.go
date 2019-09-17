@@ -32,14 +32,14 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/wanchain/go-wanchain/log"
-	"github.com/wanchain/go-wanchain/node"
-	"github.com/wanchain/go-wanchain/p2p"
-	"github.com/wanchain/go-wanchain/p2p/discover"
-	"github.com/wanchain/go-wanchain/p2p/simulations"
-	"github.com/wanchain/go-wanchain/p2p/simulations/adapters"
-	"github.com/wanchain/go-wanchain/rlp"
-	"github.com/wanchain/go-wanchain/rpc"
+	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/node"
+	"github.com/wanchain/schnorr-mpc/p2p"
+	"github.com/wanchain/schnorr-mpc/p2p/discover"
+	"github.com/wanchain/schnorr-mpc/p2p/simulations"
+	"github.com/wanchain/schnorr-mpc/p2p/simulations/adapters"
+	"github.com/wanchain/schnorr-mpc/rlp"
+	"github.com/wanchain/schnorr-mpc/rpc"
 )
 
 // ProtocolTester is the tester environment used for unit testing protocol

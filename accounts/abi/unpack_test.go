@@ -27,7 +27,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/wanchain/go-wanchain/common"
+	"github.com/wanchain/schnorr-mpc/common"
 )
 
 type unpackTest struct {

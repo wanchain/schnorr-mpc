@@ -24,7 +24,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/wanchain/go-wanchain/common"
+	"github.com/wanchain/schnorr-mpc/common"
 )
 
 func TestPack(t *testing.T) {

@@ -24,9 +24,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/crypto"
-	whisper "github.com/wanchain/go-wanchain/whisper/whisperv5"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/crypto"
+	whisper "github.com/wanchain/schnorr-mpc/whisper/whisperv5"
 )
 
 const powRequirement = 0.00001

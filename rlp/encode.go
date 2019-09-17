@@ -18,7 +18,7 @@ package rlp
 
 import (
 	"fmt"
-	// "github.com/wanchain/go-wanchain/common/hexutil"
+	// "github.com/wanchain/schnorr-mpc/common/hexutil"
 	"io"
 	"math/big"
 	"reflect"

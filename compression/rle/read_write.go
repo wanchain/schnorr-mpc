@@ -21,7 +21,7 @@ import (
 	"bytes"
 	"errors"
 
-	"github.com/wanchain/go-wanchain/crypto"
+	"github.com/wanchain/schnorr-mpc/crypto"
 )
 
 const (

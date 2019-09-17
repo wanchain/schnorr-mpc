@@ -27,10 +27,10 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/crypto"
-	"github.com/wanchain/go-wanchain/crypto/ecies"
-	"github.com/wanchain/go-wanchain/log"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/crypto"
+	"github.com/wanchain/schnorr-mpc/crypto/ecies"
+	"github.com/wanchain/schnorr-mpc/log"
 )
 
 // Options specifies the exact way a message should be wrapped into an Envelope.

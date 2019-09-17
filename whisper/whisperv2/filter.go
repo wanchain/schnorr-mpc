@@ -21,7 +21,7 @@ package whisperv2
 import (
 	"crypto/ecdsa"
 
-	"github.com/wanchain/go-wanchain/event/filter"
+	"github.com/wanchain/schnorr-mpc/event/filter"
 )
 
 // Filter is used to subscribe to specific types of whisper messages.

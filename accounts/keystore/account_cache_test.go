@@ -30,8 +30,8 @@ import (
 
 	"github.com/cespare/cp"
 	"github.com/davecgh/go-spew/spew"
-	"github.com/wanchain/go-wanchain/accounts"
-	"github.com/wanchain/go-wanchain/common"
+	"github.com/wanchain/schnorr-mpc/accounts"
+	"github.com/wanchain/schnorr-mpc/common"
 )
 
 var (

@@ -25,8 +25,8 @@ import (
 	"runtime"
 
 	colorable "github.com/mattn/go-colorable"
-	"github.com/wanchain/go-wanchain/log"
-	"github.com/wanchain/go-wanchain/log/term"
+	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/log/term"
 	"gopkg.in/urfave/cli.v1"
 )
 

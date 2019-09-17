@@ -28,8 +28,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/wanchain/go-wanchain/log"
-	"github.com/wanchain/go-wanchain/swarm/api"
+	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/swarm/api"
 )
 
 //templateMap holds a mapping of an HTTP error code to a template

@@ -19,7 +19,7 @@ package params
 //import (
 //	"math/big"
 //
-//	"github.com/wanchain/go-wanchain/common"
+//	"github.com/wanchain/schnorr-mpc/common"
 //)
 
 // DAOForkBlockExtra is the block header extra-data field to set for the DAO fork

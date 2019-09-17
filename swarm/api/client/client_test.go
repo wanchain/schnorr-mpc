@@ -25,8 +25,8 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/wanchain/go-wanchain/swarm/api"
-	"github.com/wanchain/go-wanchain/swarm/testutil"
+	"github.com/wanchain/schnorr-mpc/swarm/api"
+	"github.com/wanchain/schnorr-mpc/swarm/testutil"
 )
 
 // TestClientUploadDownloadRaw test uploading and downloading raw data to swarm

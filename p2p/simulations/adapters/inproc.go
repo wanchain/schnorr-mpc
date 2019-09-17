@@ -23,12 +23,12 @@ import (
 	"net"
 	"sync"
 
-	"github.com/wanchain/go-wanchain/event"
-	//"github.com/wanchain/go-wanchain/log"
-	"github.com/wanchain/go-wanchain/node"
-	"github.com/wanchain/go-wanchain/p2p"
-	"github.com/wanchain/go-wanchain/p2p/discover"
-	"github.com/wanchain/go-wanchain/rpc"
+	"github.com/wanchain/schnorr-mpc/event"
+	//"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/node"
+	"github.com/wanchain/schnorr-mpc/p2p"
+	"github.com/wanchain/schnorr-mpc/p2p/discover"
+	"github.com/wanchain/schnorr-mpc/rpc"
 )
 
 // SimAdapter is a NodeAdapter which creates in-memory simulation nodes and

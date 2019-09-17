@@ -2,14 +2,14 @@ package btc
 
 import (
 	"errors"
-	"github.com/wanchain/go-wanchain/common"
+	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"math/big"
-	"github.com/wanchain/go-wanchain/crypto"
-	"github.com/wanchain/go-wanchain/accounts/keystore"
-	"github.com/wanchain/go-wanchain/log"
+	"github.com/wanchain/schnorr-mpc/crypto"
+	"github.com/wanchain/schnorr-mpc/accounts/keystore"
+	"github.com/wanchain/schnorr-mpc/log"
 	"strconv"
 )
 

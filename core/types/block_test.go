@@ -23,9 +23,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/wanchain/go-wanchain/common"
-	// "github.com/wanchain/go-wanchain/common/hexutil"
-	"github.com/wanchain/go-wanchain/rlp"
+	"github.com/wanchain/schnorr-mpc/common"
+	// "github.com/wanchain/schnorr-mpc/common/hexutil"
+	"github.com/wanchain/schnorr-mpc/rlp"
 )
 
 func stringToBlockNonce(input string) BlockNonce {

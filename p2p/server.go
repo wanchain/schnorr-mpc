@@ -25,14 +25,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/common/mclock"
-	"github.com/wanchain/go-wanchain/event"
-	"github.com/wanchain/go-wanchain/log"
-	"github.com/wanchain/go-wanchain/p2p/discover"
-	"github.com/wanchain/go-wanchain/p2p/discv5"
-	"github.com/wanchain/go-wanchain/p2p/nat"
-	"github.com/wanchain/go-wanchain/p2p/netutil"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/common/mclock"
+	"github.com/wanchain/schnorr-mpc/event"
+	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/p2p/discover"
+	"github.com/wanchain/schnorr-mpc/p2p/discv5"
+	"github.com/wanchain/schnorr-mpc/p2p/nat"
+	"github.com/wanchain/schnorr-mpc/p2p/netutil"
 )
 
 const (

@@ -54,7 +54,7 @@ func TestBloom(t *testing.T) {
 import (
 	"testing"
 
-	"github.com/wanchain/go-wanchain/core/state"
+	"github.com/wanchain/schnorr-mpc/core/state"
 )
 
 func TestBloom9(t *testing.T) {

@@ -21,7 +21,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/wanchain/go-wanchain/common"
+	"github.com/wanchain/schnorr-mpc/common"
 )
 
 func (Address) Generate(rand *rand.Rand, size int) reflect.Value {

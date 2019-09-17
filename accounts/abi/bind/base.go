@@ -22,11 +22,11 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/wanchain/go-wanchain"
-	"github.com/wanchain/go-wanchain/accounts/abi"
-	"github.com/wanchain/go-wanchain/common"
-	"github.com/wanchain/go-wanchain/core/types"
-	"github.com/wanchain/go-wanchain/crypto"
+	"github.com/wanchain/schnorr-mpc"
+	"github.com/wanchain/schnorr-mpc/accounts/abi"
+	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/core/types"
+	"github.com/wanchain/schnorr-mpc/crypto"
 )
 
 // SignerFn is a signer function callback when a contract requires a method to

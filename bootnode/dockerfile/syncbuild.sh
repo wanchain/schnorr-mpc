@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# cd  ../go-wanchain-bak
+# cd  ../schnorr-mpc-bak
 # files=`git diff --name-only`
 
 
 # for f in ${files[@]}; do
-#        cp ${f} ../go-wanchain/${f}
+#        cp ${f} ../schnorr-mpc/${f}
 # done
 
-cd ../go-wanchain
+cd ../schnorr-mpc
 make
 cp ./build/bin/gwan ../pos6/bin/
 cd ../pos6

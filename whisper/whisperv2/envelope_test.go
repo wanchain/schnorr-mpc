@@ -21,8 +21,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wanchain/go-wanchain/crypto"
-	"github.com/wanchain/go-wanchain/crypto/ecies"
+	"github.com/wanchain/schnorr-mpc/crypto"
+	"github.com/wanchain/schnorr-mpc/crypto/ecies"
 )
 
 func TestEnvelopeOpen(t *testing.T) {

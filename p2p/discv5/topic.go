@@ -23,8 +23,8 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/wanchain/go-wanchain/common/mclock"
-	"github.com/wanchain/go-wanchain/log"
+	"github.com/wanchain/schnorr-mpc/common/mclock"
+	"github.com/wanchain/schnorr-mpc/log"
 )
 
 const (

@@ -23,8 +23,8 @@ import (
 	"io"
 	"sort"
 
-	"github.com/wanchain/go-wanchain/cmd/utils"
-	"github.com/wanchain/go-wanchain/internal/debug"
+	"github.com/wanchain/schnorr-mpc/cmd/utils"
+	"github.com/wanchain/schnorr-mpc/internal/debug"
 	"gopkg.in/urfave/cli.v1"
 )
 

@@ -21,7 +21,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/wanchain/go-wanchain/event"
+	"github.com/wanchain/schnorr-mpc/event"
 )
 
 // Manager is an overarching account manager that can communicate with various

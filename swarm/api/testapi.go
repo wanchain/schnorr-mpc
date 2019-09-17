@@ -17,7 +17,7 @@
 package api
 
 import (
-	"github.com/wanchain/go-wanchain/swarm/network"
+	"github.com/wanchain/schnorr-mpc/swarm/network"
 )
 
 type Control struct {

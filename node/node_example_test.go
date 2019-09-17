@@ -20,9 +20,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/wanchain/go-wanchain/node"
-	"github.com/wanchain/go-wanchain/p2p"
-	"github.com/wanchain/go-wanchain/rpc"
+	"github.com/wanchain/schnorr-mpc/node"
+	"github.com/wanchain/schnorr-mpc/p2p"
+	"github.com/wanchain/schnorr-mpc/rpc"
 )
 
 // SampleService is a trivial network service that can be attached to a node for

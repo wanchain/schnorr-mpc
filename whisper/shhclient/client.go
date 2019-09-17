@@ -19,10 +19,10 @@ package shhclient
 import (
 	"context"
 
-	"github.com/wanchain/go-wanchain"
-	"github.com/wanchain/go-wanchain/common/hexutil"
-	"github.com/wanchain/go-wanchain/rpc"
-	whisper "github.com/wanchain/go-wanchain/whisper/whisperv5"
+	"github.com/wanchain/schnorr-mpc"
+	"github.com/wanchain/schnorr-mpc/common/hexutil"
+	"github.com/wanchain/schnorr-mpc/rpc"
+	whisper "github.com/wanchain/schnorr-mpc/whisper/whisperv5"
 )
 
 // Client defines typed wrappers for the Whisper v5 RPC API.

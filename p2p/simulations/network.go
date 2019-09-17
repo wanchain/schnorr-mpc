@@ -24,11 +24,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wanchain/go-wanchain/event"
-	"github.com/wanchain/go-wanchain/log"
-	"github.com/wanchain/go-wanchain/p2p"
-	"github.com/wanchain/go-wanchain/p2p/discover"
-	"github.com/wanchain/go-wanchain/p2p/simulations/adapters"
+	"github.com/wanchain/schnorr-mpc/event"
+	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/p2p"
+	"github.com/wanchain/schnorr-mpc/p2p/discover"
+	"github.com/wanchain/schnorr-mpc/p2p/simulations/adapters"
 )
 
 var dialBanTimeout = 200 * time.Millisecond

@@ -28,7 +28,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wanchain/go-wanchain/common"
+	"github.com/wanchain/schnorr-mpc/common"
 )
 
 // In this test, nodes try to randomly resolve each other.

@@ -27,7 +27,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/wanchain/go-wanchain/log"
+	"github.com/wanchain/schnorr-mpc/log"
 	"golang.org/x/net/websocket"
 	"gopkg.in/fatih/set.v0"
 )

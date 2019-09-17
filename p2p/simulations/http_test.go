@@ -27,12 +27,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wanchain/go-wanchain/event"
-	"github.com/wanchain/go-wanchain/node"
-	"github.com/wanchain/go-wanchain/p2p"
-	"github.com/wanchain/go-wanchain/p2p/discover"
-	"github.com/wanchain/go-wanchain/p2p/simulations/adapters"
-	"github.com/wanchain/go-wanchain/rpc"
+	"github.com/wanchain/schnorr-mpc/event"
+	"github.com/wanchain/schnorr-mpc/node"
+	"github.com/wanchain/schnorr-mpc/p2p"
+	"github.com/wanchain/schnorr-mpc/p2p/discover"
+	"github.com/wanchain/schnorr-mpc/p2p/simulations/adapters"
+	"github.com/wanchain/schnorr-mpc/rpc"
 )
 
 // testService implements the node.Service interface and provides protocols

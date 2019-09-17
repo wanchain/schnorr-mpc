@@ -4,7 +4,7 @@ package log
 
 import (
 	"fmt"
-	"github.com/wanchain/go-wanchain/event"
+	"github.com/wanchain/schnorr-mpc/event"
 )
 
 type SyslogFun func(m string) error

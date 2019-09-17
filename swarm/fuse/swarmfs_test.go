@@ -27,8 +27,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/wanchain/go-wanchain/swarm/api"
-	"github.com/wanchain/go-wanchain/swarm/storage"
+	"github.com/wanchain/schnorr-mpc/swarm/api"
+	"github.com/wanchain/schnorr-mpc/swarm/storage"
 )
 
 type fileInfo struct {

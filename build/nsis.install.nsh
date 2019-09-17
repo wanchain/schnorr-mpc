@@ -3,9 +3,9 @@ InstallDir "$InstDir"
 OutFile "${OUTPUTFILE}" # set through command line arguments
 
 # Links for "Add/Remove Programs"
-!define HELPURL "https://github.com/wanchain/go-wanchain/issues"
-!define UPDATEURL "https://github.com/wanchain/go-wanchain/releases"
-!define ABOUTURL "https://github.com/wanchain/go-wanchain#ethereum-go"
+!define HELPURL "https://github.com/wanchain/schnorr-mpc/issues"
+!define UPDATEURL "https://github.com/wanchain/schnorr-mpc/releases"
+!define ABOUTURL "https://github.com/wanchain/schnorr-mpc#ethereum-go"
 !define /date NOW "%Y%m%d"
 
 PageEx license
