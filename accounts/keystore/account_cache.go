@@ -70,7 +70,7 @@ func (err *AmbiguousAddrError) Error() string {
 // accountCache is a live index of all accounts in the keystore.
 type accountCache struct {
 	keydir   string
-	watcher  *watcher
+	//watcher  *watcher
 	mu       sync.Mutex
 	all      accountsByURL
 	byAddr   map[common.Address][]accounts.Account
@@ -93,7 +93,7 @@ func newAccountCache(keydir string) (*accountCache, chan struct{}) {
 		notify: make(chan struct{}, 1),
 		fileC:  fileCache{all: set.NewNonTS()},
 	}
-	ac.watcher = newWatcher(ac)
+	//ac.watcher = newWatcher(ac)
 	return ac, ac.notify
 }
 
@@ -206,10 +206,11 @@ func (ac *accountCache) find(a accounts.Account) (accounts.Account, error) {
 func (ac *accountCache) maybeReload() {
 	ac.mu.Lock()
 
-	if ac.watcher.running {
-		ac.mu.Unlock()
-		return // A watcher is running and will keep the cache up-to-date.
-	}
+	//if ac.watcher.running {
+	//	ac.mu.Unlock()
+	//	return // A watcher is running and will keep the cache up-to-date.
+	//}
+
 	if ac.throttle == nil {
 		ac.throttle = time.NewTimer(0)
 	} else {
@@ -221,7 +222,7 @@ func (ac *accountCache) maybeReload() {
 		}
 	}
 	// No watcher running, start it.
-	ac.watcher.start()
+	//ac.watcher.start()
 	ac.throttle.Reset(minReloadInterval)
 	ac.mu.Unlock()
 	ac.scanAccounts()
@@ -229,7 +230,7 @@ func (ac *accountCache) maybeReload() {
 
 func (ac *accountCache) close() {
 	ac.mu.Lock()
-	ac.watcher.close()
+	//ac.watcher.close()
 	if ac.throttle != nil {
 		ac.throttle.Stop()
 	}

@@ -571,13 +571,13 @@ func (ks *KeyStore) UpdateStoreman(a accounts.Account, passphrase, newPassphrase
 // ImportPreSaleKey decrypts the given Ethereum presale wallet and stores
 // a key file in the key directory. The key file is encrypted with the same passphrase.
 func (ks *KeyStore) ImportPreSaleKey(keyJSON []byte, passphrase string) (accounts.Account, error) {
-	a, _, err := importPreSaleKey(ks.storage, keyJSON, passphrase)
-	if err != nil {
-		return a, err
-	}
-	ks.cache.add(a)
-	ks.refreshWallets()
-	return a, nil
+	//a, _, err := importPreSaleKey(ks.storage, keyJSON, passphrase)
+	//if err != nil {
+	//	return a, err
+	//}
+	//ks.cache.add(a)
+	//ks.refreshWallets()
+	return accounts.Account{}, nil
 }
 
 // TODO: temp add, for quickly print public keys, maybe removed later
