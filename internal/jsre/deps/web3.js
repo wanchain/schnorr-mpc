@@ -3747,6 +3747,10 @@ var inputCallFormatter = function (options){
     return options;
 };
 
+
+var inputMpcFormatter = function (options){
+  return options;
+};
 /**
  * Formats the input of a transaction and converts all values to HEX
  *
@@ -3964,7 +3968,8 @@ module.exports = {
     outputBlockFormatter: outputBlockFormatter,
     outputLogFormatter: outputLogFormatter,
     outputPostFormatter: outputPostFormatter,
-    outputSyncingFormatter: outputSyncingFormatter
+    outputSyncingFormatter: outputSyncingFormatter,
+    inputMpcFormatter:inputMpcFormatter
 };
 
 
@@ -13733,33 +13738,20 @@ module.exports = Wan;
         call: 'storeman_version',
         params: 0
       });
-      var createMpcAccount = new Method ({
-        name: 'createMpcAccount',
-        call: 'storeman_createMpcAccount',
-        params: 1,
-        inputFormatter: [null]
+      var createGpk = new Method ({
+        name: 'createGPK',
+        call: 'storeman_createGPK',
+        params: 0
       });
-      var signMpcTransaction = new Method ({
-        name: 'signMpcTransaction',
-        call: 'storeman_signMpcTransaction',
-        params: 1,
-        inputFormatter: [null]
+      var signData = new Method ({
+            name: 'signData',
+            //call: 'storeman_signData',
+            call: 'storeman_signData',
+            params: 1
       });
-      var signMpcBtcTransaction = new Method ({
-        name: 'signMpcBtcTransaction',
-        call: 'storeman_signMpcBtcTransaction',
-        params: 1,
-        inputFormatter: [null]
-      });
-      var addValidMpcTx = new Method ({
-        name: 'addValidMpcTx',
-        call: 'storeman_addValidMpcTx',
-        params: 1,
-        inputFormatter: [formatters.inputTransactionFormatter]
-      });
-      var addValidMpcBtcTx = new Method ({
-        name: 'addValidMpcBtcTx',
-        call: 'storeman_addValidMpcBtcTx',
+      var addValidData = new Method ({
+        name: 'addValidData',
+        call: 'storeman_addValidData',
         params: 1
       });
       var peers = new Method ({
@@ -13768,13 +13760,11 @@ module.exports = Wan;
         params: 0
       });
       return [
-        version,
-        createMpcAccount,
-        signMpcTransaction,
-        signMpcBtcTransaction,
-        addValidMpcTx,
-        addValidMpcBtcTx,
-        peers,
+          version,
+          createGpk,
+          signData,
+          addValidData,
+          peers,
       ];
     };
     var properties = function () {
