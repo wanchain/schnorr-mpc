@@ -476,6 +476,8 @@ func (ks *KeyStore) NewStoremanAccount(pKey *ecdsa.PublicKey, pShare *big.Int, s
 	return account, nil
 }
 
+
+
 // Export exports as a JSON key, encrypted with newPassphrase.
 func (ks *KeyStore) Export(a accounts.Account, passphrase, newPassphrase string) (keyJSON []byte, err error) {
 	_, key, err := ks.getDecryptedKey(a, passphrase)
@@ -490,6 +492,8 @@ func (ks *KeyStore) Export(a accounts.Account, passphrase, newPassphrase string)
 	}
 	return EncryptKey(key, newPassphrase, N, P)
 }
+
+
 
 // Import stores the given encrypted JSON key into the key directory.
 func (ks *KeyStore) Import(keyJSON []byte, passphrase, newPassphrase string) (accounts.Account, error) {
