@@ -476,6 +476,8 @@ func (ks *KeyStore) NewStoremanAccount(pKey *ecdsa.PublicKey, pShare *big.Int, s
 	return account, nil
 }
 
+
+
 // Export exports as a JSON key, encrypted with newPassphrase.
 func (ks *KeyStore) Export(a accounts.Account, passphrase, newPassphrase string) (keyJSON []byte, err error) {
 	_, key, err := ks.getDecryptedKey(a, passphrase)
@@ -490,6 +492,8 @@ func (ks *KeyStore) Export(a accounts.Account, passphrase, newPassphrase string)
 	}
 	return EncryptKey(key, newPassphrase, N, P)
 }
+
+
 
 // Import stores the given encrypted JSON key into the key directory.
 func (ks *KeyStore) Import(keyJSON []byte, passphrase, newPassphrase string) (accounts.Account, error) {
@@ -571,13 +575,13 @@ func (ks *KeyStore) UpdateStoreman(a accounts.Account, passphrase, newPassphrase
 // ImportPreSaleKey decrypts the given Ethereum presale wallet and stores
 // a key file in the key directory. The key file is encrypted with the same passphrase.
 func (ks *KeyStore) ImportPreSaleKey(keyJSON []byte, passphrase string) (accounts.Account, error) {
-	a, _, err := importPreSaleKey(ks.storage, keyJSON, passphrase)
-	if err != nil {
-		return a, err
-	}
-	ks.cache.add(a)
-	ks.refreshWallets()
-	return a, nil
+	//a, _, err := importPreSaleKey(ks.storage, keyJSON, passphrase)
+	//if err != nil {
+	//	return a, err
+	//}
+	//ks.cache.add(a)
+	//ks.refreshWallets()
+	return accounts.Account{}, nil
 }
 
 // TODO: temp add, for quickly print public keys, maybe removed later
