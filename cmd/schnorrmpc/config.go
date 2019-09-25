@@ -24,8 +24,8 @@ import (
 	"github.com/wanchain/schnorr-mpc/accounts/keystore"
 	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/log"
-	"github.com/wanchain/schnorr-mpc/schnorr"
-	"github.com/wanchain/schnorr-mpc/schnorr/storemanmpc"
+	"github.com/wanchain/schnorr-mpc/storeman"
+	"github.com/wanchain/schnorr-mpc/storeman/storemanmpc"
 	"golang.org/x/crypto/ssh/terminal"
 	"io"
 	"os"
@@ -37,10 +37,10 @@ import (
 
 	"github.com/naoina/toml"
 	"github.com/wanchain/schnorr-mpc/cmd/utils"
-	//"github.com/wanchain/schnorr-mpc/eth"
+	//"github.com/wanchain/storeman-mpc/eth"
 	"github.com/wanchain/schnorr-mpc/node"
 	"github.com/wanchain/schnorr-mpc/params"
-	//"github.com/wanchain/schnorr-mpc/pos/posconfig"
+	//"github.com/wanchain/storeman-mpc/pos/posconfig"
 
 	whisper "github.com/wanchain/schnorr-mpc/whisper/whisperv5"
 )
@@ -86,7 +86,7 @@ type ethstatsConfig struct {
 type gethConfig struct {
 	//Eth      eth.Config
 	Shh      whisper.Config
-	Sm       schnorr.Config
+	Sm       storeman.Config
 	Node     node.Config
 	Ethstats ethstatsConfig
 }
@@ -115,7 +115,7 @@ func defaultNodeConfig() node.Config {
 	cfg.HTTPModules = append(cfg.HTTPModules, "storeman")
 	cfg.WSModules = append(cfg.WSModules, "eth", "shh")
 	cfg.WSModules = append(cfg.WSModules, "wan", "shh")
-	cfg.IPCPath = "schnorr.ipc"
+	cfg.IPCPath = "storeman.ipc"
 	return cfg
 }
 
@@ -125,7 +125,7 @@ func makeConfigNode(ctx *cli.Context) (*node.Node, gethConfig) {
 		//Eth:  eth.DefaultConfig,
 		Shh:  whisper.DefaultConfig,
 		Node: defaultNodeConfig(),
-		Sm:   schnorr.DefaultConfig,
+		Sm:   storeman.DefaultConfig,
 	}
 
 	// Load config file.

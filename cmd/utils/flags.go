@@ -21,12 +21,6 @@ import (
 	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
-	"github.com/wanchain/schnorr-mpc/schnorr"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"strconv"
-	"strings"
 	"github.com/wanchain/schnorr-mpc/accounts"
 	"github.com/wanchain/schnorr-mpc/accounts/keystore"
 	"github.com/wanchain/schnorr-mpc/common"
@@ -41,8 +35,14 @@ import (
 	"github.com/wanchain/schnorr-mpc/p2p/nat"
 	"github.com/wanchain/schnorr-mpc/p2p/netutil"
 	"github.com/wanchain/schnorr-mpc/params"
+	"github.com/wanchain/schnorr-mpc/storeman"
 	whisper "github.com/wanchain/schnorr-mpc/whisper/whisperv5"
-	cli "gopkg.in/urfave/cli.v1"
+	"gopkg.in/urfave/cli.v1"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
 )
 
 var (
@@ -643,10 +643,10 @@ func RegisterShhService(stack *node.Node, cfg *whisper.Config) {
 }
 
 // RegisterSmService configure Storeman and adds it to the given node
-func RegisterSmService(stack *node.Node, cfg *schnorr.Config, aKID, secretKey, region string) {
+func RegisterSmService(stack *node.Node, cfg *storeman.Config, aKID, secretKey, region string) {
 	if err := stack.Register(func(n *node.ServiceContext) (node.Service, error) {
 
-		return schnorr.New(cfg, stack.AccountManager(), aKID, secretKey, region), nil
+		return  storeman.New(cfg, stack.AccountManager(), aKID, secretKey, region), nil
 	}); err != nil {
 		Fatalf("Failed to register the Storeman service: %v", err)
 	}
