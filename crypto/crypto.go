@@ -301,6 +301,9 @@ func modInverse(a, n *big.Int) (ia *big.Int, ok bool) {
 	return x, true
 }
 
+func ModInverse(a, n *big.Int) (ia *big.Int, ok bool) {
+	return modInverse(a,n)
+}
 // RSA encryption algorithm interface
 // Shi，TeemoGuo added
 func Rsa_encrypt(c *big.Int, pub *rsa.PublicKey, m *big.Int) *big.Int {
