@@ -3,6 +3,7 @@ package storeman
 import (
 	"context"
 	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"path/filepath"
 	"sync"
@@ -238,7 +239,7 @@ func (sa *StoremanAPI) Peers(ctx context.Context) []*p2p.PeerInfo {
 	return ps
 }
 
-func (sa *StoremanAPI) CreateGPK(ctx context.Context) (pk []byte, err error) {
+func (sa *StoremanAPI) CreateGPK(ctx context.Context) (pk hexutil.Bytes, err error) {
 
 	log.SyslogInfo("CreateGPK begin")
 	log.SyslogInfo("CreateGPK begin", "peers", len(sa.sm.peers), "storeman peers", len(sa.sm.storemanPeers))
@@ -302,7 +303,7 @@ func (sa *StoremanAPI) SignData(ctx context.Context, data mpcprotocol.SendData) 
 		return mpcprotocol.SignedResult{R: []byte{}, S: []byte{}}, err
 	}
 
-	return mpcprotocol.SignedResult{R: signed[0:66], S: signed[65:]}, nil
+	return mpcprotocol.SignedResult{R: signed[0:65], S: signed[65:]}, nil
 }
 
 func (sa *StoremanAPI) AddValidData(ctx context.Context, data mpcprotocol.SendData) error {

@@ -171,4 +171,40 @@ func TestSchnorr(t *testing.T) {
 	} else {
 		t.Fatal("Verification Failed")
 	}
+
+	// compute gpk-> address address
+	address := crypto.PubkeyToAddress(*gpk)
+	// compute address'  (ssG - R)*m^ = pk'
+	// temp1 = -R
+	temp1 := new(ecdsa.PublicKey)
+	temp1.Curve = crypto.S256()
+
+	temp1.X = rpk.X
+	temp1.Y = big.NewInt(0).Neg(rpk.Y)
+
+	// temp2 = (-R) + ssG
+	temp2 := new(ecdsa.PublicKey)
+	temp2.Curve = crypto.S256()
+	temp2.X, temp2.Y = crypto.S256().Add(temp1.X, temp1.Y, ssG.X, ssG.Y)
+
+
+	// temp3 = temp2 * m^
+	mInverse, ok := crypto.ModInverse(m,crypto.Secp256k1_N)
+	if ok == false{
+		t.Fatal("Verification Failed with address")
+	}
+	//
+	temp3 := new(ecdsa.PublicKey)
+	temp3.Curve = crypto.S256()
+	temp3.X, temp3.Y = crypto.S256().ScalarMult(temp2.X, temp2.Y, mInverse.Bytes())
+
+	// pk' -> address'
+	address1 := crypto.PubkeyToAddress(*temp3)
+
+	// check   address == address'
+	if address != address1 {
+		t.Fatal("Verification Failed address ")
+	}else{
+		fmt.Println("Verification Succeeded with address")
+	}
 }
