@@ -1,10 +1,8 @@
-var weth = artifacts.require("./WETH.sol");
-var wethManager = artifacts.require("./WETHManager.sol");
-var smgAdmin =  artifacts.require("./StoremanGroupAdmin.sol");
-var smgAdmin =  artifacts.require("./CoinAdmin.sol");
-var groupWETH =  artifacts.require("./HTLCWETH.sol");
-var groupETH =  artifacts.require("./HTLCETH.sol")
+// const HTLCETH = artifacts.require("./HTLCETH.sol");
+// const ConvertLib = artifacts.require("./ConvertLib.sol")
 
-module.exports = function(deployer,network, accounts) {
-
+module.exports = function(deployer, network, accounts) {
+	// deployer.deploy(ConvertLib);
+	// deployer.autolink();
+	// deployer.deploy(HTLCETH);
 };
