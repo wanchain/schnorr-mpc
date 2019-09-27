@@ -3,8 +3,8 @@ package step
 import (
 	"bytes"
 	"crypto/ecdsa"
-	"encoding/hex"
 	"fmt"
+	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
@@ -173,14 +173,14 @@ func (mars *MpcAckRSStep) verifyRS(result mpcprotocol.MpcResultInterface) error 
 	temp.X, temp.Y = crypto.S256().Add(mgpk.X, mgpk.Y, rpk.X, rpk.Y)
 
 	log.Info("@@@@@@@@@@@@@@Jacob verifyRS@@@@@@@@@@@@@@",
-		"M", hex.EncodeToString(M[:]),
-		"hash(M)", hex.EncodeToString(hashMBytes),
-		"m", hex.EncodeToString(m.Bytes()),
-		"R", hex.EncodeToString(crypto.FromECDSAPub(rpk)),
-		"rpk+m*gpk", hex.EncodeToString(crypto.FromECDSAPub(temp)),
-		"sG", hex.EncodeToString(crypto.FromECDSAPub(ssG)),
-		"s", hex.EncodeToString(mars.mpcS.Bytes()),
-		"gpk", hex.EncodeToString(crypto.FromECDSAPub(gpk)))
+		"M", hexutil.Encode(M[:]),
+		"hash(M)", hexutil.Encode(hashMBytes),
+		"m", hexutil.Encode(m.Bytes()),
+		"R", hexutil.Encode(crypto.FromECDSAPub(rpk)),
+		"rpk+m*gpk", hexutil.Encode(crypto.FromECDSAPub(temp)),
+		"sG", hexutil.Encode(crypto.FromECDSAPub(ssG)),
+		"s", hexutil.Encode(mars.mpcS.Bytes()),
+		"gpk", hexutil.Encode(crypto.FromECDSAPub(gpk)))
 
 	if ssG.X.Cmp(temp.X) == 0 && ssG.Y.Cmp(temp.Y) == 0 {
 		fmt.Println("Verification Succeeded")
