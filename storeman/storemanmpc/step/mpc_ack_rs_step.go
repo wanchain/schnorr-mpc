@@ -130,6 +130,8 @@ func (mars *MpcAckRSStep) verifyRS(result mpcprotocol.MpcResultInterface) error 
 		return err
 	}
 
+	hashMBytes := crypto.Keccak256(M)
+
 	// gpk
 	gpkItem, err := result.GetValue(mpcprotocol.PublicKeyResult)
 	if err != nil {
@@ -144,9 +146,12 @@ func (mars *MpcAckRSStep) verifyRS(result mpcprotocol.MpcResultInterface) error 
 	rpk := new(ecdsa.PublicKey)
 	rpk.Curve = crypto.S256()
 	rpk.X, rpk.Y = &mars.mpcR[0], &mars.mpcR[1]
+
 	// Forming the m: hash(message||rpk)
 	var buffer bytes.Buffer
-	buffer.Write(M[:])
+	//buffer.Write(M[:])
+	buffer.Write(hashMBytes[:])
+
 	buffer.Write(crypto.FromECDSAPub(rpk))
 	mTemp := crypto.Keccak256(buffer.Bytes())
 	m := new(big.Int).SetBytes(mTemp)
@@ -169,11 +174,12 @@ func (mars *MpcAckRSStep) verifyRS(result mpcprotocol.MpcResultInterface) error 
 
 	log.Info("@@@@@@@@@@@@@@Jacob verifyRS@@@@@@@@@@@@@@",
 		"M", hex.EncodeToString(M[:]),
+		"hash(M)", hex.EncodeToString(hashMBytes),
 		"m", hex.EncodeToString(m.Bytes()),
 		"R", hex.EncodeToString(crypto.FromECDSAPub(rpk)),
 		"rpk+m*gpk", hex.EncodeToString(crypto.FromECDSAPub(temp)),
-		"ssG", hex.EncodeToString(crypto.FromECDSAPub(ssG)),
-		"ss", hex.EncodeToString(mars.mpcS.Bytes()),
+		"sG", hex.EncodeToString(crypto.FromECDSAPub(ssG)),
+		"s", hex.EncodeToString(mars.mpcS.Bytes()),
 		"gpk", hex.EncodeToString(crypto.FromECDSAPub(gpk)))
 
 	if ssG.X.Cmp(temp.X) == 0 && ssG.Y.Cmp(temp.Y) == 0 {

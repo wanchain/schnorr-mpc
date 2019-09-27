@@ -44,13 +44,15 @@ func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcpr
 		return err
 	}
 
+	hashMBytes := crypto.Keccak256(MBytes)
 	// compute m
 	var buffer bytes.Buffer
-	buffer.Write(MBytes[:])
+	//buffer.Write(MBytes[:])
+	buffer.Write(hashMBytes[:])
 	buffer.Write(crypto.FromECDSAPub(&rgpk))
 
-	M := crypto.Keccak256(buffer.Bytes())
-	m := new(big.Int).SetBytes(M)
+	mBytes := crypto.Keccak256(buffer.Bytes())
+	m := new(big.Int).SetBytes(mBytes)
 
 	rskShare, err := result.GetValue(mpcprotocol.RMpcPrivateShare)
 	if err != nil {
