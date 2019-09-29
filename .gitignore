@@ -13,7 +13,7 @@ build/_vendor/pkg
 tests/testdata/**
 pos/gwan/**
 
-sigVerify/Wanchain/node_modules/
+sigVerify/Wanchain/node_modules/**
 
 #*
 .#*
