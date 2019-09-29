@@ -6,6 +6,7 @@ pragma experimental ABIEncoderV2;
 
 contract SchnorrVerifier {
   secp256k1 public curve;
+  // flag for debuging purpose, remove this before production phase
   bool public flag = false;
 
   struct Point {
@@ -45,8 +46,9 @@ contract SchnorrVerifier {
 
   function verify(bytes32 signature, bytes32 groupKeyX, bytes32 groupKeyY, bytes32 randomPointX, bytes32 randomPointY, bytes32 message)
     public returns (bool) {
-
+    flag = false;
     Verification memory state;
+
     state.signature = uint256(signature);
     state.groupKey.x = uint256(groupKeyX);
     state.groupKey.y = uint256(groupKeyY);
