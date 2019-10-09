@@ -63,6 +63,7 @@ type mpcAccount struct {
 	address      common.Address
 	privateShare big.Int
 	peers        []mpcprotocol.PeerInfo
+	externString string
 }
 
 type KmsInfo struct {
@@ -239,12 +240,12 @@ func (mpcServer *MpcDistributor) CreateRequestGPK() ([]byte, error) {
 	}
 }
 
-func (mpcServer *MpcDistributor) CreateReqMpcSign(data []byte, from common.Address) ([]byte, error) {
+func (mpcServer *MpcDistributor) CreateReqMpcSign(data []byte, pkBytes []byte) ([]byte, error) {
 
 	log.SyslogInfo("CreateReqMpcSign begin")
 
 	value, err := mpcServer.createRequestMpcContext(mpcprotocol.MpcSignLeader,
-		MpcValue{mpcprotocol.MpcAddress, nil, from[:]},
+		MpcValue{mpcprotocol.MpcAddress, nil, pkBytes[:]},
 		MpcValue{mpcprotocol.MpcM, nil, data})
 
 	//Todo update the return value
@@ -259,11 +260,15 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 	}
 
 	peers := []mpcprotocol.PeerInfo{}
+
+	var address common.Address
 	if ctxType == mpcprotocol.MpcSignLeader {
-		address := common.Address{}
 		for _, item := range preSetValue {
 			if item.Key == mpcprotocol.MpcAddress {
-				copy(address[:], item.ByteValue)
+				address, err = shcnorrmpc.PkToAddress(item.ByteValue)
+				if err != nil {
+					return []byte{}, err
+				}
 				break
 			}
 		}
@@ -341,12 +346,13 @@ func (mpcServer *MpcDistributor) loadStoremanAddress(address *common.Address) (*
 			peers[i].Seed = seed
 		}
 
-		value = &mpcAccount{*address, *key.PrivateKey.D, peers}
+		value = &mpcAccount{*address, *key.PrivateKey.D, peers, key.Exten}
 
 		mpcServer.mpcAccountMap[*address] = value
 	}
 
-	gpkByte, err := hex.DecodeString(key.Exten)
+	//gpkByte, err := hex.DecodeString(key.Exten)
+	gpkByte, err := hex.DecodeString(value.externString)
 	gpk := crypto.ToECDSAPub(gpkByte)
 
 	return &MpcValue{mpcprotocol.MpcPrivateShare, []big.Int{value.privateShare}, nil},
@@ -389,46 +395,6 @@ func (mpcServer *MpcDistributor) getMessagePeers(mpcMessage *mpcprotocol.MpcMess
 
 	return &peers
 }
-
-//func (mpcServer *MpcDistributor) selectPeers(ctxType int,
-//	allPeers []mpcprotocol.PeerInfo,
-//	preSetValue ...MpcValue) []mpcprotocol.PeerInfo {
-//
-//	var peers []mpcprotocol.PeerInfo
-//	if ctxType == mpcprotocol.MpcGPKLeader {
-//		peers = allPeers
-//	} else {
-//		peers = make([]mpcprotocol.PeerInfo, mpcprotocol.MPCDegree*2+1)
-//		storemanLen := len(mpcServer.StoreManGroup)
-//		selectIndex := 0
-//		rand.Seed(time.Now().UnixNano())
-//		for _, item := range preSetValue {
-//			if strings.Index(item.Key, mpcprotocol.MpcTxHash) == 0 {
-//				sel := big.NewInt(0)
-//				hash := item.Value[0]
-//				sel.Mod(&hash, big.NewInt(int64(storemanLen)))
-//				selectIndex = (int(sel.Uint64()) + rand.Int()) % storemanLen
-//				break
-//			}
-//		}
-//
-//		j := 1
-//		for i := 0; j < len(peers) && i < len(allPeers); i++ {
-//			sel := (i + selectIndex) % storemanLen
-//			if mpcServer.P2pMessager.IsActivePeer(&(allPeers[sel].PeerID)) {
-//				peers[j] = allPeers[sel]
-//				log.SyslogInfo("select peers", "index", j, "peer", peers[j].PeerID.String())
-//				j++
-//			}
-//		}
-//
-//		index := int(mpcServer.storeManIndex[mpcServer.Self.ID])
-//		peers[0] = allPeers[index]
-//		log.SyslogInfo("select peers", "index", 0, "peer", peers[0].PeerID.String())
-//	}
-//
-//	return peers
-//}
 
 func (mpcServer *MpcDistributor) getMpcID() (uint64, error) {
 	var mpcID uint64
@@ -483,8 +449,13 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 		mpcM := mpcMessage.BytesData[0]
 		address := mpcMessage.BytesData[1]
 
-		add := common.Address{}
-		copy(add[:], address)
+		//add := common.Address{}
+		//copy(add[:], address)
+
+		add, err := shcnorrmpc.PkToAddress(address[:])
+		if err != nil {
+			return err
+		}
 
 		log.SyslogInfo("createMpcCtx", "address", address, "mpcM", mpcM)
 		// load account
@@ -498,13 +469,13 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 		preSetValue = append(preSetValue, *MpcPrivateShare)
 		preSetValue = append(preSetValue, *MpcPubKey)
 
-		//verifyResult := validator.ValidateTx(signer, address, chainType, &chainId, txBytesData, txHash.Bytes())
-		verifyResult := validator.ValidateData(mpcM[:])
+		receivedData := &mpcprotocol.SendData{PKBytes: address, Data: mpcM}
 
-		if !verifyResult {
+		addApprovingResult := validator.AddApprovingData(receivedData)
+		if addApprovingResult != nil {
 			mpcMsg := &mpcprotocol.MpcMessage{ContextID: mpcMessage.ContextID,
 				StepID: 0,
-				Peers:  []byte(mpcprotocol.ErrFailedTxVerify.Error())}
+				Peers:  []byte(mpcprotocol.ErrFailedAddApproving.Error())}
 			peerInfo := mpcServer.getMessagePeers(mpcMessage)
 			peerIDs := make([]discover.NodeID, 0)
 			for _, item := range *peerInfo {
@@ -513,8 +484,27 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 
 			mpcServer.BroadcastMessage(peerIDs, mpcprotocol.MPCError, mpcMsg)
 
-			log.SyslogErr("createMpcContext, verify tx fail", "ContextID", mpcMessage.ContextID)
-			return mpcprotocol.ErrFailedTxVerify
+			log.SyslogErr("createMpcContext, AddApprovingData  fail",
+				"ContextID", mpcMessage.ContextID, "err", addApprovingResult.Error())
+			return mpcprotocol.ErrFailedAddApproving
+		}
+
+		verifyResult := validator.ValidateData(receivedData)
+
+		if !verifyResult {
+			mpcMsg := &mpcprotocol.MpcMessage{ContextID: mpcMessage.ContextID,
+				StepID: 0,
+				Peers:  []byte(mpcprotocol.ErrFailedDataVerify.Error())}
+			peerInfo := mpcServer.getMessagePeers(mpcMessage)
+			peerIDs := make([]discover.NodeID, 0)
+			for _, item := range *peerInfo {
+				peerIDs = append(peerIDs, item.PeerID)
+			}
+
+			mpcServer.BroadcastMessage(peerIDs, mpcprotocol.MPCError, mpcMsg)
+
+			log.SyslogErr("createMpcContext, verify data fail", "ContextID", mpcMessage.ContextID)
+			return mpcprotocol.ErrFailedDataVerify
 		}
 
 	} else if ctxType == mpcprotocol.MpcGPKPeer {

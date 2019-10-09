@@ -33,7 +33,8 @@ const (
 	NumberOfMessageCodes
 
 	//MPCTimeOut = time.Second * 100
-	MPCTimeOut = time.Second * 10
+	//MPCTimeOut = time.Second * 10
+	MPCTimeOut = time.Second * 100
 	PName      = "storeman"
 	PVer       = uint64(1)
 	PVerStr    = "1.1"
@@ -53,6 +54,12 @@ const (
 	MpcTxHash  = "MpcTxHash"
 	MpcAddress = "MpcAddress"
 	MPCAction  = "MPCAction"
+)
+
+const (
+	MpcApproving     = "MpcApproving"
+	MpcApproved      = "MpcApproved"
+	MpcApprovingKeys = "MpcApprovingKeys" // key : MpcApprovingKeys, value: array of the key of the data.
 )
 
 type PeerInfo struct {

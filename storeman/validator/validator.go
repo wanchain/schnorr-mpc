@@ -1,9 +1,12 @@
 package validator
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	lvdberror "github.com/syndtr/goleveldb/leveldb/errors"
 	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
@@ -17,87 +20,206 @@ func init() {
 }
 
 // TODO add ValidateData
-func ValidateData(data []byte) bool {
-	// 1. check in local db or not
-	// 2. check has approved or not
+func ValidateData(data *mpcprotocol.SendData) bool {
+
+	log.SyslogInfo("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&Jacob ValidateData, begin",
+		"pk", hexutil.Encode(data.PKBytes),
+		"data", hexutil.Encode(data.Data))
+
+	sdb, err := GetDB()
+	if err != nil {
+		log.SyslogErr("GetDataForApprove, getting storeman database fail", "err", err.Error())
+		return false
+	}
+
+	approvedKey := buildKeyFromData(data, mpcprotocol.MpcApproved)
+	_, err = waitKeyFromDB([][]byte{approvedKey})
+	if err != nil {
+		log.SyslogErr("ValidateData, waitKeyFromDB has fail", "err", err.Error())
+		return false
+	}
+
+	value, err := sdb.Get(approvedKey)
+	if err != nil {
+		log.SyslogErr("ValidateData, sdb.Get has fail", "err", err.Error())
+		return false
+	}
+
+	//var byteDb []byte
+	//err = json.Unmarshal(value, &byteDb)
+	//if err != nil {
+	//	log.SyslogErr("ValidateData, json.Unmarshal has fail", "err", err.Error())
+	//	return false
+	//}
+
+	var byteRev []byte
+	byteRev, err = json.Marshal(&data)
+	if err != nil {
+		log.SyslogErr("ValidateData, check has fail", "err", err.Error())
+		return false
+	}
+
+	if !bytes.Equal(value, byteRev) {
+		return false
+	}
+
 	return true
+
 }
 
-//func ValidateTx(signer mpccrypto.MPCTxSigner, from common.Address, chainType string, chainId *big.Int, leaderTxRawData []byte, leaderTxLeaderHashBytes []byte) bool {
-//	log.SyslogInfo("ValidateTx",
-//		"from", from.String(),
-//		"chainType", chainType,
-//		"chainId", chainId.String(),
-//		"leaderTxLeaderHashBytes", common.ToHex(leaderTxLeaderHashBytes),
-//		"leaderTxRawData", common.ToHex(leaderTxRawData))
-//
-//	var leaderTx types.Transaction
-//	err := rlp.DecodeBytes(leaderTxRawData, &leaderTx)
-//	if err != nil {
-//		log.SyslogErr("ValidateTx leader tx data decode fail", "err", err.Error())
-//		return false
-//	}
-//
-//	log.SyslogInfo("ValidateTx", "leaderTxData", common.ToHex(leaderTx.Data()))
-//	isNotice, err := IsNoticeTransaction(leaderTx.Data())
-//	if err != nil {
-//		log.SyslogErr("ValidateTx, check notice transaction fail", "err", err.Error())
-//	} else if isNotice {
-//		log.SyslogInfo("ValidateTx, is notice transaction, skip validating")
-//		return true
-//	}
-//
-//	key := GetKeyFromTx(&from, leaderTx.To(), leaderTx.Value(), leaderTx.Data(), &chainType, chainId)
-//	log.SyslogInfo("mpc ValidateTx", "key", common.ToHex(key))
-//
-//	followerDB, err := GetDB()
-//	if err != nil {
-//		log.SyslogErr("ValidateTx leader get database fail", "err", err.Error())
-//		return false
-//	}
-//
-//	_, err = waitKeyFromDB([][]byte{key})
-//	if err != nil {
-//		log.SyslogErr("ValidateTx, check has fail", "err", err.Error())
-//		return false
-//	}
-//
-//	followerTxRawData, err := followerDB.Get(key)
-//	if err != nil {
-//		log.SyslogErr("ValidateTx, getting followerTxRawData fail", "err", err.Error())
-//		return false
-//	}
-//
-//	log.SyslogInfo("ValidateTx, followerTxRawData is got")
-//
-//	var followerRawTx mpcprotocol.SendTxArgs
-//	err = json.Unmarshal(followerTxRawData, &followerRawTx)
-//	if err != nil {
-//		log.SyslogErr("ValidateTx, follower tx data decode fail", "err", err.Error())
-//		return false
-//	}
-//
-//	followerCreatedTx := types.NewTransaction(leaderTx.Nonce(), *followerRawTx.To, followerRawTx.Value.ToInt(),
-//		leaderTx.Gas(), leaderTx.GasPrice(), followerRawTx.Data)
-//	followerCreatedHash := signer.Hash(followerCreatedTx)
-//	leaderTxLeaderHash := common.BytesToHash(leaderTxLeaderHashBytes)
-//
-//	if followerCreatedHash == leaderTxLeaderHash {
-//		log.SyslogInfo("ValidateTx, validate success")
-//		return true
-//	} else {
-//		log.SyslogErr("ValidateTx, leader tx hash is not same with follower tx hash",
-//			"leaderTxLeaderHash", leaderTxLeaderHash.String(),
-//			"followerCreatedHash", followerCreatedHash.String())
-//		return false
-//	}
-//}
+func AddApprovedData(data *mpcprotocol.SendData) error {
+	return addApprovedData(data)
+}
+
+func AddApprovingData(data *mpcprotocol.SendData) error {
+	return addApprovingData(data)
+}
+
+func GetDataForApprove() ([]mpcprotocol.SendData, error) {
+	log.SyslogInfo("GetDataForApprove, begin")
+	sdb, err := GetDB()
+	if err != nil {
+		log.SyslogErr("GetDataForApprove, getting storeman database fail", "err", err.Error())
+		return nil, err
+	}
+
+	log.SyslogInfo("GetDataForApprove", "key", mpcprotocol.MpcApprovingKeys)
+	ret, err := sdb.Get([]byte(mpcprotocol.MpcApprovingKeys))
+	if err != nil {
+		log.SyslogErr("GetDataForApprove, getting storeman database fail", "err", err.Error())
+		return nil, err
+	}
+	var approvingKeys [][]byte
+	err = json.Unmarshal(ret, &approvingKeys)
+	if err != nil {
+		return nil, err
+	}
+
+	var approvingData []mpcprotocol.SendData
+	for i := 0; i < len(approvingKeys); i++ {
+		approvingItem, err := sdb.Get(approvingKeys[i])
+		if err != nil {
+			log.SyslogErr("GetDataForApprove, getting storeman database fail", "err", err.Error())
+			return nil, err
+		}
+
+		var approvingTemp mpcprotocol.SendData
+		err = json.Unmarshal(approvingItem, &approvingTemp)
+		if err != nil {
+			return nil, err
+		}
+		approvingData = append(approvingData, approvingTemp)
+	}
+	log.SyslogInfo("GetDataForApprove succeed to get data from level db after putting key-val pair", "ret", string(ret))
+	return approvingData, nil
+}
+
+func ApproveData(approveData []mpcprotocol.SendData) []error {
+	retResult := make([]error, len(approveData))
+	for i := 0; i < len(approveData); i++ {
+		dataItem := approveData[i]
+		approvingKey := buildKeyFromData(&dataItem, mpcprotocol.MpcApproving)
+
+		// check in approving keys
+		sdb, err := GetDB()
+		if err != nil {
+			log.SyslogErr("GetDataForApprove, getting storeman database fail", "err", err.Error())
+			retResult[i] = err
+			continue
+		}
+
+		ret, err := sdb.Get([]byte(mpcprotocol.MpcApprovingKeys))
+		if err != nil {
+			log.SyslogErr("GetDataForApprove, getting storeman database fail", "err", err.Error())
+			retResult[i] = err
+			continue
+		}
+		var approvingKeys [][]byte
+		err = json.Unmarshal(ret, &approvingKeys)
+		if err != nil {
+			retResult[i] = err
+			continue
+		}
+
+		if !inByteArray(&approvingKey, &approvingKeys) {
+			retResult[i] = errors.New("can not fond in approving keys")
+			continue
+		}
+
+		// check in approving db
+		exist, err := sdb.Has(approvingKey)
+		if !exist {
+			retResult[i] = errors.New("can not fond in approving db")
+			continue
+		}
+		if err != nil {
+			retResult[i] = err
+			continue
+		}
+
+		// put in approved db
+		err = addApprovedData(&dataItem)
+		if err != nil {
+			retResult[i] = err
+			continue
+		}
+
+		// delete key in keys
+		newApprovingKeys := deleteInByteArray(&approvingKey, &approvingKeys)
+		newApprovingKeysBytes, err := json.Marshal(&newApprovingKeys)
+		if err != nil {
+			retResult[i] = err
+			continue
+		}
+		err = addKeyValueToDB([]byte(mpcprotocol.MpcApprovingKeys), newApprovingKeysBytes)
+		if err != nil {
+			retResult[i] = err
+			continue
+		}
+
+		// delete in approving db
+		err = sdb.Delete(approvingKey)
+		if err != nil {
+			retResult[i] = err
+			continue
+		}
+	}
+
+	return retResult
+}
+
+func inByteArray(data *[]byte, collection *[][]byte) bool {
+	if data == nil || len(*collection) == 0 {
+		return false
+	}
+
+	for _, value := range *collection {
+		if bytes.Compare(*data, value) == 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func deleteInByteArray(data *[]byte, collection *[][]byte) [][]byte {
+	if !inByteArray(data, collection) {
+		return *collection
+	}
+
+	ret := make([][]byte, 0)
+	for _, value := range *collection {
+		if bytes.Compare(*data, value) != 0 {
+			ret = append(ret, value)
+		}
+	}
+	return ret
+}
 
 func waitKeyFromDB(keys [][]byte) ([]byte, error) {
 	log.SyslogInfo("waitKeyFromDB, begin")
 
 	for i, key := range keys {
-		log.SyslogInfo("waitKeyFromDB", "i", i, "key", common.ToHex(key))
+		log.SyslogInfo("waitKeyFromDB", "i", i, "key", hexutil.Encode(key))
 	}
 
 	db, err := GetDB()
@@ -111,12 +233,13 @@ func waitKeyFromDB(keys [][]byte) ([]byte, error) {
 		for _, key := range keys {
 			isExist, err := db.Has(key)
 			if err != nil {
-				log.SyslogErr("waitKeyFromDB fail", "err", err.Error())
+				log.SyslogErr("=================Jacob waitKeyFromDB fail", "err", err.Error())
 				return nil, err
 			} else if isExist {
-				log.SyslogInfo("waitKeyFromDB, got it", "key", common.ToHex(key))
+				log.SyslogInfo("=================Jacob waitKeyFromDB, got it", "key", common.ToHex(key))
 				return key, nil
 			}
+
 		}
 
 		if time.Now().Sub(start) >= mpcprotocol.MPCTimeOut {
@@ -128,18 +251,6 @@ func waitKeyFromDB(keys [][]byte) ([]byte, error) {
 	}
 
 	return nil, errors.New("waitKeyFromDB, unknown error")
-}
-
-func AddValidData(data *mpcprotocol.SendData) error {
-	log.SyslogInfo("AddValidData", "data", data.String())
-	val, err := json.Marshal(&data)
-	if err != nil {
-		log.SyslogErr("AddValidData, marshal fail", "err", err.Error())
-		return err
-	}
-
-	key := crypto.Keccak256(data.Data[:])
-	return addKeyValueToDB(key, val)
 }
 
 func addKeyValueToDB(key, value []byte) error {
@@ -166,3 +277,106 @@ func addKeyValueToDB(key, value []byte) error {
 	log.SyslogInfo("addKeyValueToDB succeed to get data from level db after putting key-val pair", "ret", string(ret))
 	return nil
 }
+
+// status: approving || approved
+func buildKeyFromData(data *mpcprotocol.SendData, status string) []byte {
+	// data || status
+
+	// build the key.
+	var buffer bytes.Buffer
+	buffer.Write(data.PKBytes[:])
+	buffer.Write(data.Data[:])
+	buffer.Write([]byte(status))
+
+	return crypto.Keccak256(buffer.Bytes())
+}
+
+func addApprovingData(dataItem *mpcprotocol.SendData) error {
+
+	approvingKey := buildKeyFromData(dataItem, mpcprotocol.MpcApproving)
+	// check in approving keys
+	sdb, err := GetDB()
+	if err != nil {
+		log.SyslogErr("addApprovingData, getting storeman database fail", "err", err.Error())
+		return err
+	}
+
+	ret, err := sdb.Get([]byte(mpcprotocol.MpcApprovingKeys))
+	if err != nil && err != lvdberror.ErrNotFound {
+		log.SyslogErr("addApprovingData,  sdb.Get fail", "err", err.Error())
+		return err
+	}
+	var approvingKeys [][]byte
+	if len(ret) != 0 {
+		err = json.Unmarshal(ret, &approvingKeys)
+		if err != nil {
+			log.SyslogErr("addApprovingData,  Unmarshal fail", "err", err.Error())
+			return err
+		}
+	}
+
+	if inByteArray(&approvingKey, &approvingKeys) {
+		return errors.New("already has approving key")
+	}
+
+	// check in approving db
+	exist, err := sdb.Has(approvingKey)
+	if exist {
+		return errors.New("already has in approving db")
+	}
+	if err != nil {
+		log.SyslogErr("addApprovingData, sdb.Has fail", "err", err.Error())
+		return err
+	}
+
+	// put in approving db
+	value, err := json.Marshal(&dataItem)
+	if err != nil {
+		log.SyslogErr("addApprovingData, json.Marshal fail", "err", err.Error())
+		return err
+	}
+	err = addKeyValueToDB(approvingKey, value)
+	log.SyslogInfo("===============Jacob addApprovingData ", "approvingKey", hexutil.Encode(approvingKey), "value", value)
+	if err != nil {
+		log.SyslogErr("addApprovingData, addKeyValueToDB fail", "err", err.Error())
+		return err
+	}
+
+	// append key in keys
+	approvingKeys = append(approvingKeys, approvingKey)
+
+	approvingKeysBytes, err := json.Marshal(&approvingKeys)
+	if err != nil {
+		log.SyslogErr("addApprovingData, Marshal approvingKeys fail", "err", err.Error())
+		return err
+	}
+
+	log.SyslogInfo("===============Jacob addApprovingData ",
+		"approvingKeys", hexutil.Encode([]byte(mpcprotocol.MpcApprovingKeys)),
+		"value", approvingKeysBytes)
+
+	err = addKeyValueToDB([]byte(mpcprotocol.MpcApprovingKeys), approvingKeysBytes)
+	if err != nil {
+		log.SyslogErr("addApprovingData,  MpcApprovingKeys addKeyValueToDB fail", "err", err.Error())
+		return err
+	}
+	return nil
+}
+
+func addApprovedData(data *mpcprotocol.SendData) error {
+	log.SyslogInfo("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&Jacob addApprovedData, begin",
+		"pk", hexutil.Encode(data.PKBytes),
+		"data", hexutil.Encode(data.Data))
+
+	val, err := json.Marshal(&data)
+	if err != nil {
+		log.SyslogErr("addApprovedData, marshal fail", "err", err.Error())
+		return err
+	}
+
+	key := buildKeyFromData(data, mpcprotocol.MpcApproved)
+	log.SyslogInfo("===============Jacob addApprovedData", "data", data.String(), "approved key", hexutil.Encode(key))
+	return addKeyValueToDB(key, val)
+}
+
+//TODO need delete the approved data when signature complete successfully.

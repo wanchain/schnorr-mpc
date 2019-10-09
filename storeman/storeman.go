@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
-	"github.com/wanchain/schnorr-mpc/crypto"
 	"path/filepath"
 	"sync"
 
@@ -290,10 +289,8 @@ func (sa *StoremanAPI) SignData(ctx context.Context, data mpcprotocol.SendData) 
 	}
 
 	PKBytes := data.PKBytes
-	pk := crypto.ToECDSAPub(PKBytes)
-	from := crypto.PubkeyToAddress(*pk)
 
-	signed, err := sa.sm.mpcDistributor.CreateReqMpcSign(data.Data, from)
+	signed, err := sa.sm.mpcDistributor.CreateReqMpcSign(data.Data, PKBytes)
 
 	// signed   R // s
 	if err == nil {
@@ -307,15 +304,15 @@ func (sa *StoremanAPI) SignData(ctx context.Context, data mpcprotocol.SendData) 
 }
 
 func (sa *StoremanAPI) AddValidData(ctx context.Context, data mpcprotocol.SendData) error {
-	return validator.AddValidData(&data)
+	return validator.AddApprovedData(&data)
 }
 
 // non leader node polling the data received from leader node
-//func (sa *StoremanAPI) GetDataForApprove(ctx context.Context) ([]mpcprotocol.SendData, error) {
-//	return nil, nil
-//}
-//
+func (sa *StoremanAPI) GetDataForApprove(ctx context.Context) ([]mpcprotocol.SendData, error) {
+	return validator.GetDataForApprove()
+}
+
 //// non leader node ApproveData, and make sure that the data is really required to be signed by them.
-//func (sa *StoremanAPI) ApproveData(ctx context.Context, data []mpcprotocol.SendData) []bool {
-//	return []bool{true}
-//}
+func (sa *StoremanAPI) ApproveData(ctx context.Context, data []mpcprotocol.SendData) []error {
+	return validator.ApproveData(data)
+}

@@ -3,9 +3,13 @@ package shcnorrmpc
 import (
 	"crypto/ecdsa"
 	Rand "crypto/rand"
+	"errors"
+	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"math/big"
 )
+
+const PkLength = 65
 
 // Generate a random polynomial, its constant item is nominated
 func RandPoly(degree int, constant big.Int) Polynomial {
@@ -150,4 +154,13 @@ func UintRand(MaxValue uint64) (uint64, error) {
 	}
 
 	return num.Uint64(), nil
+}
+
+func PkToAddress(PkBytes []byte) (common.Address, error) {
+	if len(PkBytes) != PkLength {
+		return common.Address{}, errors.New("invalid pk address")
+	}
+	pk := crypto.ToECDSAPub(PkBytes[:])
+	address := crypto.PubkeyToAddress(*pk)
+	return address, nil
 }
