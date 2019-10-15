@@ -24,7 +24,7 @@ func ValidateData(data *mpcprotocol.SendData) bool {
 
 	log.SyslogInfo("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&Jacob ValidateData, begin",
 		"pk", hexutil.Encode(data.PKBytes),
-		"data", hexutil.Encode(data.Data))
+		"data", hexutil.Encode([]byte(data.Data)))
 
 	sdb, err := GetDB()
 	if err != nil {
@@ -285,7 +285,7 @@ func buildKeyFromData(data *mpcprotocol.SendData, status string) []byte {
 	// build the key.
 	var buffer bytes.Buffer
 	buffer.Write(data.PKBytes[:])
-	buffer.Write(data.Data[:])
+	buffer.Write([]byte(data.Data[:]))
 	buffer.Write([]byte(status))
 
 	return crypto.Keccak256(buffer.Bytes())
@@ -366,7 +366,7 @@ func addApprovingData(dataItem *mpcprotocol.SendData) error {
 func addApprovedData(data *mpcprotocol.SendData) error {
 	log.SyslogInfo("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&Jacob addApprovedData, begin",
 		"pk", hexutil.Encode(data.PKBytes),
-		"data", hexutil.Encode(data.Data))
+		"data", hexutil.Encode([]byte(data.Data)))
 
 	val, err := json.Marshal(&data)
 	if err != nil {

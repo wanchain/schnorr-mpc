@@ -7,12 +7,13 @@ import (
 
 type SendData struct {
 	PKBytes hexutil.Bytes `json:"pk"`
-	Data    []byte        `json:"data"`
+	//Data    []byte        `json:"data"`
+	Data string `json:"data"`
 }
 
 func (d *SendData) String() string {
 	return fmt.Sprintf(
-		"From:%s", hexutil.Encode(d.Data[:]))
+		"From:%s", hexutil.Encode([]byte(d.Data[:])))
 }
 
 type SignedResult struct {

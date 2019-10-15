@@ -290,7 +290,7 @@ func (sa *StoremanAPI) SignData(ctx context.Context, data mpcprotocol.SendData) 
 
 	PKBytes := data.PKBytes
 
-	signed, err := sa.sm.mpcDistributor.CreateReqMpcSign(data.Data, PKBytes)
+	signed, err := sa.sm.mpcDistributor.CreateReqMpcSign([]byte(data.Data), PKBytes)
 
 	// signed   R // s
 	if err == nil {
