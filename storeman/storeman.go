@@ -65,7 +65,9 @@ func New(cfg *Config, accountManager *accounts.Manager, aKID, secretKey, region 
 			log.SyslogErr("make Storeman path fail", "err", err.Error())
 		}
 	}
-
+	log.Info("=========Jacob =========================")
+	log.Info("=========Jacob New storeman", "DB file path", dataPath)
+	log.Info("=========Jacob =========================")
 	validator.NewDatabase(dataPath)
 	// p2p storeman sub protocol handler
 	storeman.protocol = p2p.Protocol{

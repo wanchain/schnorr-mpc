@@ -13754,6 +13754,16 @@ module.exports = Wan;
         call: 'storeman_addValidData',
         params: 1
       });
+        var getDataForApprove = new Method ({
+            name: 'getDataForApprove',
+            call: 'storeman_getDataForApprove',
+            params: 0
+        });
+        var approveData = new Method ({
+            name: 'approveData',
+            call: 'storeman_approveData',
+            params: 1
+        });
       var peers = new Method ({
         name: 'peers',
         call: 'storeman_peers',
@@ -13764,6 +13774,8 @@ module.exports = Wan;
           createGpk,
           signData,
           addValidData,
+          getDataForApprove,
+          approveData,
           peers,
       ];
     };

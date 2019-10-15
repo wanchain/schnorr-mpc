@@ -79,14 +79,14 @@ func GetDataForApprove() ([]mpcprotocol.SendData, error) {
 	log.SyslogInfo("GetDataForApprove, begin")
 	sdb, err := GetDB()
 	if err != nil {
-		log.SyslogErr("GetDataForApprove, getting storeman database fail", "err", err.Error())
+		log.SyslogErr("GetDataForApprove, getting storeman database fail [GetDB()]", "err", err.Error())
 		return nil, err
 	}
 
 	log.SyslogInfo("GetDataForApprove", "key", mpcprotocol.MpcApprovingKeys)
 	ret, err := sdb.Get([]byte(mpcprotocol.MpcApprovingKeys))
 	if err != nil {
-		log.SyslogErr("GetDataForApprove, getting storeman database fail", "err", err.Error())
+		log.SyslogErr("GetDataForApprove, getting storeman database fail [MpcApprovingKeys]", "err", err.Error())
 		return nil, err
 	}
 	var approvingKeys [][]byte
@@ -99,7 +99,7 @@ func GetDataForApprove() ([]mpcprotocol.SendData, error) {
 	for i := 0; i < len(approvingKeys); i++ {
 		approvingItem, err := sdb.Get(approvingKeys[i])
 		if err != nil {
-			log.SyslogErr("GetDataForApprove, getting storeman database fail", "err", err.Error())
+			log.SyslogErr("GetDataForApprove, getting storeman database fail [approvingKeys[i]]", "err", err.Error())
 			return nil, err
 		}
 
