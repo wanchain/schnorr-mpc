@@ -293,14 +293,24 @@ func buildKeyFromData(data *mpcprotocol.SendData, status string) []byte {
 
 func addApprovingData(dataItem *mpcprotocol.SendData) error {
 
-	approvingKey := buildKeyFromData(dataItem, mpcprotocol.MpcApproving)
-	// check in approving keys
 	sdb, err := GetDB()
 	if err != nil {
 		log.SyslogErr("addApprovingData, getting storeman database fail", "err", err.Error())
 		return err
 	}
 
+	// check in approved db
+	approvedKey := buildKeyFromData(dataItem, mpcprotocol.MpcApproved)
+	isExist, err := sdb.Has(approvedKey)
+	if err != nil {
+		log.SyslogErr("addApprovingData", "sdb.Has err", err.Error())
+		return err
+	}
+	if isExist {
+		return nil
+	}
+	// check in approving keys
+	approvingKey := buildKeyFromData(dataItem, mpcprotocol.MpcApproving)
 	ret, err := sdb.Get([]byte(mpcprotocol.MpcApprovingKeys))
 	if err != nil && err != lvdberror.ErrNotFound {
 		log.SyslogErr("addApprovingData,  sdb.Get fail", "err", err.Error())
@@ -314,52 +324,55 @@ func addApprovingData(dataItem *mpcprotocol.SendData) error {
 			return err
 		}
 	}
-
-	if inByteArray(&approvingKey, &approvingKeys) {
-		return errors.New("already has approving key")
-	}
-
+	// in approvingKey or not
+	inApprovingKeys := inByteArray(&approvingKey, &approvingKeys)
 	// check in approving db
-	exist, err := sdb.Has(approvingKey)
-	if exist {
-		return errors.New("already has in approving db")
-	}
+	existApprovingDb, err := sdb.Has(approvingKey)
 	if err != nil {
 		log.SyslogErr("addApprovingData, sdb.Has fail", "err", err.Error())
 		return err
 	}
+	log.SyslogErr("addApprovingData ", "existApprovingDb", existApprovingDb, "inApprovingKeys", inApprovingKeys)
+	if existApprovingDb && inApprovingKeys {
+		return nil
+	}
 
 	// put in approving db
-	value, err := json.Marshal(&dataItem)
-	if err != nil {
-		log.SyslogErr("addApprovingData, json.Marshal fail", "err", err.Error())
-		return err
-	}
-	err = addKeyValueToDB(approvingKey, value)
-	log.SyslogInfo("===============Jacob addApprovingData ", "approvingKey", hexutil.Encode(approvingKey), "value", value)
-	if err != nil {
-		log.SyslogErr("addApprovingData, addKeyValueToDB fail", "err", err.Error())
-		return err
+	if !existApprovingDb {
+		value, err := json.Marshal(&dataItem)
+		if err != nil {
+			log.SyslogErr("addApprovingData, json.Marshal fail", "err", err.Error())
+			return err
+		}
+		err = addKeyValueToDB(approvingKey, value)
+		log.SyslogInfo("===============Jacob addApprovingData ", "approvingKey", hexutil.Encode(approvingKey), "value", value)
+		if err != nil {
+			log.SyslogErr("addApprovingData, addKeyValueToDB fail", "err", err.Error())
+			return err
+		}
 	}
 
 	// append key in keys
-	approvingKeys = append(approvingKeys, approvingKey)
+	if !inApprovingKeys {
+		approvingKeys = append(approvingKeys, approvingKey)
 
-	approvingKeysBytes, err := json.Marshal(&approvingKeys)
-	if err != nil {
-		log.SyslogErr("addApprovingData, Marshal approvingKeys fail", "err", err.Error())
-		return err
+		approvingKeysBytes, err := json.Marshal(&approvingKeys)
+		if err != nil {
+			log.SyslogErr("addApprovingData, Marshal approvingKeys fail", "err", err.Error())
+			return err
+		}
+
+		log.SyslogInfo("===============Jacob addApprovingData ",
+			"approvingKeys", hexutil.Encode([]byte(mpcprotocol.MpcApprovingKeys)),
+			"value", approvingKeysBytes)
+
+		err = addKeyValueToDB([]byte(mpcprotocol.MpcApprovingKeys), approvingKeysBytes)
+		if err != nil {
+			log.SyslogErr("addApprovingData,  MpcApprovingKeys addKeyValueToDB fail", "err", err.Error())
+			return err
+		}
 	}
 
-	log.SyslogInfo("===============Jacob addApprovingData ",
-		"approvingKeys", hexutil.Encode([]byte(mpcprotocol.MpcApprovingKeys)),
-		"value", approvingKeysBytes)
-
-	err = addKeyValueToDB([]byte(mpcprotocol.MpcApprovingKeys), approvingKeysBytes)
-	if err != nil {
-		log.SyslogErr("addApprovingData,  MpcApprovingKeys addKeyValueToDB fail", "err", err.Error())
-		return err
-	}
 	return nil
 }
 
