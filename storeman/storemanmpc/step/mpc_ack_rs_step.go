@@ -3,6 +3,7 @@ package step
 import (
 	"bytes"
 	"crypto/ecdsa"
+	"crypto/sha256"
 	"fmt"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/crypto"
@@ -130,7 +131,8 @@ func (mars *MpcAckRSStep) verifyRS(result mpcprotocol.MpcResultInterface) error 
 		return err
 	}
 
-	hashMBytes := crypto.Keccak256(M)
+	//hashMBytes := crypto.Keccak256(M)
+	hashMBytes := sha256.Sum256(M)
 
 	// gpk
 	gpkItem, err := result.GetValue(mpcprotocol.PublicKeyResult)
@@ -153,8 +155,9 @@ func (mars *MpcAckRSStep) verifyRS(result mpcprotocol.MpcResultInterface) error 
 	buffer.Write(hashMBytes[:])
 
 	buffer.Write(crypto.FromECDSAPub(rpk))
-	mTemp := crypto.Keccak256(buffer.Bytes())
-	m := new(big.Int).SetBytes(mTemp)
+	//mTemp := crypto.Keccak256(buffer.Bytes())
+	mTemp := sha256.Sum256(buffer.Bytes())
+	m := new(big.Int).SetBytes(mTemp[:])
 
 	// check ssG = rpk + m*gpk
 	ssG := new(ecdsa.PublicKey)
@@ -174,7 +177,7 @@ func (mars *MpcAckRSStep) verifyRS(result mpcprotocol.MpcResultInterface) error 
 
 	log.Info("@@@@@@@@@@@@@@Jacob verifyRS@@@@@@@@@@@@@@",
 		"M", hexutil.Encode(M[:]),
-		"hash(M)", hexutil.Encode(hashMBytes),
+		"hash(M)", hexutil.Encode(hashMBytes[:]),
 		"m", hexutil.Encode(m.Bytes()),
 		"R", hexutil.Encode(crypto.FromECDSAPub(rpk)),
 		"rpk+m*gpk", hexutil.Encode(crypto.FromECDSAPub(temp)),

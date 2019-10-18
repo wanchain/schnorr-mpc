@@ -126,3 +126,7 @@ func (step *BaseStep) getPeerSeed(peerID *discover.NodeID) uint64 {
 func (step *BaseStep) SetWaitAll(waitAll bool) {
 	step.waitAll = waitAll
 }
+
+func (step *BaseStep) SetWaiting(waiting int) {
+	step.waiting = waiting
+}

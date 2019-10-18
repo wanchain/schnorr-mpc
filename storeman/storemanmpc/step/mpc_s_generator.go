@@ -3,6 +3,7 @@ package step
 import (
 	"bytes"
 	"crypto/ecdsa"
+	"crypto/sha256"
 	"encoding/hex"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
@@ -44,15 +45,18 @@ func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcpr
 		return err
 	}
 
-	hashMBytes := crypto.Keccak256(MBytes)
+	//hashMBytes := crypto.Keccak256(MBytes)
+	hashMBytes := sha256.Sum256(MBytes)
+
 	// compute m
 	var buffer bytes.Buffer
 	//buffer.Write(MBytes[:])
 	buffer.Write(hashMBytes[:])
 	buffer.Write(crypto.FromECDSAPub(&rgpk))
 
-	mBytes := crypto.Keccak256(buffer.Bytes())
-	m := new(big.Int).SetBytes(mBytes)
+	//mBytes := crypto.Keccak256(buffer.Bytes())
+	mBytes := sha256.Sum256(buffer.Bytes())
+	m := new(big.Int).SetBytes(mBytes[:])
 
 	rskShare, err := result.GetValue(mpcprotocol.RMpcPrivateShare)
 	if err != nil {
