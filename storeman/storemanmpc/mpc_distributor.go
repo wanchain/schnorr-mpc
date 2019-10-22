@@ -240,13 +240,14 @@ func (mpcServer *MpcDistributor) CreateRequestGPK() ([]byte, error) {
 	}
 }
 
-func (mpcServer *MpcDistributor) CreateReqMpcSign(data []byte, pkBytes []byte) ([]byte, error) {
+func (mpcServer *MpcDistributor) CreateReqMpcSign(data []byte, extern []byte, pkBytes []byte) ([]byte, error) {
 
 	log.SyslogInfo("CreateReqMpcSign begin")
 
 	value, err := mpcServer.createRequestMpcContext(mpcprotocol.MpcSignLeader,
 		MpcValue{mpcprotocol.MpcAddress, nil, pkBytes[:]},
-		MpcValue{mpcprotocol.MpcM, nil, data})
+		MpcValue{mpcprotocol.MpcM, nil, data},
+		MpcValue{mpcprotocol.MpcExt, nil, extern})
 
 	//Todo update the return value
 	return value, err
@@ -448,6 +449,7 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 		log.SyslogInfo("createMpcCtx MpcSignPeer")
 		mpcM := mpcMessage.BytesData[0]
 		address := mpcMessage.BytesData[1]
+		mpcExt := mpcMessage.BytesData[2]
 
 		//add := common.Address{}
 		//copy(add[:], address)
@@ -466,10 +468,12 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 
 		preSetValue = append(preSetValue, MpcValue{mpcprotocol.MpcAddress, nil, address})
 		preSetValue = append(preSetValue, MpcValue{mpcprotocol.MpcM, nil, mpcM})
+		preSetValue = append(preSetValue, MpcValue{mpcprotocol.MpcExt, nil, mpcExt})
 		preSetValue = append(preSetValue, *MpcPrivateShare)
 		preSetValue = append(preSetValue, *MpcPubKey)
 
-		receivedData := &mpcprotocol.SendData{PKBytes: address, Data: string(mpcM[:])}
+		//receivedData := &mpcprotocol.SendData{PKBytes: address, Data: string(mpcM[:])}
+		receivedData := &mpcprotocol.SendData{PKBytes: address, Data: string(mpcM[:]), Extern: string(mpcExt[:])}
 
 		addApprovingResult := validator.AddApprovingData(receivedData)
 		if addApprovingResult != nil {

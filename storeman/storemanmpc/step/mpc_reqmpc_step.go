@@ -14,6 +14,7 @@ type RequestMpcStep struct {
 	messageType int64
 	address     []byte
 	mpcM        []byte
+	mpcExt      []byte
 	message     map[discover.NodeID]bool
 }
 
@@ -64,6 +65,11 @@ func (req *RequestMpcStep) InitStep(result mpcprotocol.MpcResultInterface) error
 			return err
 		}
 
+		req.mpcExt, err = result.GetByteValue(mpcprotocol.MpcExt)
+		if err != nil {
+			return err
+		}
+
 	}
 
 	return nil
@@ -80,9 +86,10 @@ func (req *RequestMpcStep) CreateMessage() []mpcprotocol.StepMessage {
 	msg.Data = make([]big.Int, 1)
 	msg.Data[0].SetInt64(req.messageType)
 	if req.messageType == mpcprotocol.MpcSignLeader {
-		msg.BytesData = make([][]byte, 2)
+		msg.BytesData = make([][]byte, 3)
 		msg.BytesData[0] = req.mpcM
 		msg.BytesData[1] = req.address
+		msg.BytesData[2] = req.mpcExt
 	} else if req.messageType == mpcprotocol.MpcGPKLeader {
 		//todo  do nothing?
 	}

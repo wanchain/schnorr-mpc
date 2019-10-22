@@ -51,6 +51,8 @@ const (
 	MpcM             = "MpcM"             // M
 	MpcS             = "MpcS"             // S: s
 
+	MpcExt = "MpcExtern" // extern
+
 	MpcTxHash  = "MpcTxHash"
 	MpcAddress = "MpcAddress"
 	MPCAction  = "MPCAction"

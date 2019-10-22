@@ -8,7 +8,8 @@ import (
 type SendData struct {
 	PKBytes hexutil.Bytes `json:"pk"`
 	//Data    []byte        `json:"data"`
-	Data string `json:"data"`
+	Data   string `json:"data"`
+	Extern string `json:extern`
 }
 
 func (d *SendData) String() string {

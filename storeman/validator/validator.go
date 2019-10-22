@@ -286,6 +286,7 @@ func buildKeyFromData(data *mpcprotocol.SendData, status string) []byte {
 	var buffer bytes.Buffer
 	buffer.Write(data.PKBytes[:])
 	buffer.Write([]byte(data.Data[:]))
+	//buffer.Write([]byte(data.Extern[:]))
 	buffer.Write([]byte(status))
 
 	return crypto.Keccak256(buffer.Bytes())
@@ -379,7 +380,8 @@ func addApprovingData(dataItem *mpcprotocol.SendData) error {
 func addApprovedData(data *mpcprotocol.SendData) error {
 	log.SyslogInfo("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&Jacob addApprovedData, begin",
 		"pk", hexutil.Encode(data.PKBytes),
-		"data", hexutil.Encode([]byte(data.Data)))
+		"data", hexutil.Encode([]byte(data.Data)),
+		"Extern", hexutil.Encode([]byte(data.Extern)))
 
 	val, err := json.Marshal(&data)
 	if err != nil {
