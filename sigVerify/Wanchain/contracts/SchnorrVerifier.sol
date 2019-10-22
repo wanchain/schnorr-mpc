@@ -7,7 +7,7 @@ pragma experimental ABIEncoderV2;
 contract SchnorrVerifier {
   secp256k1 public curve;
   // flag for debuging purpose, remove this before production phase
-  bool public flag = false;
+  bool public flag;
 
   struct Point {
     uint256 x; uint256 y;
@@ -29,7 +29,7 @@ contract SchnorrVerifier {
   }
 
   function h(bytes32 m, uint256 a, uint256 b) public view returns (uint256) {
-    return uint256(keccak256(m, 0x04, a, b));
+    return uint256(sha256(m, 0x04, a, b));
   }
 
   function cmul(Point p, uint256 scalar) public view returns (uint256, uint256) {
