@@ -31,9 +31,17 @@ func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStep
 
 	accTypeStr := ""
 	skShare := step.CreateMpcRSKShareStep(mpcprotocol.MPCDegree, &mpc.peers)
+	// wait time out, in order for all node try best get most response, so each node can get the same poly value.
+	// It is not enough for node to wait only MPCDegree response, the reason is above.
 	RStep := step.CreateMpcRStep(&mpc.peers, accTypeStr)
+	RStep.SetWaiting(mpcprotocol.MPCDegree)
+
 	SStep := step.CreateMpcSStep(&mpc.peers, []string{mpcprotocol.MpcPrivateShare}, []string{mpcprotocol.MpcS})
+	SStep.SetWaiting(mpcprotocol.MPCDegree)
+
 	ackRSStep := step.CreateAckMpcRSStep(&mpc.peers, accTypeStr)
+	ackRSStep.SetWaiting(mpcprotocol.MPCDegree)
+
 	mpc.setMpcStep(firstStep, readyStep, skShare, RStep, SStep, ackRSStep)
 
 	for _, stepItem := range mpc.MpcSteps {
