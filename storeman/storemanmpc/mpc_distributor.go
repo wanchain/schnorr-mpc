@@ -486,7 +486,8 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 				peerIDs = append(peerIDs, item.PeerID)
 			}
 
-			mpcServer.BroadcastMessage(peerIDs, mpcprotocol.MPCError, mpcMsg)
+			//mpcServer.BroadcastMessage(peerIDs, mpcprotocol.MPCError, mpcMsg)
+			mpcServer.P2pMessage(&mpcServer.Self.ID, mpcprotocol.MPCError, mpcMsg)
 
 			log.SyslogErr("createMpcContext, AddApprovingData  fail",
 				"ContextID", mpcMessage.ContextID, "err", addApprovingResult.Error())
@@ -506,7 +507,8 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 				peerIDs = append(peerIDs, item.PeerID)
 			}
 
-			mpcServer.BroadcastMessage(peerIDs, mpcprotocol.MPCError, mpcMsg)
+			//mpcServer.BroadcastMessage(peerIDs, mpcprotocol.MPCError, mpcMsg)
+			mpcServer.P2pMessage(&mpcServer.Self.ID, mpcprotocol.MPCError, mpcMsg)
 
 			log.SyslogErr("createMpcContext, verify data fail", "ContextID", mpcMessage.ContextID)
 			//return mpcprotocol.ErrFailedDataVerify

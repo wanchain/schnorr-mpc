@@ -12,6 +12,8 @@ func reqSignMpc(mpcID uint64, peers []mpcprotocol.PeerInfo, preSetValue ...MpcVa
 	result.InitializeValue(preSetValue...)
 	mpc := createMpcContext(mpcID, peers, result)
 	reqMpc := step.CreateRequestMpcStep(&mpc.peers, mpcprotocol.MpcSignLeader)
+	reqMpc.SetWaiting(mpcprotocol.MPCDegree)
+
 	mpcReady := step.CreateMpcReadyStep(&mpc.peers)
 	return generateTxSignMpc(mpc, reqMpc, mpcReady)
 }
