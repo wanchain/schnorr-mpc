@@ -493,12 +493,13 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 			return mpcprotocol.ErrFailedAddApproving
 		}
 
-		verifyResult := validator.ValidateData(receivedData)
+		verifyResult, err := validator.ValidateData(receivedData)
 
 		if !verifyResult {
 			mpcMsg := &mpcprotocol.MpcMessage{ContextID: mpcMessage.ContextID,
 				StepID: 0,
-				Peers:  []byte(mpcprotocol.ErrFailedDataVerify.Error())}
+				//Peers:  []byte(mpcprotocol.ErrFailedDataVerify.Error())}
+				Peers: []byte(err.Error())}
 			peerInfo := mpcServer.getMessagePeers(mpcMessage)
 			peerIDs := make([]discover.NodeID, 0)
 			for _, item := range *peerInfo {
@@ -508,7 +509,8 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 			mpcServer.BroadcastMessage(peerIDs, mpcprotocol.MPCError, mpcMsg)
 
 			log.SyslogErr("createMpcContext, verify data fail", "ContextID", mpcMessage.ContextID)
-			return mpcprotocol.ErrFailedDataVerify
+			//return mpcprotocol.ErrFailedDataVerify
+			return err
 		}
 
 	} else if ctxType == mpcprotocol.MpcGPKPeer {

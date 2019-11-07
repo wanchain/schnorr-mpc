@@ -20,7 +20,7 @@ func init() {
 }
 
 // TODO add ValidateData
-func ValidateData(data *mpcprotocol.SendData) bool {
+func ValidateData(data *mpcprotocol.SendData) (bool, error) {
 
 	log.SyslogInfo("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&Jacob ValidateData, begin",
 		"pk", hexutil.Encode(data.PKBytes),
@@ -29,20 +29,20 @@ func ValidateData(data *mpcprotocol.SendData) bool {
 	sdb, err := GetDB()
 	if err != nil {
 		log.SyslogErr("GetDataForApprove, getting storeman database fail", "err", err.Error())
-		return false
+		return false, mpcprotocol.ErrGetDb
 	}
 
 	approvedKey := buildKeyFromData(data, mpcprotocol.MpcApproved)
 	_, err = waitKeyFromDB([][]byte{approvedKey})
 	if err != nil {
 		log.SyslogErr("ValidateData, waitKeyFromDB has fail", "err", err.Error())
-		return false
+		return false, mpcprotocol.ErrWaitApproved
 	}
 
 	value, err := sdb.Get(approvedKey)
 	if err != nil {
 		log.SyslogErr("ValidateData, sdb.Get has fail", "err", err.Error())
-		return false
+		return false, mpcprotocol.ErrGetApproved
 	}
 
 	//var byteDb []byte
@@ -56,14 +56,14 @@ func ValidateData(data *mpcprotocol.SendData) bool {
 	byteRev, err = json.Marshal(&data)
 	if err != nil {
 		log.SyslogErr("ValidateData, check has fail", "err", err.Error())
-		return false
+		return false, mpcprotocol.ErrMarshal
 	}
 
 	if !bytes.Equal(value, byteRev) {
-		return false
+		return false, mpcprotocol.ErrApprovedNotConsistent
 	}
 
-	return true
+	return true, nil
 
 }
 
