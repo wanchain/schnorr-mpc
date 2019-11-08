@@ -93,6 +93,12 @@ func (msg *mpcSGenerator) calculateResult() error {
 	}
 
 	// Lagrange
+	log.SyslogInfo("++++++++Jacob all signature share+++++++++",
+		"Need nodes number:", mpcprotocol.MpcSchnrThr,
+		"Now nodes number:", len(sigshares))
+	if len(sigshares) < mpcprotocol.MpcSchnrThr {
+		return mpcprotocol.ErrTooLessDataCollected
+	}
 	result := shcnorrmpc.Lagrange(sigshares, seeds[:], mpcprotocol.MPCDegree)
 	msg.result = result
 	log.SyslogInfo("mpcSGenerator.calculateResult succeed")

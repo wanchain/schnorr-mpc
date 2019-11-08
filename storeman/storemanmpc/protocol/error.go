@@ -23,4 +23,5 @@ var (
 	ErrGetApproved           = errors.New("get being approved failed")
 	ErrMarshal               = errors.New("marshal data failed")
 	ErrApprovedNotConsistent = errors.New("not equal,received  data and approved data in DB")
+	ErrTooLessDataCollected  = errors.New("not enough data collected")
 )

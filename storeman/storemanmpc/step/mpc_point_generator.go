@@ -79,6 +79,13 @@ func (point *mpcPointGenerator) calculateResult() error {
 	}
 
 	// lagrangeEcc
+	log.SyslogInfo("++++++++Jacob all public share+++++++++",
+		"Need nodes number:", mpcprotocol.MpcSchnrThr,
+		"Now nodes number:", len(gpkshares))
+	if len(gpkshares) < mpcprotocol.MpcSchnrThr {
+		return mpcprotocol.ErrTooLessDataCollected
+	}
+
 	result := shcnorrmpc.LagrangeECC(gpkshares, seeds[:], mpcprotocol.MPCDegree)
 
 	if !shcnorrmpc.ValidatePublicKey(result) {
