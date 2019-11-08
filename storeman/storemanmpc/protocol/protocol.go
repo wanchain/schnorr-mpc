@@ -34,7 +34,7 @@ const (
 
 	//MPCTimeOut = time.Second * 100
 	//MPCTimeOut = time.Second * 10
-	MPCTimeOut = time.Second * 100
+	MPCTimeOut = time.Second * 20
 	PName      = "storeman"
 	PVer       = uint64(1)
 	PVerStr    = "1.1"

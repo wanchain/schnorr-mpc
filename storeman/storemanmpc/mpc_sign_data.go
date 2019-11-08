@@ -12,7 +12,7 @@ func reqSignMpc(mpcID uint64, peers []mpcprotocol.PeerInfo, preSetValue ...MpcVa
 	result.InitializeValue(preSetValue...)
 	mpc := createMpcContext(mpcID, peers, result)
 	reqMpc := step.CreateRequestMpcStep(&mpc.peers, mpcprotocol.MpcSignLeader)
-	reqMpc.SetWaiting(mpcprotocol.MPCDegree)
+	reqMpc.SetWaiting(mpcprotocol.MpcSchnrThr)
 
 	mpcReady := step.CreateMpcReadyStep(&mpc.peers)
 	return generateTxSignMpc(mpc, reqMpc, mpcReady)
@@ -36,13 +36,13 @@ func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStep
 	// wait time out, in order for all node try best get most response, so each node can get the same poly value.
 	// It is not enough for node to wait only MPCDegree response, the reason is above.
 	RStep := step.CreateMpcRStep(&mpc.peers, accTypeStr)
-	RStep.SetWaiting(mpcprotocol.MPCDegree)
+	RStep.SetWaiting(mpcprotocol.MpcSchnrThr)
 
 	SStep := step.CreateMpcSStep(&mpc.peers, []string{mpcprotocol.MpcPrivateShare}, []string{mpcprotocol.MpcS})
-	SStep.SetWaiting(mpcprotocol.MPCDegree)
+	SStep.SetWaiting(mpcprotocol.MpcSchnrThr)
 
 	ackRSStep := step.CreateAckMpcRSStep(&mpc.peers, accTypeStr)
-	ackRSStep.SetWaiting(mpcprotocol.MPCDegree)
+	ackRSStep.SetWaiting(mpcprotocol.MpcSchnrThr)
 
 	mpc.setMpcStep(firstStep, readyStep, skShare, RStep, SStep, ackRSStep)
 
