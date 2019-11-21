@@ -46,8 +46,9 @@ func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStep
 
 	mpc.setMpcStep(firstStep, readyStep, skShare, RStep, SStep, ackRSStep)
 
-	for _, stepItem := range mpc.MpcSteps {
+	for stepId, stepItem := range mpc.MpcSteps {
 		stepItem.SetWaitAll(false)
+		stepItem.SetStepId(stepId)
 	}
 	return mpc, nil
 }

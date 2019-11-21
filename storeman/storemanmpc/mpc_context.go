@@ -23,6 +23,7 @@ type MpcStepFunc interface {
 	FinishStep(mpcprotocol.MpcResultInterface, mpcprotocol.StoremanManager) error
 	GetMessageChan() chan *mpcprotocol.StepMessage
 	SetWaitAll(bool)
+	SetStepId(int)
 }
 
 type MpcContext struct {
@@ -52,7 +53,8 @@ func (mpcCtx *MpcContext) getMessage(PeerID *discover.NodeID,
 		PeerID:    PeerID,
 		Peers:     peers,
 		Data:      msg.Data,
-		BytesData: msg.BytesData}
+		BytesData: msg.BytesData,
+		StepId:    int(msg.StepID)}
 	return nil
 }
 

@@ -13,6 +13,7 @@ type BaseStep struct {
 	finish  chan error
 	waiting int
 	waitAll bool // true: wait all
+	stepId  int
 }
 
 func CreateBaseStep(peers *[]mpcprotocol.PeerInfo, wait int) *BaseStep {
@@ -92,10 +93,16 @@ func (step *BaseStep) HandleMessage(msger mpcprotocol.GetMessageInterface) error
 			return mpcprotocol.ErrQuit
 		}
 
-		if step.waiting > 0 && msger.HandleMessage(msg) {
-			step.waiting--
-			if step.waiting <= 0 {
-				step.finish <- nil
+		if msg.StepId != step.GetStepId() {
+			log.SyslogErr("Get message is not in the right steps",
+				"should step", step.stepId,
+				"receive step", msg.StepId)
+		} else {
+			if step.waiting > 0 && msger.HandleMessage(msg) {
+				step.waiting--
+				if step.waiting <= 0 {
+					step.finish <- nil
+				}
 			}
 		}
 	}
@@ -129,4 +136,12 @@ func (step *BaseStep) SetWaitAll(waitAll bool) {
 
 func (step *BaseStep) SetWaiting(waiting int) {
 	step.waiting = waiting
+}
+
+func (step *BaseStep) SetStepId(stepId int) {
+	step.stepId = stepId
+}
+
+func (step *BaseStep) GetStepId() int {
+	return step.stepId
 }

@@ -90,6 +90,7 @@ type StepMessage struct {
 	Peers     *[]PeerInfo
 	Data      []big.Int //message data
 	BytesData [][]byte
+	StepId    int
 }
 
 type MpcMessage struct {
