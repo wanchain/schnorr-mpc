@@ -473,7 +473,8 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 		preSetValue = append(preSetValue, *MpcPubKey)
 
 		//receivedData := &mpcprotocol.SendData{PKBytes: address, Data: string(mpcM[:])}
-		receivedData := &mpcprotocol.SendData{PKBytes: address, Data: string(mpcM[:]), Extern: string(mpcExt[:])}
+		//receivedData := &mpcprotocol.SendData{PKBytes: address, Data: string(mpcM[:]), Extern: string(mpcExt[:])}
+		receivedData := &mpcprotocol.SendData{PKBytes: address, Data: mpcM[:], Extern: string(mpcExt[:])}
 
 		addApprovingResult := validator.AddApprovingData(receivedData)
 		if addApprovingResult != nil {
