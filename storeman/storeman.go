@@ -240,7 +240,7 @@ func (sa *StoremanAPI) Peers(ctx context.Context) []*p2p.PeerInfo {
 	return ps
 }
 
-func (sa *StoremanAPI) CreateGPK(ctx context.Context) (pk hexutil.Bytes, err error) {
+func (sa *StoremanAPI) CreateGPK(ctx context.Context, crtGpkArg mpcprotocol.CreateGPKArg) (pk hexutil.Bytes, err error) {
 
 	log.SyslogInfo("CreateGPK begin")
 	log.SyslogInfo("CreateGPK begin", "peers", len(sa.sm.peers), "storeman peers", len(sa.sm.storemanPeers))
@@ -252,7 +252,7 @@ func (sa *StoremanAPI) CreateGPK(ctx context.Context) (pk hexutil.Bytes, err err
 		return []byte{}, mpcprotocol.ErrTooLessStoreman
 	}
 
-	gpk, err := sa.sm.mpcDistributor.CreateRequestGPK()
+	gpk, err := sa.sm.mpcDistributor.CreateRequestGPK(crtGpkArg)
 	if err == nil {
 		log.SyslogInfo("CreateGPK end", "gpk", gpk)
 	} else {
@@ -293,7 +293,7 @@ func (sa *StoremanAPI) SignData(ctx context.Context, data mpcprotocol.SendData) 
 	PKBytes := data.PKBytes
 
 	//signed, err := sa.sm.mpcDistributor.CreateReqMpcSign([]byte(data.Data), PKBytes)
-	signed, err := sa.sm.mpcDistributor.CreateReqMpcSign([]byte(data.Data), []byte(data.Extern), PKBytes)
+	signed, err := sa.sm.mpcDistributor.CreateReqMpcSign([]byte(data.Data), []byte(data.Extern), PKBytes, data.SignType)
 
 	// signed   R // s
 	if err == nil {

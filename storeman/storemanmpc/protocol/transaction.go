@@ -6,11 +6,16 @@ import (
 )
 
 type SendData struct {
-	PKBytes hexutil.Bytes `json:"pk"`
+	PKBytes  hexutil.Bytes `json:"pk"`
+	SignType hexutil.Bytes `json:signType` // 0: sec256 1: bn256
 	//Data    []byte        `json:"data"`
 	//Data   string `json:"data"`
 	Data   hexutil.Bytes `json:"data"`
 	Extern string        `json:extern`
+}
+
+type CreateGPKArg struct {
+	SignType hexutil.Bytes `json:signType` // 0: sec256 1: bn256
 }
 
 func (d *SendData) String() string {

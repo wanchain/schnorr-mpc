@@ -226,12 +226,15 @@ func (mpcServer *MpcDistributor) InitStoreManGroup() {
 	}
 }
 
-func (mpcServer *MpcDistributor) CreateRequestGPK() ([]byte, error) {
+func (mpcServer *MpcDistributor) CreateRequestGPK(crtGPKArg mpcprotocol.CreateGPKArg) ([]byte, error) {
 	log.SyslogInfo("CreateRequestGPK begin")
 
-	preSetValue := make([]MpcValue, 0, 1)
+	//preSetValue := make([]MpcValue, 0, 1)
+	//value, err := mpcServer.createRequestMpcContext(mpcprotocol.MpcGPKLeader,
+	//	preSetValue...)
+
 	value, err := mpcServer.createRequestMpcContext(mpcprotocol.MpcGPKLeader,
-		preSetValue...)
+		MpcValue{mpcprotocol.MpcSignType, nil, crtGPKArg.SignType})
 
 	if err != nil {
 		return []byte{}, err
@@ -240,14 +243,15 @@ func (mpcServer *MpcDistributor) CreateRequestGPK() ([]byte, error) {
 	}
 }
 
-func (mpcServer *MpcDistributor) CreateReqMpcSign(data []byte, extern []byte, pkBytes []byte) ([]byte, error) {
+func (mpcServer *MpcDistributor) CreateReqMpcSign(data []byte, extern []byte, pkBytes []byte, signType []byte) ([]byte, error) {
 
 	log.SyslogInfo("CreateReqMpcSign begin")
 
 	value, err := mpcServer.createRequestMpcContext(mpcprotocol.MpcSignLeader,
 		MpcValue{mpcprotocol.MpcAddress, nil, pkBytes[:]},
 		MpcValue{mpcprotocol.MpcM, nil, data},
-		MpcValue{mpcprotocol.MpcExt, nil, extern})
+		MpcValue{mpcprotocol.MpcExt, nil, extern},
+		MpcValue{mpcprotocol.MpcSignType, nil, signType})
 
 	//Todo update the return value
 	return value, err
@@ -274,6 +278,7 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 			}
 		}
 		// peers1: the peers which are used to create the group public key, used to build the sign data.
+		// todo need load sec256 or bn256.
 		value, value1, peers1, err := mpcServer.loadStoremanAddress(&address)
 		if err != nil {
 

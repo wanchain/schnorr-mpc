@@ -21,6 +21,12 @@ const (
 	MpcSignLeader
 	MpcSignPeer
 )
+
+const (
+	SignSec256 = iota + 0
+	SignBn256
+)
+
 const (
 	StatusCode = iota + 0 // used by storeman protocol
 	KeepaliveCode
@@ -51,7 +57,8 @@ const (
 	MpcM             = "MpcM"             // M
 	MpcS             = "MpcS"             // S: s
 
-	MpcExt = "MpcExtern" // extern
+	MpcExt      = "MpcExtern"   // extern
+	MpcSignType = "MpcSignType" // 0: sec256 1: bn256
 
 	MpcTxHash  = "MpcTxHash"
 	MpcAddress = "MpcAddress"
