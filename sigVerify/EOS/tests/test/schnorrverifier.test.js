@@ -48,6 +48,54 @@ describe('schnorrverifier', function() {
         assert.notEqual(retError, undefined)
     })
 
+    it('should fail with invalid signature - shorter data', async () => {
+        let retError;
+
+        try {
+            await contractAccount.verify('test', randomPoint, 'e7fc619cb10827948c0965b5f07fb7c66cbecba6ecbc67291fac09ec0f1e7a', "045380730dde59cc2bffb432293d22364beb250912e0e73b11b655bf51fd7a8adabdffea4047d7ff2a9ec877815e12116a47236276d54b5679b13792719eebb9", raw_msg, memo, { from: testAccount});
+        } catch (e) {
+            retError = e;
+        }
+
+        assert.notEqual(retError, undefined)
+    })
+
+    it('should fail with invalid signature - longer data', async () => {
+        let retError;
+
+        try {
+            await contractAccount.verify('test', randomPoint, 'c0c0e7fc619cb10827948c0965b5f07fb7c66cbecba6ecbc67291fac09ec0f1e7a', "047a7a5380730dde59cc2bffb432293d22364beb250912e0e73b11b655bf51fd7a8adabdffea4047d7ff2a9ec877815e12116a47236276d54b5679b13792719eebb9", raw_msg, memo, { from: testAccount});
+        } catch (e) {
+            retError = e;
+        }
+
+        assert.notEqual(retError, undefined)
+    })
+
+    it('should fail with invalid groupKey - shorter data', async () => {
+        let retError;
+
+        try {
+            await contractAccount.verify('test', randomPoint, signature, groupKey, raw_msg, memo, { from: testAccount});
+        } catch (e) {
+            retError = e;
+        }
+
+        assert.notEqual(retError, undefined)
+    })
+
+    it('should fail with invalid groupKey - longer data', async () => {
+        let retError;
+
+        try {
+            await contractAccount.verify('test', randomPoint, signature, groupKey, raw_msg, memo, { from: testAccount});
+        } catch (e) {
+            retError = e;
+        }
+
+        assert.notEqual(retError, undefined)
+    })
+
     it('should verify the signature', async () => {
         testAccount = await eoslime.Account.load('test', '5JVAU49StEp8F2ve32Ha22ejSX62XZknqRKkZPwK6senJ3M5rrM')
 
