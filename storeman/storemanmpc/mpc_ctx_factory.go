@@ -13,7 +13,7 @@ func (*MpcCtxFactory) CreateContext(ctxType int,
 	peers []mpcprotocol.PeerInfo,
 	preSetValue ...MpcValue) (MpcInterface, error) {
 
-	log.Info("============================Jacob CreateContext=====================")
+	log.Info("============================ CreateContext=====================")
 	log.Info("CreateContext", "ctxType", ctxType)
 	for i := 0; i < len(preSetValue); i++ {
 		if preSetValue[i].Value != nil {
@@ -22,7 +22,7 @@ func (*MpcCtxFactory) CreateContext(ctxType int,
 			log.Info("preSetValue", "key", preSetValue[i].Key, "bytevalue", preSetValue[i].ByteValue)
 		}
 	}
-	log.Info("============================Jacob CreateContext=====================")
+	log.Info("============================ CreateContext=====================")
 
 	switch ctxType {
 	case mpcprotocol.MpcGPKLeader:

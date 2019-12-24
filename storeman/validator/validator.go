@@ -22,7 +22,7 @@ func init() {
 // TODO add ValidateData
 func ValidateData(data *mpcprotocol.SendData) (bool, error) {
 
-	log.SyslogInfo("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&Jacob ValidateData, begin",
+	log.SyslogInfo("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& ValidateData, begin",
 		"pk", hexutil.Encode(data.PKBytes),
 		"data", hexutil.Encode([]byte(data.Data)))
 
@@ -233,10 +233,10 @@ func waitKeyFromDB(keys [][]byte) ([]byte, error) {
 		for _, key := range keys {
 			isExist, err := db.Has(key)
 			if err != nil {
-				log.SyslogErr("=================Jacob waitKeyFromDB fail", "err", err.Error())
+				log.SyslogErr("================= waitKeyFromDB fail", "err", err.Error())
 				return nil, err
 			} else if isExist {
-				log.SyslogInfo("=================Jacob waitKeyFromDB, got it", "key", common.ToHex(key))
+				log.SyslogInfo("================= waitKeyFromDB, got it", "key", common.ToHex(key))
 				return key, nil
 			}
 
@@ -346,7 +346,7 @@ func addApprovingData(dataItem *mpcprotocol.SendData) error {
 			return err
 		}
 		err = addKeyValueToDB(approvingKey, value)
-		log.SyslogInfo("===============Jacob addApprovingData ", "approvingKey", hexutil.Encode(approvingKey), "value", value)
+		log.SyslogInfo("=============== addApprovingData ", "approvingKey", hexutil.Encode(approvingKey), "value", value)
 		if err != nil {
 			log.SyslogErr("addApprovingData, addKeyValueToDB fail", "err", err.Error())
 			return err
@@ -363,7 +363,7 @@ func addApprovingData(dataItem *mpcprotocol.SendData) error {
 			return err
 		}
 
-		log.SyslogInfo("===============Jacob addApprovingData ",
+		log.SyslogInfo("=============== addApprovingData ",
 			"approvingKeys", hexutil.Encode([]byte(mpcprotocol.MpcApprovingKeys)),
 			"value", approvingKeysBytes)
 
@@ -378,7 +378,7 @@ func addApprovingData(dataItem *mpcprotocol.SendData) error {
 }
 
 func addApprovedData(data *mpcprotocol.SendData) error {
-	log.SyslogInfo("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&Jacob addApprovedData, begin",
+	log.SyslogInfo("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& addApprovedData, begin",
 		"pk", hexutil.Encode(data.PKBytes),
 		"data", hexutil.Encode([]byte(data.Data)),
 		"Extern", hexutil.Encode([]byte(data.Extern)))
@@ -390,7 +390,7 @@ func addApprovedData(data *mpcprotocol.SendData) error {
 	}
 
 	key := buildKeyFromData(data, mpcprotocol.MpcApproved)
-	log.SyslogInfo("===============Jacob addApprovedData", "data", data.String(), "approved key", hexutil.Encode(key))
+	log.SyslogInfo("=============== addApprovedData", "data", data.String(), "approved key", hexutil.Encode(key))
 	return addKeyValueToDB(key, val)
 }
 

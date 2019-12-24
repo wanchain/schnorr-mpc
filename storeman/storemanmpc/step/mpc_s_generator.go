@@ -45,16 +45,13 @@ func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcpr
 		return err
 	}
 
-	//hashMBytes := crypto.Keccak256(MBytes)
 	hashMBytes := sha256.Sum256(MBytes)
 
 	// compute m
 	var buffer bytes.Buffer
-	//buffer.Write(MBytes[:])
 	buffer.Write(hashMBytes[:])
 	buffer.Write(crypto.FromECDSAPub(&rgpk))
 
-	//mBytes := crypto.Keccak256(buffer.Bytes())
 	mBytes := sha256.Sum256(buffer.Bytes())
 	m := new(big.Int).SetBytes(mBytes[:])
 
@@ -72,7 +69,7 @@ func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcpr
 	sigShare := shcnorrmpc.SchnorrSign(gskShare[0], rskShare[0], *m)
 	msg.seed = sigShare
 
-	log.Info("@@@@@@@@@@@@@@SchnorrSign@@@@@@@@@@@@@@",
+	log.Info("@@@@@@@@@@@@@@ SchnorrSign @@@@@@@@@@@@@@",
 		"M", hex.EncodeToString(MBytes),
 		"m", hex.EncodeToString(m.Bytes()))
 
@@ -93,7 +90,7 @@ func (msg *mpcSGenerator) calculateResult() error {
 	}
 
 	// Lagrange
-	log.SyslogInfo("++++++++Jacob all signature share+++++++++",
+	log.SyslogInfo("all signature share",
 		"Need nodes number:", mpcprotocol.MpcSchnrThr,
 		"Now nodes number:", len(sigshares))
 	if len(sigshares) < mpcprotocol.MpcSchnrThr {

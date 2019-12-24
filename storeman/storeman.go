@@ -65,9 +65,9 @@ func New(cfg *Config, accountManager *accounts.Manager, aKID, secretKey, region 
 			log.SyslogErr("make Storeman path fail", "err", err.Error())
 		}
 	}
-	log.Info("=========Jacob =========================")
-	log.Info("=========Jacob New storeman", "DB file path", dataPath)
-	log.Info("=========Jacob =========================")
+	log.Info("==================================")
+	log.Info("=========New storeman", "DB file path", dataPath)
+	log.Info("==================================")
 	validator.NewDatabase(dataPath)
 	// p2p storeman sub protocol handler
 	storeman.protocol = p2p.Protocol{
@@ -261,27 +261,6 @@ func (sa *StoremanAPI) CreateGPK(ctx context.Context) (pk hexutil.Bytes, err err
 
 	return gpk, err
 }
-
-//func (sa *StoremanAPI) SignData(ctx context.Context, data mpcprotocol.SendData) (R []byte, s []byte, err error) {
-//	//Todo  check the input parameter
-//
-//	if len(sa.sm.peers) < mpcprotocol.MPCDegree*2 {
-//		return []byte{}, []byte{}, mpcprotocol.ErrTooLessStoreman
-//	}
-//
-//	PKBytes := data.PKBytes
-//	pk := crypto.ToECDSAPub(PKBytes)
-//	from := crypto.PubkeyToAddress(*pk)
-//
-//	signed, err := sa.sm.mpcDistributor.CreateReqMpcSign(data.Data, from)
-//	if err == nil {
-//		log.SyslogInfo("SignMpcTransaction end", "signed", common.ToHex(signed))
-//	} else {
-//		log.SyslogErr("SignMpcTransaction end", "err", err.Error())
-//	}
-//
-//	return []byte{}, []byte{}, nil
-//}
 
 func (sa *StoremanAPI) SignData(ctx context.Context, data mpcprotocol.SendData) (result mpcprotocol.SignedResult, err error) {
 	//Todo  check the input parameter

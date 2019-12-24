@@ -43,7 +43,7 @@ func (ptStep *MpcPointStep) CreateMessage() []mpcprotocol.StepMessage {
 
 func (ptStep *MpcPointStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	seed := ptStep.getPeerSeed(msg.PeerID)
-	log.SyslogInfo("***************Jacob MpcPointStep.HandleMessage begin ",
+	log.SyslogInfo("MpcPointStep.HandleMessage begin ",
 		"peerID", msg.PeerID.String(),
 		"gpk x", hex.EncodeToString(msg.Data[0].Bytes()),
 		"gpk y", hex.EncodeToString(msg.Data[1].Bytes()),
@@ -55,7 +55,7 @@ func (ptStep *MpcPointStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	}
 
 	if len(msg.Data) != 2*ptStep.signNum {
-		log.SyslogErr("MpcPointStep HandleMessage, msg data len doesn't match requiremant, dataLen:%d", len(msg.Data))
+		log.SyslogErr("MpcPointStep HandleMessage, msg data len doesn't match requirement, dataLen:%d", len(msg.Data))
 		return false
 	}
 
@@ -83,7 +83,7 @@ func (ptStep *MpcPointStep) FinishStep(result mpcprotocol.MpcResultInterface, mp
 	for i := 0; i < ptStep.signNum; i++ {
 		pointer := ptStep.messages[i].(*mpcPointGenerator)
 		//PublicKeyResult
-		log.Info("==Jacob generated gpk MpcPointStep::FinishStep",
+		log.Info("generated gpk MpcPointStep::FinishStep",
 			"result key", ptStep.resultKeys[i],
 			"result value", pointer.result[:])
 

@@ -57,7 +57,7 @@ func (jrss *MpcSKShareStep) FinishStep(result mpcprotocol.MpcResultInterface, mp
 
 func (jrss *MpcSKShareStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	seed := jrss.getPeerSeed(msg.PeerID)
-	log.Info("==Jacob MpcSKShareStep::HandleMessage recieved message ",
+	log.Info("MpcSKShareStep::HandleMessage received message ",
 		"peerId", msg.PeerID.String(),
 		"seed", seed)
 	if seed == 0 {

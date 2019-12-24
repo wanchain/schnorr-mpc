@@ -249,7 +249,6 @@ func (mpcServer *MpcDistributor) CreateReqMpcSign(data []byte, extern []byte, pk
 		MpcValue{mpcprotocol.MpcM, nil, data},
 		MpcValue{mpcprotocol.MpcExt, nil, extern})
 
-	//Todo update the return value
 	return value, err
 }
 
@@ -352,7 +351,6 @@ func (mpcServer *MpcDistributor) loadStoremanAddress(address *common.Address) (*
 		mpcServer.mpcAccountMap[*address] = value
 	}
 
-	//gpkByte, err := hex.DecodeString(key.Exten)
 	gpkByte, err := hex.DecodeString(value.externString)
 	gpk := crypto.ToECDSAPub(gpkByte)
 
@@ -472,8 +470,6 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 		preSetValue = append(preSetValue, *MpcPrivateShare)
 		preSetValue = append(preSetValue, *MpcPubKey)
 
-		//receivedData := &mpcprotocol.SendData{PKBytes: address, Data: string(mpcM[:])}
-		//receivedData := &mpcprotocol.SendData{PKBytes: address, Data: string(mpcM[:]), Extern: string(mpcExt[:])}
 		receivedData := &mpcprotocol.SendData{PKBytes: address, Data: mpcM[:], Extern: string(mpcExt[:])}
 
 		addApprovingResult := validator.AddApprovingData(receivedData)
@@ -680,7 +676,7 @@ func (mpcServer *MpcDistributor) CreateKeystore(result mpcprotocol.MpcResultInte
 	}
 
 	result.SetByteValue(mpcprotocol.MpcContextResult, crypto.FromECDSAPub(result1))
-	log.Info("=====Jacob CreateKeystore ",
+	log.Info("CreateKeystore ",
 		"gpk address", crypto.PubkeyToAddress(*result1),
 		"gpk byte", crypto.FromECDSAPub(result1),
 		"gpk hexutil.Encode", hexutil.Encode(crypto.FromECDSAPub(result1)),

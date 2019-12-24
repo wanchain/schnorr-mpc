@@ -175,7 +175,7 @@ func (mars *MpcAckRSStep) verifyRS(result mpcprotocol.MpcResultInterface) error 
 
 	temp.X, temp.Y = crypto.S256().Add(mgpk.X, mgpk.Y, rpk.X, rpk.Y)
 
-	log.Info("@@@@@@@@@@@@@@Jacob verifyRS@@@@@@@@@@@@@@",
+	log.Info("@@@@@@@@@@@@@@verifyRS@@@@@@@@@@@@@@",
 		"M", hexutil.Encode(M[:]),
 		"hash(M)", hexutil.Encode(hashMBytes[:]),
 		"m", hexutil.Encode(m.Bytes()),

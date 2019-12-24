@@ -46,7 +46,7 @@ func (req *RequestMpcStep) InitStep(result mpcprotocol.MpcResultInterface) error
 		}
 
 		for index, peer := range *req.peers {
-			log.Info("===Jacob RequestMpcStep::InitStep ",
+			log.Info("RequestMpcStep::InitStep ",
 				"index", index,
 				"peerID", peer.PeerID.String(),
 				"seed", peer.Seed)

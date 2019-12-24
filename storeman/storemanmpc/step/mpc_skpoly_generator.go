@@ -7,7 +7,6 @@ import (
 	"github.com/wanchain/schnorr-mpc/storeman/shcnorrmpc"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
-
 )
 
 type RandomPolynomialValue struct {
@@ -24,7 +23,7 @@ func createSkPolyValue(degree int, peerNum int) *RandomPolynomialValue {
 func (poly *RandomPolynomialValue) initialize(peers *[]mpcprotocol.PeerInfo,
 	result mpcprotocol.MpcResultInterface) error {
 
-	log.Info("==Jacob RandomPolynomialValue::initialize ", "len of recieved message", len(poly.message))
+	log.Info("RandomPolynomialValue::initialize ", "len of recieved message", len(poly.message))
 
 	degree := len(poly.randCoefficient) - 1
 
@@ -40,7 +39,7 @@ func (poly *RandomPolynomialValue) initialize(peers *[]mpcprotocol.PeerInfo,
 		poly.polyValue[i] = shcnorrmpc.EvaluatePoly(poly.randCoefficient,
 			new(big.Int).SetUint64((*peers)[i].Seed),
 			degree)
-		log.Info("==Jacob RandomPolynomialValue::initialize poly ",
+		log.Info("RandomPolynomialValue::initialize poly ",
 			"poly peerId", (*peers)[i].PeerID.String(),
 			"poly x seed", (*peers)[i].Seed)
 	}
@@ -50,7 +49,7 @@ func (poly *RandomPolynomialValue) initialize(peers *[]mpcprotocol.PeerInfo,
 
 func (poly *RandomPolynomialValue) calculateResult() error {
 	poly.result = big.NewInt(0)
-	log.Info("==Jacob RandomPolynomialValue::calculateResult ", "len of recieved message", len(poly.message))
+	log.Info("RandomPolynomialValue::calculateResult ", "len of recieved message", len(poly.message))
 	for _, value := range poly.message {
 		poly.result.Add(poly.result, &value)
 		poly.result.Mod(poly.result, crypto.S256().Params().N)
