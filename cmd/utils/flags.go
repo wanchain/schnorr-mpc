@@ -567,7 +567,9 @@ func SetP2PConfig(ctx *cli.Context, cfg *p2p.Config) {
 					log.Error("Storeman URL _4.invalid", "enode", url, "err", err)
 					continue
 				}
+
 				cfg.StoremanNodes = append(cfg.StoremanNodes, node)
+
 			}
 			log.Debug("target is ", "storemanNodes", cfg.StoremanNodes)
 		}
@@ -647,7 +649,7 @@ func RegisterShhService(stack *node.Node, cfg *whisper.Config) {
 func RegisterSmService(stack *node.Node, cfg *storeman.Config, aKID, secretKey, region string) {
 	if err := stack.Register(func(n *node.ServiceContext) (node.Service, error) {
 
-		return  storeman.New(cfg, stack.AccountManager(), aKID, secretKey, region,stack), nil
+		return  storeman.New(cfg, stack.AccountManager(), aKID, secretKey, region), nil
 	}); err != nil {
 		Fatalf("Failed to register the Storeman service: %v", err)
 	}

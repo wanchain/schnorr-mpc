@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
-	"github.com/wanchain/schnorr-mpc/node"
 	"github.com/wanchain/schnorr-mpc/rlp"
 	"net"
 	"path/filepath"
@@ -52,12 +51,12 @@ type StrmanAllPeers struct {
 const keepaliveMagic = 0x33
 
 // New creates a Whisper client ready to communicate through the Ethereum P2P network.
-func New(cfg *Config, accountManager *accounts.Manager, aKID, secretKey, region string,pnode *node.Node) *Storeman {
+func New(cfg *Config, accountManager *accounts.Manager, aKID, secretKey, region string) *Storeman {
 	storeman := &Storeman{
 		peers: make(map[discover.NodeID]*Peer),
 		quit:  make(chan struct{}),
 		cfg:   cfg,
-		node:  pnode,
+		isSentPeer:false,
 	}
 
 	storeman.mpcDistributor = storemanmpc.CreateMpcDistributor(accountManager,
@@ -104,7 +103,8 @@ type Storeman struct {
 	quit           chan struct{} // Channel used for graceful exit
 	mpcDistributor *storemanmpc.MpcDistributor
 	cfg            *Config
-	node 		   *node.Node
+	server 			*p2p.Server
+	isSentPeer 	   bool
 }
 
 // MaxMessageSize returns the maximum accepted message size.
@@ -151,7 +151,8 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 						TCP: uint16(addr.Port),
 					}
 
-					sm.node.Server().AddPeer(nd)
+					sm.server.AddPeer(nd)
+
 				}
 
 			default:
@@ -194,7 +195,7 @@ func (sm *Storeman) Start(server *p2p.Server) error {
 	sm.mpcDistributor.Self = server.Self()
 	sm.mpcDistributor.StoreManGroup = make([]discover.NodeID, len(server.StoremanNodes))
 	sm.storemanPeers = make(map[discover.NodeID]bool)
-
+	sm.server = server
 	for i, item := range server.StoremanNodes {
 		sm.mpcDistributor.StoreManGroup[i] = item.ID
 		sm.storemanPeers[item.ID] = true
@@ -233,6 +234,7 @@ func (sm *Storeman) IsActivePeer(peerID *discover.NodeID) bool {
 // HandlePeer is called by the underlying P2P layer when the whisper sub-protocol
 // connection is negotiated.
 func (sm *Storeman) HandlePeer(peer *p2p.Peer, rw p2p.MsgReadWriter) error {
+
 	if _, exist := sm.storemanPeers[peer.ID()]; !exist {
 		return errors.New("Peer is not in storemangroup")
 	}
@@ -259,15 +261,23 @@ func (sm *Storeman) HandlePeer(peer *p2p.Peer, rw p2p.MsgReadWriter) error {
 		sm.peerMu.Unlock()
 	}()
 
-	localIP := sm.node.Server().Self().IP
-	localPort := sm.node.Server().Self().TCP
-	bootnodesIP := sm.cfg.StoremanNodes[0].IP
-	bootnodesPort := sm.cfg.StoremanNodes[0].TCP
 
-	//only bootnode send this message
-	if localIP.Equal(bootnodesIP) && localPort==bootnodesPort {
 
-		if len(sm.storemanPeers)+1 == mpcprotocol.MpcSchnrNodeNumber {
+
+	if len(sm.peers)+1 == mpcprotocol.MpcSchnrNodeNumber {
+
+		localIP := sm.server.Self().IP
+		localPort := sm.server.Self().TCP
+		bootnodesIP := sm.cfg.StoremanNodes[0].IP
+		bootnodesPort := sm.cfg.StoremanNodes[0].TCP
+		//only bootnode send this message
+		res := localIP.Equal(bootnodesIP)
+		res = (localPort==bootnodesPort)
+		res = !sm.isSentPeer
+		res = res
+
+		if localIP.Equal(bootnodesIP) && localPort==bootnodesPort && !sm.isSentPeer{
+
 			all := &StrmanAllPeers{make([]*p2p.PeerInfo, 0)}
 			for _, p := range sm.peers {
 				all.allPeers = append(all.allPeers, p.Peer.Info())
@@ -276,6 +286,8 @@ func (sm *Storeman) HandlePeer(peer *p2p.Peer, rw p2p.MsgReadWriter) error {
 			for _, p := range sm.peers {
 				p.sendAllpeers(all)
 			}
+
+			sm.isSentPeer = true
 		}
 	}
 
