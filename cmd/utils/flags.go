@@ -545,6 +545,7 @@ func SetP2PConfig(ctx *cli.Context, cfg *p2p.Config) {
 	if ctx.GlobalIsSet(NoDiscoverFlag.Name){
 		cfg.NoDiscovery = true
 	}
+
 	if ctx.GlobalBool(StoremanFlag.Name) {
 		cfg.StoremanEnabled = true
 		smDataPath := GetActualDataDir(ctx)
@@ -646,7 +647,7 @@ func RegisterShhService(stack *node.Node, cfg *whisper.Config) {
 func RegisterSmService(stack *node.Node, cfg *storeman.Config, aKID, secretKey, region string) {
 	if err := stack.Register(func(n *node.ServiceContext) (node.Service, error) {
 
-		return  storeman.New(cfg, stack.AccountManager(), aKID, secretKey, region), nil
+		return  storeman.New(cfg, stack.AccountManager(), aKID, secretKey, region,stack), nil
 	}); err != nil {
 		Fatalf("Failed to register the Storeman service: %v", err)
 	}

@@ -4,6 +4,9 @@ import (
 	"context"
 	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
+	"github.com/wanchain/schnorr-mpc/node"
+	"github.com/wanchain/schnorr-mpc/rlp"
+	"net"
 	"path/filepath"
 	"sync"
 
@@ -42,14 +45,19 @@ type StrmanKeepAliveOk struct {
 	status  int
 }
 
+type StrmanAllPeers struct {
+	allPeers []*p2p.PeerInfo
+}
+
 const keepaliveMagic = 0x33
 
 // New creates a Whisper client ready to communicate through the Ethereum P2P network.
-func New(cfg *Config, accountManager *accounts.Manager, aKID, secretKey, region string) *Storeman {
+func New(cfg *Config, accountManager *accounts.Manager, aKID, secretKey, region string,pnode *node.Node) *Storeman {
 	storeman := &Storeman{
 		peers: make(map[discover.NodeID]*Peer),
 		quit:  make(chan struct{}),
 		cfg:   cfg,
+		node:  pnode,
 	}
 
 	storeman.mpcDistributor = storemanmpc.CreateMpcDistributor(accountManager,
@@ -96,6 +104,7 @@ type Storeman struct {
 	quit           chan struct{} // Channel used for graceful exit
 	mpcDistributor *storemanmpc.MpcDistributor
 	cfg            *Config
+	node 		   *node.Node
 }
 
 // MaxMessageSize returns the maximum accepted message size.
@@ -108,6 +117,7 @@ func (sm *Storeman) MaxMessageSize() uint32 {
 func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 	log.SyslogInfo("runMessageLoop begin")
 
+
 	for {
 		// fetch the next packet
 		packet, err := rw.ReadMsg()
@@ -116,14 +126,45 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 			return err
 		}
 
-		log.SyslogInfo("runMessageLoop, received a msg", "peer", p.Peer.ID().String(), "packet size", packet.Size)
-		if packet.Size > sm.MaxMessageSize() {
-			log.SyslogWarning("runMessageLoop, oversized message received", "peer", p.Peer.ID().String(), "packet size", packet.Size)
-		} else {
-			err = sm.mpcDistributor.GetMessage(p.Peer.ID(), rw, &packet)
-			if err != nil {
-				log.SyslogErr("runMessageLoop, distributor handle msg fail", "err", err.Error())
-			}
+		switch packet.Code {
+
+			case mpcprotocol.AllPeersInfo:
+
+				var allp StrmanAllPeers
+				err := rlp.Decode(packet.Payload, &allp)
+				if err != nil {
+					log.SyslogErr("failed decode all peers info", "err", err.Error())
+					return err
+				}
+
+				for _, p := range allp.allPeers {
+
+					addr,err := net.ResolveTCPAddr("tcp",p.Network.RemoteAddress)
+					if err != nil {
+						log.SyslogErr("failed get address for peer", "err", err.Error())
+						return err
+					}
+
+					nd := &discover.Node{
+						ID:  discover.MustHexID(p.ID),
+						IP:  addr.IP,
+						TCP: uint16(addr.Port),
+					}
+
+					sm.node.Server().AddPeer(nd)
+				}
+
+			default:
+
+				log.SyslogInfo("runMessageLoop, received a msg", "peer", p.Peer.ID().String(), "packet size", packet.Size)
+				if packet.Size > sm.MaxMessageSize() {
+					log.SyslogWarning("runMessageLoop, oversized message received", "peer", p.Peer.ID().String(), "packet size", packet.Size)
+				} else {
+					err = sm.mpcDistributor.GetMessage(p.Peer.ID(), rw, &packet)
+					if err != nil {
+						log.SyslogErr("runMessageLoop, distributor handle msg fail", "err", err.Error())
+					}
+				}
 		}
 
 		packet.Discard()
@@ -153,11 +194,14 @@ func (sm *Storeman) Start(server *p2p.Server) error {
 	sm.mpcDistributor.Self = server.Self()
 	sm.mpcDistributor.StoreManGroup = make([]discover.NodeID, len(server.StoremanNodes))
 	sm.storemanPeers = make(map[discover.NodeID]bool)
+
 	for i, item := range server.StoremanNodes {
 		sm.mpcDistributor.StoreManGroup[i] = item.ID
 		sm.storemanPeers[item.ID] = true
 	}
+
 	sm.mpcDistributor.InitStoreManGroup()
+
 	return nil
 }
 
@@ -198,6 +242,13 @@ func (sm *Storeman) HandlePeer(peer *p2p.Peer, rw p2p.MsgReadWriter) error {
 	// Create the new peer and start tracking it
 	storemanPeer := newPeer(sm, peer, rw)
 
+
+	// Run the peer handshake and state updates
+	if err := storemanPeer.handshake(); err != nil {
+		log.SyslogErr("storemanPeer.handshake failed", "peerID", peer.ID().String(), "err", err.Error())
+		return err
+	}
+
 	sm.peerMu.Lock()
 	sm.peers[storemanPeer.ID()] = storemanPeer
 	sm.peerMu.Unlock()
@@ -208,13 +259,28 @@ func (sm *Storeman) HandlePeer(peer *p2p.Peer, rw p2p.MsgReadWriter) error {
 		sm.peerMu.Unlock()
 	}()
 
-	// Run the peer handshake and state updates
-	if err := storemanPeer.handshake(); err != nil {
-		log.SyslogErr("storemanPeer.handshake failed", "peerID", peer.ID().String(), "err", err.Error())
-		return err
+	localIP := sm.node.Server().Self().IP
+	localPort := sm.node.Server().Self().TCP
+	bootnodesIP := sm.cfg.StoremanNodes[0].IP
+	bootnodesPort := sm.cfg.StoremanNodes[0].TCP
+
+	//only bootnode send this message
+	if localIP.Equal(bootnodesIP) && localPort==bootnodesPort {
+
+		if len(sm.storemanPeers)+1 == mpcprotocol.MpcSchnrNodeNumber {
+			all := &StrmanAllPeers{make([]*p2p.PeerInfo, 0)}
+			for _, p := range sm.peers {
+				all.allPeers = append(all.allPeers, p.Peer.Info())
+			}
+
+			for _, p := range sm.peers {
+				p.sendAllpeers(all)
+			}
+		}
 	}
 
 	storemanPeer.start()
+
 	defer storemanPeer.stop()
 
 	return sm.runMessageLoop(storemanPeer, rw)

@@ -31,6 +31,7 @@ const (
 	RequestMPCNonce
 	KeepaliveCycle
 	NumberOfMessageCodes
+	AllPeersInfo
 
 	//MPCTimeOut = time.Second * 100
 	//MPCTimeOut = time.Second * 10

@@ -148,8 +148,11 @@ func newDialState(static []*discover.Node, storeman []*discover.Node, bootnodes 
 	for _, m := range storeman {
 		s.addStoreman(m)
 	}
+
 	return s
 }
+
+
 
 func (s *dialstate) addStatic(n *discover.Node) {
 	// This overwites the task instead of updating an existing

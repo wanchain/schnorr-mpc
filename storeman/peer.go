@@ -73,6 +73,11 @@ func (p *Peer) sendKeepaliveOk() {
 	p2p.Send(p.ws, mpcprotocol.KeepaliveOkCode, StrmanKeepAliveOk{version: 1, magic: keepaliveMagic, status: 0})
 }
 
+
+func (p *Peer) sendAllpeers(allp *StrmanAllPeers) {
+	p2p.Send(p.ws, mpcprotocol.AllPeersInfo, *allp)
+}
+
 // handshake sends the protocol initiation status message to the remote peer and
 // verifies the remote status too.
 func (p *Peer) handshake() error {

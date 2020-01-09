@@ -159,6 +159,7 @@ func (mpcServer *MpcDistributor) GetMessage(PeerID discover.NodeID, rw p2p.MsgRe
 	log.SyslogInfo("MpcDistributor GetMessage begin", "msgCode", msg.Code)
 
 	switch msg.Code {
+
 	case mpcprotocol.StatusCode:
 		// this should not happen, but no need to panic; just ignore this message.
 		log.SyslogInfo("unexpected status message received", "peer", PeerID.String())
