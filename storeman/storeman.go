@@ -266,17 +266,8 @@ func (sm *Storeman) HandlePeer(peer *p2p.Peer, rw p2p.MsgReadWriter) error {
 
 	if len(sm.peers)+1 == mpcprotocol.MpcSchnrNodeNumber {
 
-		localIP := sm.server.Self().IP
-		localPort := sm.server.Self().TCP
-		bootnodesIP := sm.cfg.StoremanNodes[0].IP
-		bootnodesPort := sm.cfg.StoremanNodes[0].TCP
-		//only bootnode send this message
-		res := localIP.Equal(bootnodesIP)
-		res = (localPort==bootnodesPort)
-		res = !sm.isSentPeer
-		res = res
-
-		if localIP.Equal(bootnodesIP) && localPort==bootnodesPort && !sm.isSentPeer{
+		serverID := sm.server.NodeInfo().ID
+		if serverID==sm.cfg.StoremanNodes[0].IP.String() && !sm.isSentPeer{
 
 			all := &StrmanAllPeers{make([]*p2p.PeerInfo, 0)}
 			for _, p := range sm.peers {
