@@ -120,6 +120,7 @@ func (sm *Storeman) MaxMessageSize() uint32 {
 
 // runMessageLoop reads and processes inbound messages directly to merge into client-global state.
 func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
+
 	log.SyslogInfo("runMessageLoop begin")
 
 
@@ -329,11 +330,11 @@ func (sm *Storeman) HandlePeer(peer *p2p.Peer, rw p2p.MsgReadWriter) error {
 				all.allPeers = append(all.allPeers, p.Peer.Info())
 			}
 
-			for _, p := range sm.peers {
-				p.sendAllpeers(all)
-			}
-
-			sm.isSentPeer = true
+			//for _, p := range sm.peers {
+			//	p.sendAllpeers(all)
+			//}
+			//
+			//sm.isSentPeer = true
 		}
 	}
 
