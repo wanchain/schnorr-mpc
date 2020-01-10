@@ -57,6 +57,11 @@ func genCreateGPKMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStepFu
 	gpk := step.CreateMpcGPKStep(&mpc.peers, accTypeStr)
 	ackGpk := step.CreateAckMpcGPKStep(&mpc.peers)
 	mpc.setMpcStep(firstStep, readyStep, skShare, gpk, ackGpk)
+
+	for stepId, stepItem := range mpc.MpcSteps {
+		stepItem.SetStepId(stepId)
+	}
+
 	return mpc, nil
 
 }
