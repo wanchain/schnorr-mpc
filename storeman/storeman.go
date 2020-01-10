@@ -57,7 +57,7 @@ type StrmanAllPeers struct {
 }
 
 type StrmanGetPeers struct {
-	localPort int
+	LocalPort []byte
 }
 
 const keepaliveMagic = 0x33
@@ -150,19 +150,19 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 					log.SyslogErr("failed decode peers getting info", "err", err.Error())
 					return err
 				}
-
-				sm.peersPort[p.ID()] = peerGeting.localPort
+				sm.peersPort[p.ID()] = int(binary.LittleEndian.Uint32(peerGeting.LocalPort))
 
 				allp := &StrmanAllPeers{make([][]byte, 0),make([][]byte,0),make([][]byte,0)}
 
 				for _, smpr := range sm.peers {
 
-					if p.ID().String() == smpr.Peer.ID().String() {
+					if p.ID().String() == smpr.Peer.ID().String() ||
+						sm.peersPort[p.ID()] == 0 {
 						continue
 					}
 
 					n :=  smpr.Peer.Info()
-					log.Info("adding peer","",n.Network.RemoteAddress)
+
 					addr,err := net.ResolveTCPAddr("tcp",n.Network.RemoteAddress)
 					if err != nil {
 						log.SyslogErr("failed get address for peer", "err", err.Error())
@@ -181,6 +181,8 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 
 					allp.Port = append(allp.Port, portbytes)
 					allp.Nodeid = append(allp.Nodeid,p.ID().Bytes())
+
+					log.Info("adding peer","",n.Network.RemoteAddress,sm.peersPort[smpr.ID()])
 				}
 
 				if len(allp.Port)>0 {
@@ -220,7 +222,6 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 
 					sm.server.AddPeer(nd)
 
-					log.Info("get leader peer",p.ID)
 					//added to storeman peer
 					sm.storemanPeers[nd.ID] = true
 				}
@@ -296,7 +297,7 @@ func (sm *Storeman) checkPeerInfo() {
 	for {
 		select {
 			case <-keepalive.C:
-				log.Info("send get all peers require","is in peer",sm.IsActivePeer(&leaderid))
+				log.Info("send get all peers require","current peer count",len(sm.peers))
 				if sm.IsActivePeer(&leaderid) {
 					fmt.Println(sm.server.ListenAddr)
 					aps := strings.Split(sm.server.ListenAddr,":")
@@ -305,7 +306,10 @@ func (sm *Storeman) checkPeerInfo() {
 						log.Error("can not get local port")
 						return
 					}
-					sm.SendToPeer(&leaderid,mpcprotocol.GetPeersInfo,StrmanGetPeers{port})
+
+					portBytes := make([]byte,4)
+					binary.LittleEndian.PutUint32(portBytes,uint32(port))
+					sm.SendToPeer(&leaderid,mpcprotocol.GetPeersInfo,StrmanGetPeers{portBytes})
 				}
 
 				if len(sm.peers)+1 == mpcprotocol.MpcSchnrNodeNumber {
