@@ -85,7 +85,7 @@ func New(cfg *Config, accountManager *accounts.Manager, aKID, secretKey, region 
 	storeman.protocol = p2p.Protocol{
 		Name:    mpcprotocol.PName,
 		Version: uint(mpcprotocol.PVer),
-		Length:  mpcprotocol.GetPeersInfo,
+		Length:  mpcprotocol.NumberOfMessageCodes,
 		Run:     storeman.HandlePeer,
 		NodeInfo: func() interface{} {
 			return map[string]interface{}{
