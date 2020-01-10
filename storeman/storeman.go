@@ -180,10 +180,11 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 					binary.LittleEndian.PutUint32(portbytes, uint32(sm.peersPort[smpr.ID()]))
 
 					allp.Port = append(allp.Port, portbytes)
-					allp.Nodeid = append(allp.Nodeid,p.ID().Bytes())
+					allp.Nodeid = append(allp.Nodeid,smpr.ID().Bytes())
 
 					log.Info("adding peer","",n.Network.RemoteAddress,sm.peersPort[smpr.ID()])
 				}
+
 
 				if len(allp.Port)>0 {
 					log.Info("send all peers from leader, count","",len(allp.Port))
