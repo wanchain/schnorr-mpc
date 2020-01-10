@@ -178,6 +178,7 @@ type Server struct {
 	loopWG        sync.WaitGroup // loop, listenLoop
 	peerFeed      event.Feed
 	log           log.Logger
+
 }
 
 type peerOpFunc func(map[discover.NodeID]*Peer)
@@ -487,6 +488,7 @@ func (srv *Server) Start() (err error) {
 	}
 
 	dynPeers := srv.maxDialedConns()
+
 	dialer := newDialState(srv.StaticNodes, srv.StoremanNodes[0:1], srv.BootstrapNodes, srv.ntab, dynPeers, srv.NetRestrict)
 
 	// handshake
@@ -551,6 +553,7 @@ func (srv *Server) run(dialstate dialer) {
 		runningTasks []task
 		queuedTasks  []task // tasks that can't run yet
 	)
+
 	// Put trusted nodes into a map to speed up checks.
 	// Trusted peers are loaded on startup and cannot be
 	// modified while the server is running.

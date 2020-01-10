@@ -51,6 +51,7 @@ func (p *Peer) update() {
 	for {
 		select {
 		case <-keepalive.C:
+
 			p.sendKeepalive()
 
 		case <-p.quit:

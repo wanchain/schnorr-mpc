@@ -32,7 +32,7 @@ const (
 	KeepaliveCycle
 	NumberOfMessageCodes
 	AllPeersInfo
-
+	GetPeersInfo
 	//MPCTimeOut = time.Second * 100
 	//MPCTimeOut = time.Second * 10
 	MPCTimeOut = time.Second * 20

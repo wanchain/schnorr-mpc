@@ -2,12 +2,14 @@ package storeman
 
 import (
 	"context"
+	"fmt"
 	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/rlp"
 	"net"
 	"path/filepath"
 	"sync"
+	"time"
 
 	"os"
 
@@ -46,6 +48,10 @@ type StrmanKeepAliveOk struct {
 
 type StrmanAllPeers struct {
 	allPeers []*p2p.PeerInfo
+}
+
+type StrmanGetPeers struct {
+	peerNum int
 }
 
 const keepaliveMagic = 0x33
@@ -128,7 +134,19 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 
 		switch packet.Code {
 
+			case mpcprotocol.GetPeersInfo:
+
+				all := &StrmanAllPeers{make([]*p2p.PeerInfo, 0)}
+				for _, p := range sm.peers {
+					all.allPeers = append(all.allPeers, p.Peer.Info())
+				}
+				p.sendAllpeers(all)
+
 			case mpcprotocol.AllPeersInfo:
+
+				if len(sm.peers)+1 == mpcprotocol.MpcSchnrNodeNumber {
+					return nil
+				}
 
 				var allp StrmanAllPeers
 				err := rlp.Decode(packet.Payload, &allp)
@@ -138,6 +156,10 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 				}
 
 				for _, p := range allp.allPeers {
+					//if allready exist,check next
+					if sm.storemanPeers[discover.MustHexID(p.ID)] {
+						continue
+					}
 
 					addr,err := net.ResolveTCPAddr("tcp",p.Network.RemoteAddress)
 					if err != nil {
@@ -153,6 +175,9 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 
 					sm.server.AddPeer(nd)
 
+					fmt.Println("get leader peer",p.ID)
+					//added to storeman peer
+					sm.storemanPeers[discover.MustHexID(p.ID)] = true
 				}
 
 			default:
@@ -203,9 +228,40 @@ func (sm *Storeman) Start(server *p2p.Server) error {
 
 	sm.mpcDistributor.InitStoreManGroup()
 
+	go sm.checkPeerInfo()
+
 	return nil
 }
 
+func (sm *Storeman) checkPeerInfo() {
+	//leader will not checkPeerInfo
+	serverID := sm.server.NodeInfo().ID
+	if serverID==sm.cfg.StoremanNodes[0].ID.String() {
+		return
+	}
+
+	// Start the tickers for the updates
+	keepalive := time.NewTicker(mpcprotocol.KeepaliveCycle * time.Second)
+
+	leaderid,err := discover.BytesID(sm.cfg.StoremanNodes[0].ID.Bytes())
+	if err != nil {
+		log.Info("err decode leader node id from config")
+	}
+	// Loop and transmit until termination is requested
+	for {
+		select {
+			case <-keepalive.C:
+				log.Debug("send get all peers require")
+				if sm.IsActivePeer(&leaderid) {
+					sm.SendToPeer(&leaderid,mpcprotocol.GetPeersInfo,StrmanGetPeers{len(sm.storemanPeers)})
+				}
+
+				if len(sm.peers)+1 == mpcprotocol.MpcSchnrNodeNumber {
+					return
+				}
+		}
+	}
+}
 // Stop implements node.Service, stopping the background data propagation thread
 // of the Whisper protocol.
 func (sm *Storeman) Stop() error {
@@ -263,11 +319,9 @@ func (sm *Storeman) HandlePeer(peer *p2p.Peer, rw p2p.MsgReadWriter) error {
 
 
 
-
 	if len(sm.peers)+1 == mpcprotocol.MpcSchnrNodeNumber {
-
 		serverID := sm.server.NodeInfo().ID
-		if serverID==sm.cfg.StoremanNodes[0].IP.String() && !sm.isSentPeer{
+		if serverID==sm.cfg.StoremanNodes[0].ID.String() && !sm.isSentPeer{
 
 			all := &StrmanAllPeers{make([]*p2p.PeerInfo, 0)}
 			for _, p := range sm.peers {
@@ -283,6 +337,7 @@ func (sm *Storeman) HandlePeer(peer *p2p.Peer, rw p2p.MsgReadWriter) error {
 	}
 
 	storemanPeer.start()
+
 
 	defer storemanPeer.stop()
 
