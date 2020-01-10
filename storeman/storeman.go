@@ -2,11 +2,15 @@ package storeman
 
 import (
 	"context"
+	"encoding/binary"
+	"fmt"
 	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/rlp"
 	"net"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -45,12 +49,15 @@ type StrmanKeepAliveOk struct {
 	status  int
 }
 
+
 type StrmanAllPeers struct {
-	allPeers []*p2p.PeerInfo
+	Ip 		[][]byte
+	Port 	[][]byte
+	Nodeid 	[][]byte
 }
 
 type StrmanGetPeers struct {
-	peerNum int
+	localPort int
 }
 
 const keepaliveMagic = 0x33
@@ -62,6 +69,7 @@ func New(cfg *Config, accountManager *accounts.Manager, aKID, secretKey, region 
 		quit:  make(chan struct{}),
 		cfg:   cfg,
 		isSentPeer:false,
+		peersPort:make(map[discover.NodeID]int),
 	}
 
 	storeman.mpcDistributor = storemanmpc.CreateMpcDistributor(accountManager,
@@ -110,6 +118,7 @@ type Storeman struct {
 	cfg            *Config
 	server 			*p2p.Server
 	isSentPeer 	   bool
+	peersPort  	   map[discover.NodeID]int
 }
 
 // MaxMessageSize returns the maximum accepted message size.
@@ -135,12 +144,50 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 		switch packet.Code {
 
 			case mpcprotocol.GetPeersInfo:
-
-				all := &StrmanAllPeers{make([]*p2p.PeerInfo, 0)}
-				for _, p := range sm.peers {
-					all.allPeers = append(all.allPeers, p.Peer.Info())
+				var peerGeting StrmanGetPeers
+				err := rlp.Decode(packet.Payload, &peerGeting)
+				if err != nil {
+					log.SyslogErr("failed decode peers getting info", "err", err.Error())
+					return err
 				}
-				p.sendAllpeers(all)
+
+				sm.peersPort[p.ID()] = peerGeting.localPort
+
+				allp := &StrmanAllPeers{make([][]byte, 0),make([][]byte,0),make([][]byte,0)}
+
+				for _, smpr := range sm.peers {
+
+					if p.ID().String() == smpr.Peer.ID().String() {
+						continue
+					}
+
+					n :=  smpr.Peer.Info()
+					log.Info("adding peer","",n.Network.RemoteAddress)
+					addr,err := net.ResolveTCPAddr("tcp",n.Network.RemoteAddress)
+					if err != nil {
+						log.SyslogErr("failed get address for peer", "err", err.Error())
+						return err
+					}
+
+					ipbytes,err := addr.IP.MarshalText()
+					if err != nil {
+						log.SyslogErr("failed get address bytes for peer", "err", err.Error())
+						return err
+					}
+					allp.Ip = append(allp.Ip,ipbytes)
+
+					portbytes := make([]byte, 4)
+					binary.LittleEndian.PutUint32(portbytes, uint32(sm.peersPort[smpr.ID()]))
+
+					allp.Port = append(allp.Port, portbytes)
+					allp.Nodeid = append(allp.Nodeid,p.ID().Bytes())
+				}
+
+				if len(allp.Port)>0 {
+					log.Info("send all peers from leader, count","",len(allp.Port))
+					p.sendAllpeers(allp)
+				}
+
 
 			case mpcprotocol.AllPeersInfo:
 
@@ -155,31 +202,27 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 					return err
 				}
 
-				log.Info("get all peers from leader, count",len(allp.allPeers))
+				log.Info("get all peers from leader, count","",len(allp.Port))
 
-				for _, p := range allp.allPeers {
+				for i:= 0;i<len(allp.Port);i++ {
 					//if allready exist,check next
-					if sm.storemanPeers[discover.MustHexID(p.ID)] {
+					nd := &discover.Node{
+						ID:  discover.MustBytesID(allp.Nodeid[i]),
+						IP:  allp.Ip[i],
+						TCP: uint16(binary.LittleEndian.Uint32(allp.Port[i])),
+					}
+
+
+					if sm.storemanPeers[nd.ID] {
 						continue
 					}
 
-					addr,err := net.ResolveTCPAddr("tcp",p.Network.RemoteAddress)
-					if err != nil {
-						log.SyslogErr("failed get address for peer", "err", err.Error())
-						return err
-					}
-
-					nd := &discover.Node{
-						ID:  discover.MustHexID(p.ID),
-						IP:  addr.IP,
-						TCP: uint16(addr.Port),
-					}
 
 					sm.server.AddPeer(nd)
 
 					log.Info("get leader peer",p.ID)
 					//added to storeman peer
-					sm.storemanPeers[discover.MustHexID(p.ID)] = true
+					sm.storemanPeers[nd.ID] = true
 				}
 
 			default:
@@ -255,8 +298,14 @@ func (sm *Storeman) checkPeerInfo() {
 			case <-keepalive.C:
 				log.Info("send get all peers require","is in peer",sm.IsActivePeer(&leaderid))
 				if sm.IsActivePeer(&leaderid) {
-					log.Info("send to leader to get peer info")
-					sm.SendToPeer(&leaderid,mpcprotocol.GetPeersInfo,StrmanGetPeers{len(sm.storemanPeers)})
+					fmt.Println(sm.server.ListenAddr)
+					aps := strings.Split(sm.server.ListenAddr,":")
+					port,err := strconv.Atoi(aps[len(aps)-1])
+					if err != nil {
+						log.Error("can not get local port")
+						return
+					}
+					sm.SendToPeer(&leaderid,mpcprotocol.GetPeersInfo,StrmanGetPeers{port})
 				}
 
 				if len(sm.peers)+1 == mpcprotocol.MpcSchnrNodeNumber {
@@ -325,19 +374,9 @@ func (sm *Storeman) HandlePeer(peer *p2p.Peer, rw p2p.MsgReadWriter) error {
 	if len(sm.peers)+1 == mpcprotocol.MpcSchnrNodeNumber {
 		serverID := sm.server.NodeInfo().ID
 		if serverID==sm.cfg.StoremanNodes[0].ID.String() && !sm.isSentPeer{
-
-			all := &StrmanAllPeers{make([]*p2p.PeerInfo, 0)}
 			for _, p := range sm.peers {
-				all.allPeers = append(all.allPeers, p.Peer.Info())
-				log.Info("peer's info",p.Peer.Info().ID,p.Peer.String())
+				log.Info("all peer's info",p.Peer.Info().ID,p.Peer.String())
 			}
-
-
-			//for _, p := range sm.peers {
-			//	p.sendAllpeers(all)
-			//}
-			//
-			//sm.isSentPeer = true
 		}
 	}
 

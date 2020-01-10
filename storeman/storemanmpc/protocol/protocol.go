@@ -101,3 +101,4 @@ type MpcMessage struct {
 	Data      []big.Int //message data
 	BytesData [][]byte
 }
+
