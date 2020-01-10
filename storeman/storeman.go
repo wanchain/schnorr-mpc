@@ -85,7 +85,7 @@ func New(cfg *Config, accountManager *accounts.Manager, aKID, secretKey, region 
 	storeman.protocol = p2p.Protocol{
 		Name:    mpcprotocol.PName,
 		Version: uint(mpcprotocol.PVer),
-		Length:  mpcprotocol.NumberOfMessageCodes,
+		Length:  mpcprotocol.GetPeersInfo,
 		Run:     storeman.HandlePeer,
 		NodeInfo: func() interface{} {
 			return map[string]interface{}{
@@ -253,8 +253,9 @@ func (sm *Storeman) checkPeerInfo() {
 	for {
 		select {
 			case <-keepalive.C:
-				log.Debug("send get all peers require")
+				log.Info("send get all peers require","is in peer",sm.IsActivePeer(&leaderid))
 				if sm.IsActivePeer(&leaderid) {
+					log.Info("send to leader to get peer info")
 					sm.SendToPeer(&leaderid,mpcprotocol.GetPeersInfo,StrmanGetPeers{len(sm.storemanPeers)})
 				}
 
@@ -328,7 +329,9 @@ func (sm *Storeman) HandlePeer(peer *p2p.Peer, rw p2p.MsgReadWriter) error {
 			all := &StrmanAllPeers{make([]*p2p.PeerInfo, 0)}
 			for _, p := range sm.peers {
 				all.allPeers = append(all.allPeers, p.Peer.Info())
+				log.Info("peer's info",p.Peer.Info().ID,p.Peer.String())
 			}
+
 
 			//for _, p := range sm.peers {
 			//	p.sendAllpeers(all)
