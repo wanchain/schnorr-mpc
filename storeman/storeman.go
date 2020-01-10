@@ -2,7 +2,6 @@ package storeman
 
 import (
 	"context"
-	"fmt"
 	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/rlp"
@@ -155,6 +154,8 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 					return err
 				}
 
+				log.Info("get all peers from leader, count",len(allp.allPeers))
+
 				for _, p := range allp.allPeers {
 					//if allready exist,check next
 					if sm.storemanPeers[discover.MustHexID(p.ID)] {
@@ -175,7 +176,7 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 
 					sm.server.AddPeer(nd)
 
-					fmt.Println("get leader peer",p.ID)
+					log.Info("get leader peer",p.ID)
 					//added to storeman peer
 					sm.storemanPeers[discover.MustHexID(p.ID)] = true
 				}
