@@ -307,7 +307,7 @@ func (sm *Storeman) checkPeerInfo() {
 						log.Info("all peers connected","",len(sm.peers))
 
 						for _,nd := range sm.server.StoremanNodes {
-							log.Info("add peer",nd.IP.String(),"port=",nd.TCP)
+							log.Info("add peer",nd.IP.String(),nd.TCP)
 							sm.server.AddPeer(nd)
 						}
 
