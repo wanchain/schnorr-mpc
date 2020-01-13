@@ -145,6 +145,7 @@ func newDialState(static []*discover.Node, storeman []*discover.Node, bootnodes 
 		s.addStatic(n)
 	}
 
+
 	for _, m := range storeman {
 		strip := m.IP.String()
 		if m.TCP != 0 && strip != "0.0.0.0" {

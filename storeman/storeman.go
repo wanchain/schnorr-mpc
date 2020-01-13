@@ -2,7 +2,6 @@ package storeman
 
 import (
 	"context"
-	"fmt"
 	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/rlp"
@@ -161,8 +160,7 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 
 				for _, smpr := range sm.peers {
 
-					if p.ID().String() == smpr.Peer.ID().String() ||
-						sm.peersPort[smpr.Peer.ID()] == "" {
+					if sm.peersPort[smpr.Peer.ID()] == "" {
 						continue
 					}
 
@@ -206,10 +204,15 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 
 
 				for i:= 0;i<len(allp.Port);i++ {
+
+					if allp.Nodeid[i] == sm.server.Self().ID.String() {
+						continue
+					}
+
 					//if allready exist,check next
 					url := "enode://" + allp.Nodeid[i] + "@" + allp.Ip[i] + ":" + allp.Port[i]
 
-					log.Info("adding peer, url=","",url)
+					log.Info("got peer, url=","",url)
 
 					nd, err := discover.ParseNode(url)
 					if err != nil {
@@ -217,10 +220,9 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 						return err
 					}
 
-					sm.server.AddPeer(nd)
-
 					//added to storeman peer
 					sm.storemanPeers[nd.ID] = true
+					sm.server.StoremanNodes = append(sm.server.StoremanNodes,nd)
 				}
 
 			default:
@@ -294,15 +296,23 @@ func (sm *Storeman) checkPeerInfo() {
 	for {
 		select {
 			case <-keepalive.C:
-				log.Info("send get all peers require","current peer count",len(sm.peers))
+
 				if sm.IsActivePeer(&leaderid) {
-					fmt.Println(sm.server.ListenAddr)
+
+					log.Info("send get allpeers require loalport is","",sm.server.ListenAddr)
 					splits := strings.Split(sm.server.ListenAddr,":")
 					sm.SendToPeer(&leaderid,mpcprotocol.GetPeersInfo,StrmanGetPeers{splits[len(splits)-1]})
-				}
 
-				if len(sm.peers)+1 == mpcprotocol.MpcSchnrNodeNumber {
-					return
+					if len(sm.storemanPeers)+1 >= mpcprotocol.MpcSchnrNodeNumber {
+						log.Info("all peers connected","",len(sm.peers))
+
+						for _,nd := range sm.server.StoremanNodes {
+							log.Info("add peer",nd.IP.String(),"port=",nd.TCP)
+							sm.server.AddPeer(nd)
+						}
+
+						return;
+					}
 				}
 		}
 	}
@@ -340,7 +350,7 @@ func (sm *Storeman) HandlePeer(peer *p2p.Peer, rw p2p.MsgReadWriter) error {
 		return errors.New("Peer is not in storemangroup")
 	}
 
-	log.SyslogInfo("handle new peer", "remoteAddr", peer.RemoteAddr().String(), "peerID", peer.ID().String())
+	log.Info("handle new peer", "remoteAddr", peer.RemoteAddr().String(), "peerID", peer.ID().String())
 
 	// Create the new peer and start tracking it
 	storemanPeer := newPeer(sm, peer, rw)
