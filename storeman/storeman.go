@@ -2,14 +2,12 @@ package storeman
 
 import (
 	"context"
-	"encoding/binary"
 	"fmt"
 	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/rlp"
 	"net"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -51,13 +49,13 @@ type StrmanKeepAliveOk struct {
 
 
 type StrmanAllPeers struct {
-	Ip 		[][]byte
-	Port 	[][]byte
-	Nodeid 	[][]byte
+	Ip 		[]string
+	Port 	[]string
+	Nodeid 	[]string
 }
 
 type StrmanGetPeers struct {
-	LocalPort []byte
+	LocalPort string
 }
 
 const keepaliveMagic = 0x33
@@ -69,7 +67,7 @@ func New(cfg *Config, accountManager *accounts.Manager, aKID, secretKey, region 
 		quit:  make(chan struct{}),
 		cfg:   cfg,
 		isSentPeer:false,
-		peersPort:make(map[discover.NodeID]int),
+		peersPort:make(map[discover.NodeID]string),
 	}
 
 	storeman.mpcDistributor = storemanmpc.CreateMpcDistributor(accountManager,
@@ -118,7 +116,7 @@ type Storeman struct {
 	cfg            *Config
 	server 			*p2p.Server
 	isSentPeer 	   bool
-	peersPort  	   map[discover.NodeID]int
+	peersPort  	   map[discover.NodeID]string
 }
 
 // MaxMessageSize returns the maximum accepted message size.
@@ -150,14 +148,21 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 					log.SyslogErr("failed decode peers getting info", "err", err.Error())
 					return err
 				}
-				sm.peersPort[p.ID()] = int(binary.LittleEndian.Uint32(peerGeting.LocalPort))
 
-				allp := &StrmanAllPeers{make([][]byte, 0),make([][]byte,0),make([][]byte,0)}
+				sm.peersPort[p.ID()] = peerGeting.LocalPort
+				if err != nil {
+					log.SyslogErr("failed decode port info", "err", err.Error())
+					return err
+				}
+
+				log.Info("adding peer","",peerGeting.LocalPort)
+
+				allp := &StrmanAllPeers{make([]string, 0),make([]string,0),make([]string,0)}
 
 				for _, smpr := range sm.peers {
 
 					if p.ID().String() == smpr.Peer.ID().String() ||
-						sm.peersPort[p.ID()] == 0 {
+						sm.peersPort[smpr.Peer.ID()] == "" {
 						continue
 					}
 
@@ -169,20 +174,14 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 						return err
 					}
 
-					ipbytes,err := addr.IP.MarshalText()
-					if err != nil {
-						log.SyslogErr("failed get address bytes for peer", "err", err.Error())
-						return err
-					}
-					allp.Ip = append(allp.Ip,ipbytes)
+					splits := strings.Split(addr.String(),":")
 
-					portbytes := make([]byte, 4)
-					binary.LittleEndian.PutUint32(portbytes, uint32(sm.peersPort[smpr.ID()]))
+					allp.Ip = append(allp.Ip,splits[0])
 
-					allp.Port = append(allp.Port, portbytes)
-					allp.Nodeid = append(allp.Nodeid,smpr.ID().Bytes())
+					allp.Port = append(allp.Port, sm.peersPort[smpr.Peer.ID()])
+					allp.Nodeid = append(allp.Nodeid,smpr.ID().String())
 
-					log.Info("adding peer","",n.Network.RemoteAddress,sm.peersPort[smpr.ID()])
+					log.Info("append peer addrs,port",splits[0],sm.peersPort[smpr.ID()])
 				}
 
 
@@ -205,21 +204,18 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 					return err
 				}
 
-				log.Info("get all peers from leader, count","",len(allp.Port))
 
 				for i:= 0;i<len(allp.Port);i++ {
 					//if allready exist,check next
-					nd := &discover.Node{
-						ID:  discover.MustBytesID(allp.Nodeid[i]),
-						IP:  allp.Ip[i],
-						TCP: uint16(binary.LittleEndian.Uint32(allp.Port[i])),
+					url := "enode://" + allp.Nodeid[i] + "@" + allp.Ip[i] + ":" + allp.Port[i]
+
+					log.Info("adding peer, url=","",url)
+
+					nd, err := discover.ParseNode(url)
+					if err != nil {
+						log.SyslogErr("failed parse peer url", "err", err.Error())
+						return err
 					}
-
-
-					if sm.storemanPeers[nd.ID] {
-						continue
-					}
-
 
 					sm.server.AddPeer(nd)
 
@@ -301,16 +297,8 @@ func (sm *Storeman) checkPeerInfo() {
 				log.Info("send get all peers require","current peer count",len(sm.peers))
 				if sm.IsActivePeer(&leaderid) {
 					fmt.Println(sm.server.ListenAddr)
-					aps := strings.Split(sm.server.ListenAddr,":")
-					port,err := strconv.Atoi(aps[len(aps)-1])
-					if err != nil {
-						log.Error("can not get local port")
-						return
-					}
-
-					portBytes := make([]byte,4)
-					binary.LittleEndian.PutUint32(portBytes,uint32(port))
-					sm.SendToPeer(&leaderid,mpcprotocol.GetPeersInfo,StrmanGetPeers{portBytes})
+					splits := strings.Split(sm.server.ListenAddr,":")
+					sm.SendToPeer(&leaderid,mpcprotocol.GetPeersInfo,StrmanGetPeers{splits[len(splits)-1]})
 				}
 
 				if len(sm.peers)+1 == mpcprotocol.MpcSchnrNodeNumber {
