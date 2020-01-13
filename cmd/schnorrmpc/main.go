@@ -68,8 +68,6 @@ var (
 		utils.AwsKmsFlag,
 	}
 
-
-
 	rpcFlags = []cli.Flag{
 		utils.RPCEnabledFlag,
 		utils.RPCListenAddrFlag,
@@ -97,6 +95,11 @@ var (
 		utils.SyslogLevelFlag,
 		utils.SyslogTagFlag,
 	}
+
+	schnorrFlags = []cli.Flag{
+		utils.SchnorrThresholdFlag,
+		utils.SchnorrTotalNodesFlag,
+	}
 )
 
 func init() {
@@ -104,7 +107,7 @@ func init() {
 	// Initialize the CLI app and start Geth
 	app.Action = schnorrStart
 	app.HideVersion = true // we have a command to print the version
-	app.Copyright = "Copyright 2013-2017 The go-ethereum Authors; Copyright 2018 Wanchain Foundation Ltd"
+	app.Copyright = "Copyright 2013-2020 The schnorr-mpc Authors; Copyright 2020 Wanchain Foundation Ltd"
 	app.Commands = []cli.Command{
 		// See consolecmd.go:
 		consoleCommand,
@@ -125,6 +128,7 @@ func init() {
 	app.Flags = append(app.Flags, rpcFlags...)
 	app.Flags = append(app.Flags, debug.Flags...)
 	app.Flags = append(app.Flags, syslogFlags...)
+	app.Flags = append(app.Flags, schnorrFlags...)
 
 	app.Before = func(ctx *cli.Context) error {
 		runtime.GOMAXPROCS(runtime.NumCPU())
@@ -157,7 +161,7 @@ func main() {
 // blocking mode, waiting for it to be shut down.
 func schnorrStart(ctx *cli.Context) error {
 
-	ctx.Set("storeman","true")
+	ctx.Set("storeman", "true")
 
 	node := makeFullNode(ctx)
 	startNode(ctx, node)
@@ -200,4 +204,3 @@ func startNode(ctx *cli.Context, stack *node.Node) {
 	utils.StartNode(stack)
 
 }
-

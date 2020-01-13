@@ -21,13 +21,17 @@ import (
 )
 
 type Config struct {
-	StoremanNodes []*discover.Node
-	Password      string
-	DataPath      string
+	StoremanNodes     []*discover.Node
+	Password          string
+	DataPath          string
+	SchnorrThreshold  int
+	SchnorrTotalNodes int
 }
 
 var DefaultConfig = Config{
-	StoremanNodes: make([]*discover.Node, 0),
+	StoremanNodes:     make([]*discover.Node, 0),
+	SchnorrThreshold:  26,
+	SchnorrTotalNodes: 50,
 }
 
 type StrmanKeepAlive struct {
@@ -51,6 +55,16 @@ func New(cfg *Config, accountManager *accounts.Manager, aKID, secretKey, region 
 		quit:  make(chan struct{}),
 		cfg:   cfg,
 	}
+
+	mpcprotocol.MpcSchnrThr = cfg.SchnorrThreshold
+	mpcprotocol.MpcSchnrNodeNumber = cfg.SchnorrTotalNodes
+
+	if mpcprotocol.MpcSchnrThr < int((mpcprotocol.MpcSchnrNodeNumber)/2)+1 {
+		log.SyslogErr("should: SchnorrThreshold > SchnorrThreshold/2+1")
+		os.Exit(1)
+	}
+	log.Info("=========New storeman", "SchnorrThreshold", mpcprotocol.MpcSchnrThr)
+	log.Info("=========New storeman", "SchnorrTotalNodes", mpcprotocol.MpcSchnrNodeNumber)
 
 	storeman.mpcDistributor = storemanmpc.CreateMpcDistributor(accountManager,
 		storeman,

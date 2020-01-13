@@ -109,7 +109,6 @@ var (
 		Usage: "Directory for the keystore (default = inside the datadir)",
 	}
 
-
 	// Account settings
 	UnlockedAccountFlag = cli.StringFlag{
 		Name:  "unlock",
@@ -121,7 +120,6 @@ var (
 		Usage: "Password file to use for non-interactive password input",
 		Value: "",
 	}
-
 
 	// Logging and debug settings
 	EthStatsURLFlag = cli.StringFlag{
@@ -223,7 +221,6 @@ var (
 		Value: "",
 	}
 
-
 	NodeKeyFileFlag = cli.StringFlag{
 		Name:  "nodekey",
 		Usage: "P2P node key file",
@@ -253,7 +250,6 @@ var (
 		Usage: "JavaScript root path for `loadScript`",
 		Value: ".",
 	}
-
 
 	WhisperEnabledFlag = cli.BoolFlag{
 		Name:  "shh",
@@ -301,6 +297,16 @@ var (
 	AwsKmsFlag = cli.BoolFlag{
 		Name:  "kms",
 		Usage: "Enable AWS KMS encrypted keystore file",
+	}
+
+	SchnorrThresholdFlag = cli.IntFlag{
+		Name:  "threshold",
+		Usage: "threshold of the schnorr signature",
+	}
+
+	SchnorrTotalNodesFlag = cli.IntFlag{
+		Name:  "totalnodes",
+		Usage: "total node of the schnorr mpc nodes",
 	}
 )
 
@@ -353,7 +359,7 @@ func setNodeUserIdent(ctx *cli.Context, cfg *node.Config) {
 func setBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
 	urls := params.MainnetBootnodes
 	switch {
-	case ctx.GlobalIsSet(BootnodesFlag.Name) :
+	case ctx.GlobalIsSet(BootnodesFlag.Name):
 		urls = strings.Split(ctx.GlobalString(BootnodesFlag.Name), ",")
 
 	}
@@ -374,12 +380,12 @@ func setBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
 func setBootstrapNodesV5(ctx *cli.Context, cfg *p2p.Config) {
 	urls := params.DiscoveryV5Bootnodes
 	switch {
-		case ctx.GlobalIsSet(BootnodesFlag.Name):
+	case ctx.GlobalIsSet(BootnodesFlag.Name):
 
-			urls = strings.Split(ctx.GlobalString(BootnodesFlag.Name), ",")
+		urls = strings.Split(ctx.GlobalString(BootnodesFlag.Name), ",")
 
-		case cfg.BootstrapNodesV5 != nil:
-			return // already set, don't apply defaults.
+	case cfg.BootstrapNodesV5 != nil:
+		return // already set, don't apply defaults.
 	}
 
 	cfg.BootstrapNodesV5 = make([]*discv5.Node, 0, len(urls))
@@ -542,24 +548,24 @@ func SetP2PConfig(ctx *cli.Context, cfg *p2p.Config) {
 	if ctx.GlobalIsSet(MaxPendingPeersFlag.Name) {
 		cfg.MaxPendingPeers = ctx.GlobalInt(MaxPendingPeersFlag.Name)
 	}
-	if ctx.GlobalIsSet(NoDiscoverFlag.Name){
+	if ctx.GlobalIsSet(NoDiscoverFlag.Name) {
 		cfg.NoDiscovery = true
 	}
 	if ctx.GlobalBool(StoremanFlag.Name) {
 		cfg.StoremanEnabled = true
 		smDataPath := GetActualDataDir(ctx)
-		smspath := filepath.Join(smDataPath, "storemans.json");
+		smspath := filepath.Join(smDataPath, "storemans.json")
 		b, err := ioutil.ReadFile(smspath)
 		if err != nil {
 			panic(err)
 		}
 		var SIDs []string
 		errUnmarshal := json.Unmarshal(b, &SIDs)
-		if(errUnmarshal != nil) {
-			log.Error("Unmarshal error","errUnmarshal", errUnmarshal)
+		if errUnmarshal != nil {
+			log.Error("Unmarshal error", "errUnmarshal", errUnmarshal)
 			panic(errUnmarshal)
 		} else {
-			fmt.Println(SIDs);
+			fmt.Println(SIDs)
 			for _, url := range SIDs {
 				node, err := discover.ParseNode(url)
 				if err != nil {
@@ -571,7 +577,6 @@ func SetP2PConfig(ctx *cli.Context, cfg *p2p.Config) {
 			log.Debug("target is ", "storemanNodes", cfg.StoremanNodes)
 		}
 	}
-
 
 	if netrestrict := ctx.GlobalString(NetrestrictFlag.Name); netrestrict != "" {
 		list, err := netutil.ParseNetlist(netrestrict)
@@ -607,8 +612,6 @@ func SetNodeConfig(ctx *cli.Context, cfg *node.Config) {
 
 }
 
-
-
 func checkExclusive(ctx *cli.Context, flags ...cli.Flag) {
 	set := make([]string, 0, 1)
 	for _, flag := range flags {
@@ -631,8 +634,6 @@ func SetShhConfig(ctx *cli.Context, stack *node.Node, cfg *whisper.Config) {
 	}
 }
 
-
-
 // RegisterShhService configures Whisper and adds it to the given node.
 func RegisterShhService(stack *node.Node, cfg *whisper.Config) {
 	if err := stack.Register(func(n *node.ServiceContext) (node.Service, error) {
@@ -646,7 +647,7 @@ func RegisterShhService(stack *node.Node, cfg *whisper.Config) {
 func RegisterSmService(stack *node.Node, cfg *storeman.Config, aKID, secretKey, region string) {
 	if err := stack.Register(func(n *node.ServiceContext) (node.Service, error) {
 
-		return  storeman.New(cfg, stack.AccountManager(), aKID, secretKey, region), nil
+		return storeman.New(cfg, stack.AccountManager(), aKID, secretKey, region), nil
 	}); err != nil {
 		Fatalf("Failed to register the Storeman service: %v", err)
 	}
@@ -676,8 +677,6 @@ func MakeChainDatabase(ctx *cli.Context, stack *node.Node) ethdb.Database {
 	}
 	return chainDb
 }
-
-
 
 // MakeConsolePreloads retrieves the absolute paths for the console JavaScript
 // scripts to preload before starting.
