@@ -19,6 +19,7 @@ darwinDir=$(shell echo gwan-mac-amd64-`cat ./VERSION`-`git rev-parse --short=8 H
 
 schnorrmpc:
 	build/env.sh  go run   -gcflags "-N -l"    build/ci.go   install ./cmd/schnorrmpc
+	build/env.sh  go run   -gcflags "-N -l"    build/ci.go   install ./cmd/bootnode
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/schnorrmpc\" to launch schnorrmpc."
 
