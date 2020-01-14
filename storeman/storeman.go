@@ -324,7 +324,6 @@ func (sm *Storeman) checkPeerInfo() {
 
 				}
 
-
 		}
 	}
 }
