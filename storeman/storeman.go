@@ -286,7 +286,7 @@ func (sm *Storeman) checkPeerInfo() {
 	}
 
 	// Start the tickers for the updates
-	keepalive := time.NewTicker(mpcprotocol.KeepaliveCycle * time.Second)
+	keepQuest := time.NewTicker(mpcprotocol.KeepaliveCycle * time.Second)
 
 	leaderid,err := discover.BytesID(sm.cfg.StoremanNodes[0].ID.Bytes())
 	if err != nil {
@@ -295,25 +295,33 @@ func (sm *Storeman) checkPeerInfo() {
 	// Loop and transmit until termination is requested
 	for {
 		select {
-			case <-keepalive.C:
-
+			case <-keepQuest.C:
 				if sm.IsActivePeer(&leaderid) {
 
-					log.Info("send get allpeers require loalport is","",sm.server.ListenAddr)
-					splits := strings.Split(sm.server.ListenAddr,":")
-					sm.SendToPeer(&leaderid,mpcprotocol.GetPeersInfo,StrmanGetPeers{splits[len(splits)-1]})
+					if len(sm.storemanPeers)+1 >= mpcprotocol.MpcSchnrNodeNumber  {
 
-					if len(sm.storemanPeers)+1 >= mpcprotocol.MpcSchnrNodeNumber {
-						log.Info("all peers connected","",len(sm.peers))
+						peerCnt := sm.server.PeerCount()
+						if peerCnt + 1 < mpcprotocol.MpcSchnrNodeNumber {
 
-						for _,nd := range sm.server.StoremanNodes {
-							log.Info("add peer",nd.IP.String(),nd.TCP)
-							sm.server.AddPeer(nd)
+							for _, nd := range sm.server.StoremanNodes {
+								log.Info("add peer", nd.IP.String(), nd.TCP)
+								sm.server.AddPeer(nd)
+							}
+
+							log.Info("all peers added", "", len(sm.server.StoremanNodes))
 						}
 
-						return;
+					} else {
+
+						log.Info("send get allpeers require loalport is","",sm.server.ListenAddr)
+						splits := strings.Split(sm.server.ListenAddr,":")
+						sm.SendToPeer(&leaderid,mpcprotocol.GetPeersInfo,StrmanGetPeers{splits[len(splits)-1]})
+
 					}
+
 				}
+
+
 		}
 	}
 }
