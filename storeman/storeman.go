@@ -299,8 +299,8 @@ func (sm *Storeman) checkPeerInfo() {
 				if sm.IsActivePeer(&leaderid) {
 
 					if len(sm.storemanPeers)+1 >= mpcprotocol.MpcSchnrNodeNumber  {
-
 						peerCnt := sm.server.PeerCount()
+
 						if peerCnt + 1 < mpcprotocol.MpcSchnrNodeNumber {
 
 							for _, nd := range sm.server.StoremanNodes {
@@ -313,8 +313,11 @@ func (sm *Storeman) checkPeerInfo() {
 
 					} else {
 
-						log.Info("send get allpeers require loalport is","",sm.server.ListenAddr)
+
 						splits := strings.Split(sm.server.ListenAddr,":")
+
+						log.Info("send get allpeers require, loalport is","",splits[len(splits)-1])
+
 						sm.SendToPeer(&leaderid,mpcprotocol.GetPeersInfo,StrmanGetPeers{splits[len(splits)-1]})
 
 					}
