@@ -222,7 +222,7 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 
 					//added to storeman peer
 					sm.storemanPeers[nd.ID] = true
-
+					sm.server.StoremanNodes = append(sm.server.StoremanNodes,nd)
 				}
 
 			default:
