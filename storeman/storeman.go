@@ -222,7 +222,7 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 
 					//added to storeman peer
 					sm.storemanPeers[nd.ID] = true
-					sm.server.StoremanNodes = append(sm.server.StoremanNodes,nd)
+
 				}
 
 			default:
@@ -299,27 +299,19 @@ func (sm *Storeman) checkPeerInfo() {
 				if sm.IsActivePeer(&leaderid) {
 
 					if len(sm.storemanPeers)+1 >= mpcprotocol.MpcSchnrNodeNumber  {
-						peerCnt := sm.server.PeerCount()
 
-						if peerCnt + 1 < mpcprotocol.MpcSchnrNodeNumber {
-
-							for _, nd := range sm.server.StoremanNodes {
-								log.Info("add peer", nd.IP.String(), nd.TCP)
-								sm.server.AddPeer(nd)
-							}
-
-							log.Info("all peers added", "", len(sm.server.StoremanNodes))
+						for _, nd := range sm.server.StoremanNodes {
+							log.Info("add peer", nd.IP.String(), nd.TCP)
+							sm.server.AddPeer(nd)
 						}
+						log.Info("all peers added", "", len(sm.server.StoremanNodes))
 
 					} else {
 
-
 						splits := strings.Split(sm.server.ListenAddr,":")
-
 						log.Info("send get allpeers require, loalport is","",splits[len(splits)-1])
 
 						sm.SendToPeer(&leaderid,mpcprotocol.GetPeersInfo,StrmanGetPeers{splits[len(splits)-1]})
-
 					}
 
 				}
@@ -379,6 +371,13 @@ func (sm *Storeman) HandlePeer(peer *p2p.Peer, rw p2p.MsgReadWriter) error {
 	defer func() {
 		sm.peerMu.Lock()
 		delete(sm.peers, storemanPeer.ID())
+
+		serverID := sm.server.NodeInfo().ID
+		if serverID != sm.cfg.StoremanNodes[0].ID.String() &&
+		   storemanPeer.ID() != sm.cfg.StoremanNodes[0].ID {
+				delete(sm.storemanPeers, storemanPeer.ID())
+		}
+
 		sm.peerMu.Unlock()
 	}()
 
