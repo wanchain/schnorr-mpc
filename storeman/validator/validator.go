@@ -114,75 +114,91 @@ func GetDataForApprove() ([]mpcprotocol.SendData, error) {
 	return approvingData, nil
 }
 
+func approveOneData(approveData mpcprotocol.SendData) error {
+
+	approvingKey := buildKeyFromData(&approveData, mpcprotocol.MpcApproving)
+
+	sdb, err := GetDB()
+	if err != nil {
+		log.SyslogErr("approveOneData, getting storeman database fail", "err", err.Error())
+		return err
+	}
+
+	ret, err := sdb.Get([]byte(mpcprotocol.MpcApprovingKeys))
+	if err != nil {
+		log.SyslogErr("approveOneData, getting storeman database fail", "err", err.Error())
+		return err
+	}
+	var approvingKeys [][]byte
+	err = json.Unmarshal(ret, &approvingKeys)
+	if err != nil {
+		log.SyslogErr("approveOneData, Unmarshal fail", "err", err.Error())
+		return err
+	}
+	// check in approving keys
+	if !inByteArray(&approvingKey, &approvingKeys) {
+		log.SyslogErr("approveOneData, not in approving keys")
+		return err
+	}
+	// in approving keys
+	// check in approving db
+	exist, err := sdb.Has(approvingKey)
+	if !exist {
+		log.SyslogErr("approveOneData, not in approving keys")
+		return errors.New("can not fond in approving db")
+	}
+	if err != nil {
+		log.SyslogErr("approveOneData, sdb.Has error", "err:", err.Error())
+		return err
+	}
+	// in approving db
+	// add in approved DB
+	log.SyslogInfo("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& approveOneData, begin",
+		"pk", hexutil.Encode(approveData.PKBytes),
+		"data", hexutil.Encode([]byte(approveData.Data)),
+		"Extern", hexutil.Encode([]byte(approveData.Extern)))
+
+	val, err := json.Marshal(&approveData)
+	if err != nil {
+		log.SyslogErr("approveOneData, marshal fail", "err", err.Error())
+		return err
+	}
+
+	key := buildKeyFromData(&approveData, mpcprotocol.MpcApproved)
+	log.SyslogInfo("=============== approveOneData", "data", approveData.String(), "approved key", hexutil.Encode(key))
+	err = addKeyValueToDB(key, val)
+	if err != nil {
+		log.SyslogErr("approveOneData, addKeyValueToDB fail", "err", err.Error())
+		return err
+	}
+	// in approving keys
+	// delete key in keys
+	newApprovingKeys := deleteInByteArray(&approvingKey, &approvingKeys)
+	newApprovingKeysBytes, err := json.Marshal(&newApprovingKeys)
+	if err != nil {
+		log.SyslogErr("approveOneData, Marshal fail", "err", err.Error())
+		return err
+	}
+	err = addKeyValueToDB([]byte(mpcprotocol.MpcApprovingKeys), newApprovingKeysBytes)
+	if err != nil {
+		log.SyslogErr("approveOneData, addKeyValueToDB MpcApprovingKeys fail", "err", err.Error())
+		return err
+	}
+	// in approving db
+	// delete in approving db
+	err = sdb.Delete(approvingKey)
+	if err != nil {
+		log.SyslogErr("approveOneData, Delete in approving db", "err", err.Error())
+		return err
+	}
+	return nil
+}
+
 func ApproveData(approveData []mpcprotocol.SendData) []error {
 	retResult := make([]error, len(approveData))
 	for i := 0; i < len(approveData); i++ {
 		dataItem := approveData[i]
-		approvingKey := buildKeyFromData(&dataItem, mpcprotocol.MpcApproving)
-
-		// check in approving keys
-		sdb, err := GetDB()
-		if err != nil {
-			log.SyslogErr("GetDataForApprove, getting storeman database fail", "err", err.Error())
-			retResult[i] = err
-			continue
-		}
-
-		ret, err := sdb.Get([]byte(mpcprotocol.MpcApprovingKeys))
-		if err != nil {
-			log.SyslogErr("GetDataForApprove, getting storeman database fail", "err", err.Error())
-			retResult[i] = err
-			continue
-		}
-		var approvingKeys [][]byte
-		err = json.Unmarshal(ret, &approvingKeys)
-		if err != nil {
-			retResult[i] = err
-			continue
-		}
-
-		if !inByteArray(&approvingKey, &approvingKeys) {
-			retResult[i] = errors.New("can not fond in approving keys")
-			continue
-		}
-
-		// check in approving db
-		exist, err := sdb.Has(approvingKey)
-		if !exist {
-			retResult[i] = errors.New("can not fond in approving db")
-			continue
-		}
-		if err != nil {
-			retResult[i] = err
-			continue
-		}
-
-		// put in approved db
-		err = addApprovedData(&dataItem)
-		if err != nil {
-			retResult[i] = err
-			continue
-		}
-
-		// delete key in keys
-		newApprovingKeys := deleteInByteArray(&approvingKey, &approvingKeys)
-		newApprovingKeysBytes, err := json.Marshal(&newApprovingKeys)
-		if err != nil {
-			retResult[i] = err
-			continue
-		}
-		err = addKeyValueToDB([]byte(mpcprotocol.MpcApprovingKeys), newApprovingKeysBytes)
-		if err != nil {
-			retResult[i] = err
-			continue
-		}
-
-		// delete in approving db
-		err = sdb.Delete(approvingKey)
-		if err != nil {
-			retResult[i] = err
-			continue
-		}
+		retResult[i] = approveOneData(dataItem)
 	}
 
 	return retResult
@@ -378,20 +394,7 @@ func addApprovingData(dataItem *mpcprotocol.SendData) error {
 }
 
 func addApprovedData(data *mpcprotocol.SendData) error {
-	log.SyslogInfo("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& addApprovedData, begin",
-		"pk", hexutil.Encode(data.PKBytes),
-		"data", hexutil.Encode([]byte(data.Data)),
-		"Extern", hexutil.Encode([]byte(data.Extern)))
-
-	val, err := json.Marshal(&data)
-	if err != nil {
-		log.SyslogErr("addApprovedData, marshal fail", "err", err.Error())
-		return err
-	}
-
-	key := buildKeyFromData(data, mpcprotocol.MpcApproved)
-	log.SyslogInfo("=============== addApprovedData", "data", data.String(), "approved key", hexutil.Encode(key))
-	return addKeyValueToDB(key, val)
+	return approveOneData(*data)
 }
 
 //TODO need delete the approved data when signature complete successfully.

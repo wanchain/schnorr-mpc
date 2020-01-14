@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"crypto/sha256"
-	"fmt"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
@@ -186,7 +185,7 @@ func (mars *MpcAckRSStep) verifyRS(result mpcprotocol.MpcResultInterface) error 
 		"gpk", hexutil.Encode(crypto.FromECDSAPub(gpk)))
 
 	if ssG.X.Cmp(temp.X) == 0 && ssG.Y.Cmp(temp.Y) == 0 {
-		fmt.Println("Verification Succeeded")
+		log.SyslogInfo("Verification success")
 	} else {
 		log.SyslogErr("Verification failed")
 		return mpcprotocol.ErrVerifyFailed
