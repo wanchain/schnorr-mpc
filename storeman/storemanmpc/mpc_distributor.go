@@ -164,11 +164,6 @@ func (mpcServer *MpcDistributor) GetMessage(PeerID discover.NodeID, rw p2p.MsgRe
 		// this should not happen, but no need to panic; just ignore this message.
 		log.SyslogInfo("status message received", "peer", PeerID.String())
 
-		go func() {
-			log.SyslogInfo("response status message", "peer", PeerID.String())
-			p2p.Send(rw, mpcprotocol.StatusCode, mpcprotocol.PVer)
-		}()
-
 
 	case mpcprotocol.KeepaliveCode:
 		// this should not happen, but no need to panic; just ignore this message.

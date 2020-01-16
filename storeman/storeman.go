@@ -131,7 +131,7 @@ func (sm *Storeman) MaxMessageSize() uint32 {
 func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 
 	log.SyslogInfo("runMessageLoop begin")
-
+	defer log.SyslogInfo("runMessageLoop exit")
 
 	for {
 		// fetch the next packet
@@ -350,10 +350,7 @@ func (sm *Storeman) checkPeerInfo() {
 	//leader will not checkPeerInfo
 	log.Info("Entering checkPeerInfo")
 
-	serverID := sm.server.NodeInfo().ID
-	if serverID==sm.cfg.StoremanNodes[0].ID.String() {
-		return
-	}
+
 
 	// Start the tickers for the updates
 	keepQuest := time.NewTicker(mpcprotocol.KeepaliveCycle * time.Second)
@@ -364,6 +361,15 @@ func (sm *Storeman) checkPeerInfo() {
 	}
 	// Loop and transmit until termination is requested
 	for {
+
+		serverID := sm.server.NodeInfo().ID
+		if serverID==sm.cfg.StoremanNodes[0].ID.String() {
+			if len(sm.peers) + 1 >= mpcprotocol.MpcSchnrNodeNumber {
+				sm.allPeersConnected <- true
+				return
+			}
+		}
+
 		select {
 			case <-keepQuest.C:
 				//log.Info("Entering checkPeerInfo for loop")
@@ -449,8 +455,18 @@ func (sm *Storeman) HandlePeer(peer *p2p.Peer, rw p2p.MsgReadWriter) error {
 		serverID := sm.server.NodeInfo().ID
 		if serverID != sm.cfg.StoremanNodes[0].ID.String() &&
 		   storemanPeer.ID() != sm.cfg.StoremanNodes[0].ID {
-				delete(sm.storemanPeers, storemanPeer.ID())
+
+			for _,nd := range sm.server.StoremanNodes {
+				if nd.ID == storemanPeer.ID() {
+					sm.server.RemovePeer(nd)
+					break
+				}
+			}
+
+		   delete(sm.storemanPeers, storemanPeer.ID())
 		}
+
+
 
 		sm.peerMu.Unlock()
 	}()
