@@ -208,7 +208,7 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 
 				for i:= 0;i<len(allp.Port);i++ {
 
-					if allp.Nodeid[i] == sm.server.Self().ID.String() {
+					if allp.Nodeid[i] == sm.server.Self().ID.String() 	{
 						continue
 					}
 
@@ -223,10 +223,18 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 						return err
 					}
 
+					if sm.storemanPeers[nd.ID] {
+						continue
+					}
+
 					//added to storeman peer
 					sm.storemanPeers[nd.ID] = true
-					sm.server.StoremanNodes = append(sm.server.StoremanNodes,nd)
+					sm.server.StoremanNodes = append(sm.server.StoremanNodes, nd)
+
 				}
+
+				i := 0
+				i++
 
 			default:
 
@@ -371,9 +379,11 @@ func (sm *Storeman) checkPeerInfo() {
 							sm.server.AddPeer(nd)
 						}
 						log.Info("all peers added", "", len(sm.server.StoremanNodes))
+
 						if !sm.isSentPeer{
-								sm.allPeersConnected <- true
-							}
+							sm.allPeersConnected <- true
+						}
+
 					} else {
 
 						splits := strings.Split(sm.server.ListenAddr,":")

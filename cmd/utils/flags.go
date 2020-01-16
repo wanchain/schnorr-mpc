@@ -568,6 +568,8 @@ func SetP2PConfig(ctx *cli.Context, cfg *p2p.Config) {
 					continue
 				}
 
+
+
 				cfg.StoremanNodes = append(cfg.StoremanNodes, node)
 
 			}
