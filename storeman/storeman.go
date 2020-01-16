@@ -374,7 +374,9 @@ func (sm *Storeman) checkPeerInfo() {
 			case <-keepQuest.C:
 				//log.Info("Entering checkPeerInfo for loop")
 				if sm.IsActivePeer(&leaderid) {
-					//log.Info("Entering sm.IsActivePeer true")
+
+					sm.peerMu.Lock()
+
 					if len(sm.storemanPeers) +1 >= mpcprotocol.MpcSchnrNodeNumber  {
 
 						for _, nd := range sm.server.StoremanNodes {
@@ -392,6 +394,8 @@ func (sm *Storeman) checkPeerInfo() {
 							//log.Info("send get allpeers require, loalport is","",splits[len(splits)-1])
 							sm.SendToPeer(&leaderid, mpcprotocol.GetPeersInfo, StrmanGetPeers{splits[len(splits)-1]})
 					}
+
+					sm.peerMu.Unlock()
 
 				}
 
@@ -456,9 +460,10 @@ func (sm *Storeman) HandlePeer(peer *p2p.Peer, rw p2p.MsgReadWriter) error {
 		if serverID != sm.cfg.StoremanNodes[0].ID.String() &&
 		   storemanPeer.ID() != sm.cfg.StoremanNodes[0].ID {
 
-			for _,nd := range sm.server.StoremanNodes {
+			for idx,nd := range sm.server.StoremanNodes {
 				if nd.ID == storemanPeer.ID() {
 					sm.server.RemovePeer(nd)
+					sm.server.StoremanNodes = append(sm.server.StoremanNodes[0:idx],sm.server.StoremanNodes[idx+1:]...)
 					break
 				}
 			}
