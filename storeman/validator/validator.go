@@ -106,7 +106,9 @@ func GetDataForApprove() ([]mpcprotocol.SendData, error) {
 		var approvingTemp mpcprotocol.SendData
 		err = json.Unmarshal(approvingItem, &approvingTemp)
 		if err != nil {
-			return nil, err
+			log.SyslogErr("GetDataForApprove, Unmarshal approvingTemp", "err", err.Error())
+			//return nil, err
+			continue
 		}
 		approvingData = append(approvingData, approvingTemp)
 	}
