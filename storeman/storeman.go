@@ -375,14 +375,14 @@ func (sm *Storeman) checkPeerInfo() {
 				//log.Info("Entering checkPeerInfo for loop")
 				if sm.IsActivePeer(&leaderid) {
 
-					sm.peerMu.Lock()
+					if len( sm.server.StoremanNodes) +1 >= mpcprotocol.MpcSchnrNodeNumber  {
 
-					if len(sm.storemanPeers) +1 >= mpcprotocol.MpcSchnrNodeNumber  {
-
+						sm.peerMu.Lock()
 						for _, nd := range sm.server.StoremanNodes {
-							//log.Info("add peer", nd.IP.String(), nd.TCP)
 							sm.server.AddPeer(nd)
 						}
+						sm.peerMu.Unlock()
+
 						log.Info("all peers added", "", len(sm.server.StoremanNodes))
 
 						if len(sm.peers) + 1 >= mpcprotocol.MpcSchnrNodeNumber && !sm.isSentPeer {
@@ -395,7 +395,7 @@ func (sm *Storeman) checkPeerInfo() {
 							sm.SendToPeer(&leaderid, mpcprotocol.GetPeersInfo, StrmanGetPeers{splits[len(splits)-1]})
 					}
 
-					sm.peerMu.Unlock()
+
 
 				}
 
