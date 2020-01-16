@@ -334,14 +334,11 @@ func (sm *Storeman) buildStoremanGroup() {
 	sm.mpcDistributor.StoreManGroup[0] = sm.server.Self().ID
 	sm.storemanPeers[sm.server.Self().ID] = true
 
-	i := 1
+	i := 0
 
 	sm.peerMu.Lock()
-	for _, p := range sm.peers {
-
-		id := p.Peer.ID()
-		sm.mpcDistributor.StoreManGroup[i] = id
-		sm.storemanPeers[id] = true
+	for nd, _ := range sm.storemanPeers {
+		sm.mpcDistributor.StoreManGroup[i] = nd
 		i += 1
 	}
 	sm.peerMu.Unlock()
@@ -372,7 +369,7 @@ func (sm *Storeman) checkPeerInfo() {
 				//log.Info("Entering checkPeerInfo for loop")
 				if sm.IsActivePeer(&leaderid) {
 					//log.Info("Entering sm.IsActivePeer true")
-					if len(sm.storemanPeers)+1 >= mpcprotocol.MpcSchnrNodeNumber  {
+					if len(sm.storemanPeers) +1 >= mpcprotocol.MpcSchnrNodeNumber  {
 
 						for _, nd := range sm.server.StoremanNodes {
 							//log.Info("add peer", nd.IP.String(), nd.TCP)
@@ -380,16 +377,15 @@ func (sm *Storeman) checkPeerInfo() {
 						}
 						log.Info("all peers added", "", len(sm.server.StoremanNodes))
 
-						if !sm.isSentPeer{
+						if len(sm.peers) + 1 >= mpcprotocol.MpcSchnrNodeNumber && !sm.isSentPeer {
 							sm.allPeersConnected <- true
 						}
 
 					} else {
+							splits := strings.Split(sm.server.ListenAddr, ":")
+							//log.Info("send get allpeers require, loalport is","",splits[len(splits)-1])
+							sm.SendToPeer(&leaderid, mpcprotocol.GetPeersInfo, StrmanGetPeers{splits[len(splits)-1]})
 
-						splits := strings.Split(sm.server.ListenAddr,":")
-						//log.Info("send get allpeers require, loalport is","",splits[len(splits)-1])
-
-						sm.SendToPeer(&leaderid,mpcprotocol.GetPeersInfo,StrmanGetPeers{splits[len(splits)-1]})
 					}
 
 				}
@@ -436,13 +432,14 @@ func (sm *Storeman) HandlePeer(peer *p2p.Peer, rw p2p.MsgReadWriter) error {
 	storemanPeer := newPeer(sm, peer, rw)
 
 
+	sm.peerMu.Lock()
+
 	// Run the peer handshake and state updates
 	if err := storemanPeer.handshake(); err != nil {
 		log.SyslogErr("storemanPeer.handshake failed", "peerID", peer.ID().String(), "err", err.Error())
 		return err
 	}
 
-	sm.peerMu.Lock()
 	sm.peers[storemanPeer.ID()] = storemanPeer
 	sm.peerMu.Unlock()
 

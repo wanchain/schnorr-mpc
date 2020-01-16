@@ -87,6 +87,8 @@ func (p *Peer) handshake() error {
 	go func() {
 		errc <- p2p.Send(p.ws, mpcprotocol.StatusCode, mpcprotocol.PVer)
 	}()
+
+	//p2p.Send(p.ws, mpcprotocol.StatusCode, mpcprotocol.PVer)
 	// Fetch the remote status packet and verify protocol match
 	packet, err := p.ws.ReadMsg()
 	if err != nil {
