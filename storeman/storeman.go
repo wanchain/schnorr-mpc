@@ -67,6 +67,7 @@ func New(cfg *Config, accountManager *accounts.Manager, aKID, secretKey, region 
 		cfg:   cfg,
 		isSentPeer:false,
 		peersPort:make(map[discover.NodeID]string),
+		allPeersConnected:make(chan bool,1),
 	}
 
 	storeman.mpcDistributor = storemanmpc.CreateMpcDistributor(accountManager,
@@ -116,6 +117,8 @@ type Storeman struct {
 	server 			*p2p.Server
 	isSentPeer 	   bool
 	peersPort  	   map[discover.NodeID]string
+
+	allPeersConnected chan bool
 }
 
 // MaxMessageSize returns the maximum accepted message size.
@@ -262,6 +265,24 @@ func (sm *Storeman) Protocols() []p2p.Protocol {
 // Start implements node.Service, starting the background data propagation thread
 // of the Whisper protocol.
 func (sm *Storeman) Start(server *p2p.Server) error {
+
+	sm.mpcDistributor.Self = server.Self()
+	sm.mpcDistributor.StoreManGroup = make([]discover.NodeID, mpcprotocol.MpcSchnrNodeNumber)
+	sm.storemanPeers = make(map[discover.NodeID]bool)
+	sm.server = server
+
+	for _, item := range server.StoremanNodes {
+		sm.storemanPeers[item.ID] = true
+	}
+
+	go sm.checkPeerInfo()
+	//go sm.checkAllPeerConnect()
+	go sm.buildStoremanGroup()
+
+	return nil
+
+
+	/*
 	sm.mpcDistributor.Self = server.Self()
 	sm.mpcDistributor.StoreManGroup = make([]discover.NodeID, len(server.StoremanNodes))
 	sm.storemanPeers = make(map[discover.NodeID]bool)
@@ -272,14 +293,58 @@ func (sm *Storeman) Start(server *p2p.Server) error {
 	}
 
 	sm.mpcDistributor.InitStoreManGroup()
-
 	go sm.checkPeerInfo()
 
 	return nil
+	*/
+
+}
+
+func (sm *Storeman) checkAllPeerConnect() {
+	checkTimer := time.NewTicker(mpcprotocol.CheckAllPeerConnected * time.Second)
+	for {
+		select {
+		case <-checkTimer.C:
+			sm.peerMu.Lock()
+			if len(sm.peers) == mpcprotocol.MpcSchnrNodeNumber -1 {
+				log.SyslogInfo("Storeman","checkAllPeerConnect","Have got all peer nodes......")
+				sm.allPeersConnected <- true
+				sm.peerMu.Unlock()
+				break
+			}
+			sm.peerMu.Unlock()
+		}
+	}
+}
+
+
+func (sm *Storeman) buildStoremanGroup() {
+	log.SyslogInfo("Entering Storeman buildStoremanGroup......")
+	<- sm.allPeersConnected
+	sm.isSentPeer = true
+
+	sm.mpcDistributor.StoreManGroup[0] = sm.server.Self().ID
+	sm.storemanPeers[sm.server.Self().ID] = true
+
+	i := 1
+
+	sm.peerMu.Lock()
+	for _, p := range sm.peers {
+
+		id := p.Peer.ID()
+		sm.mpcDistributor.StoreManGroup[i] = id
+		sm.storemanPeers[id] = true
+		i += 1
+	}
+	sm.peerMu.Unlock()
+
+	sm.mpcDistributor.InitStoreManGroup()
 }
 
 func (sm *Storeman) checkPeerInfo() {
 	//leader will not checkPeerInfo
+	log.Info("Entering checkPeerInfo")
+
 	serverID := sm.server.NodeInfo().ID
 	if serverID==sm.cfg.StoremanNodes[0].ID.String() {
 		return
@@ -296,20 +361,23 @@ func (sm *Storeman) checkPeerInfo() {
 	for {
 		select {
 			case <-keepQuest.C:
+				//log.Info("Entering checkPeerInfo for loop")
 				if sm.IsActivePeer(&leaderid) {
-
+					//log.Info("Entering sm.IsActivePeer true")
 					if len(sm.storemanPeers)+1 >= mpcprotocol.MpcSchnrNodeNumber  {
 
 						for _, nd := range sm.server.StoremanNodes {
-							log.Info("add peer", nd.IP.String(), nd.TCP)
+							//log.Info("add peer", nd.IP.String(), nd.TCP)
 							sm.server.AddPeer(nd)
 						}
 						log.Info("all peers added", "", len(sm.server.StoremanNodes))
-
+						if !sm.isSentPeer{
+								sm.allPeersConnected <- true
+							}
 					} else {
 
 						splits := strings.Split(sm.server.ListenAddr,":")
-						log.Info("send get allpeers require, loalport is","",splits[len(splits)-1])
+						//log.Info("send get allpeers require, loalport is","",splits[len(splits)-1])
 
 						sm.SendToPeer(&leaderid,mpcprotocol.GetPeersInfo,StrmanGetPeers{splits[len(splits)-1]})
 					}

@@ -12,7 +12,7 @@ const (
 	MpcSchnrThr = 2 // MpcSchnrThr >= number(storeman )/2 +1
 	MPCDegree   = MpcSchnrThr - 1
 	//MpcSchnrNodeNumber = 50 // At least MpcSchnrNodeNumber MPC nodes
-	MpcSchnrNodeNumber = 3 // At least MpcSchnrNodeNumber MPC nodes
+	MpcSchnrNodeNumber = 4 // At least MpcSchnrNodeNumber MPC nodes
 )
 
 const (
@@ -30,6 +30,8 @@ const (
 	MPCMessage // get a message for a Context
 	RequestMPCNonce
 	KeepaliveCycle
+	CheckAllPeerConnected
+	BuildStoremanGroup
 	AllPeersInfo
 	GetPeersInfo
 	NumberOfMessageCodes

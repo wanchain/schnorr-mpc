@@ -220,11 +220,14 @@ func (mpcServer *MpcDistributor) GetMessage(PeerID discover.NodeID, rw p2p.MsgRe
 }
 
 func (mpcServer *MpcDistributor) InitStoreManGroup() {
+	log.SyslogInfo("Entering MpcDistributor InitStoreManGroup......")
 	sort.Sort(mpcprotocol.SliceStoremanGroup(mpcServer.StoreManGroup))
 	mpcServer.storeManIndex = make(map[discover.NodeID]byte)
 	for i := 0; i < len(mpcServer.StoreManGroup); i++ {
 		mpcServer.storeManIndex[mpcServer.StoreManGroup[i]] = byte(i)
 	}
+	log.SyslogInfo("InitStoreManGroup......","mpcServer.StoreManGroup",mpcServer.StoreManGroup)
+	log.SyslogInfo("InitStoreManGroup......","storeManIndex",mpcServer.storeManIndex)
 }
 
 func (mpcServer *MpcDistributor) CreateRequestGPK() ([]byte, error) {
@@ -600,6 +603,7 @@ func (mpcServer *MpcDistributor) P2pMessage(peerID *discover.NodeID, code uint64
 
 func (mpcServer *MpcDistributor) BroadcastMessage(peers []discover.NodeID, code uint64, msg interface{}) error {
 	if peers == nil {
+		log.Info("Entering BroadcastMessage using mpcServer.StoreManGroup")
 		for _, peer := range mpcServer.StoreManGroup {
 			if peer == mpcServer.Self.ID {
 				mpcServer.getOwnerP2pMessage(&mpcServer.Self.ID, code, msg)
@@ -611,6 +615,7 @@ func (mpcServer *MpcDistributor) BroadcastMessage(peers []discover.NodeID, code 
 			}
 		}
 	} else {
+		log.Info("Entering BroadcastMessage using peers")
 		for _, peerID := range peers {
 			if peerID == mpcServer.Self.ID {
 				mpcServer.getOwnerP2pMessage(&mpcServer.Self.ID, code, msg)

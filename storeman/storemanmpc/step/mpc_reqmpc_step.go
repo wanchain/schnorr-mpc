@@ -76,6 +76,8 @@ func (req *RequestMpcStep) InitStep(result mpcprotocol.MpcResultInterface) error
 }
 
 func (req *RequestMpcStep) CreateMessage() []mpcprotocol.StepMessage {
+	log.SyslogInfo("RequestMpcStep.CreateMessage.....")
+	log.Info("RequestMpcStep","CreateMessage peers",*req.peers)
 	msg := mpcprotocol.StepMessage{
 		MsgCode:   mpcprotocol.RequestMPC,
 		PeerID:    nil,

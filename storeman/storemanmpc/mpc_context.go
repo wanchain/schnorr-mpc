@@ -137,6 +137,11 @@ func (mpcCtx *MpcContext) mainMPCProcess(StoremanManager mpcprotocol.StoremanMan
 						StoremanManager.P2pMessage(item.PeerID, item.MsgCode, mpcMsg)
 						log.SyslogInfo("step send a p2p msg", "ctxid", mpcCtx.ContextID, "stepId", i)
 					} else {
+
+						for _,item := range peerIDs{
+							log.SyslogInfo("step boardcast a p2p msg", "peerid:",item.String())
+						}
+
 						StoremanManager.BroadcastMessage(peerIDs, item.MsgCode, mpcMsg)
 						log.SyslogInfo("step boardcast a p2p msg", "ctxid", mpcCtx.ContextID, "stepId", i)
 					}
