@@ -385,7 +385,6 @@ func (sm *Storeman) checkPeerInfo() {
 							splits := strings.Split(sm.server.ListenAddr, ":")
 							//log.Info("send get allpeers require, loalport is","",splits[len(splits)-1])
 							sm.SendToPeer(&leaderid, mpcprotocol.GetPeersInfo, StrmanGetPeers{splits[len(splits)-1]})
-
 					}
 
 				}
