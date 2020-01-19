@@ -157,7 +157,7 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 					return err
 				}
 
-				log.Info("adding peer","",peerGeting.LocalPort)
+				log.Debug("adding peer","",peerGeting.LocalPort)
 
 				allp := &StrmanAllPeers{make([]string, 0),make([]string,0),make([]string,0)}
 
@@ -182,12 +182,12 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 					allp.Port = append(allp.Port, sm.peersPort[smpr.Peer.ID()])
 					allp.Nodeid = append(allp.Nodeid,smpr.ID().String())
 
-					log.Info("append peer addrs,port",splits[0],sm.peersPort[smpr.ID()])
+					log.Debug("append peer addrs,port",splits[0],sm.peersPort[smpr.ID()])
 				}
 
 
 				if len(allp.Port)>0 {
-					log.Info("send all peers from leader, count","",len(allp.Port))
+					log.Debug("send all peers from leader, count","",len(allp.Port))
 					p.sendAllpeers(allp)
 				}
 
@@ -383,7 +383,7 @@ func (sm *Storeman) checkPeerInfo() {
 						}
 						sm.peerMu.Unlock()
 
-						log.Info("all peers added", "", len(sm.server.StoremanNodes))
+						log.Debug("all peers added", "", len(sm.server.StoremanNodes))
 
 						if len(sm.peers) + 1 >= mpcprotocol.MpcSchnrNodeNumber && !sm.isSentPeer {
 							sm.allPeersConnected <- true
@@ -529,7 +529,7 @@ func (sa *StoremanAPI) CreateGPK(ctx context.Context) (pk hexutil.Bytes, err err
 
 	gpk, err := sa.sm.mpcDistributor.CreateRequestGPK()
 	if err == nil {
-		log.SyslogInfo("CreateGPK end", "gpk", gpk)
+		log.SyslogInfo("CreateGPK end", "gpk", hexutil.Encode(gpk))
 	} else {
 		log.SyslogErr("CreateGPK end", "err", err.Error())
 	}

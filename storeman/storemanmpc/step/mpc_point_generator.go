@@ -66,7 +66,7 @@ func (point *mpcPointGenerator) calculateResult() error {
 		log.SyslogInfo("all public share",
 			"gpk share x", hex.EncodeToString(gpkshareTemp.X.Bytes()),
 			"gpk share y", hex.EncodeToString(gpkshareTemp.Y.Bytes()),
-			"seed", seeds[index])
+			"seed", hex.EncodeToString(seeds[index].Bytes()))
 	}
 
 	// lagrangeEcc

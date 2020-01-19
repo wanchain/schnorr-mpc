@@ -685,9 +685,7 @@ func (mpcServer *MpcDistributor) CreateKeystore(result mpcprotocol.MpcResultInte
 	result.SetByteValue(mpcprotocol.MpcContextResult, crypto.FromECDSAPub(result1))
 	log.Info("CreateKeystore ",
 		"gpk address", crypto.PubkeyToAddress(*result1),
-		"gpk byte", crypto.FromECDSAPub(result1),
-		"gpk hexutil.Encode", hexutil.Encode(crypto.FromECDSAPub(result1)),
-		"gpk string", string(crypto.FromECDSAPub(result1)))
+		"gpk hexutil.Encode", hexutil.Encode(crypto.FromECDSAPub(result1)))
 
 	return nil
 }
