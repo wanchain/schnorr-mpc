@@ -25,13 +25,17 @@ import (
 )
 
 type Config struct {
-	StoremanNodes []*discover.Node
-	Password      string
-	DataPath      string
+	StoremanNodes     []*discover.Node
+	Password          string
+	DataPath          string
+	SchnorrThreshold  int
+	SchnorrTotalNodes int
 }
 
 var DefaultConfig = Config{
-	StoremanNodes: make([]*discover.Node, 0),
+	StoremanNodes:     make([]*discover.Node, 0),
+	SchnorrThreshold:  26,
+	SchnorrTotalNodes: 50,
 }
 
 type StrmanKeepAlive struct {
@@ -69,6 +73,17 @@ func New(cfg *Config, accountManager *accounts.Manager, aKID, secretKey, region 
 		peersPort:make(map[discover.NodeID]string),
 		allPeersConnected:make(chan bool,1),
 	}
+
+	mpcprotocol.MpcSchnrThr = cfg.SchnorrThreshold
+	mpcprotocol.MpcSchnrNodeNumber = cfg.SchnorrTotalNodes
+	mpcprotocol.MPCDegree = mpcprotocol.MpcSchnrThr - 1
+
+	if mpcprotocol.MpcSchnrNodeNumber < mpcprotocol.MpcSchnrThr {
+		log.SyslogErr("should: SchnorrTotalNodes >= SchnorrThreshold")
+		os.Exit(1)
+	}
+	log.Info("=========New storeman", "SchnorrThreshold", mpcprotocol.MpcSchnrThr)
+	log.Info("=========New storeman", "SchnorrTotalNodes", mpcprotocol.MpcSchnrNodeNumber)
 
 	storeman.mpcDistributor = storemanmpc.CreateMpcDistributor(accountManager,
 		storeman,
@@ -337,8 +352,12 @@ func (sm *Storeman) buildStoremanGroup() {
 	i := 0
 
 	sm.peerMu.Lock()
+	log.Info("Storeman buildStoremanGroup","len of storemanPeers", len(sm.storemanPeers))
+	log.Info("Storeman buildStoremanGroup","len of StoreManGroup", len(sm.mpcDistributor.StoreManGroup))
 	for nd, _ := range sm.storemanPeers {
-		sm.mpcDistributor.StoreManGroup[i] = nd
+		if i< len(sm.mpcDistributor.StoreManGroup){
+			sm.mpcDistributor.StoreManGroup[i] = nd
+		}
 		i += 1
 	}
 	sm.peerMu.Unlock()
@@ -519,11 +538,8 @@ func (sa *StoremanAPI) CreateGPK(ctx context.Context) (pk hexutil.Bytes, err err
 
 	log.SyslogInfo("CreateGPK begin")
 	log.SyslogInfo("CreateGPK begin", "peers", len(sa.sm.peers), "storeman peers", len(sa.sm.storemanPeers))
-	if len(sa.sm.peers) < len(sa.sm.storemanPeers)-1 {
-		return []byte{}, mpcprotocol.ErrTooLessStoreman
-	}
 
-	if len(sa.sm.storemanPeers)+1 < mpcprotocol.MpcSchnrNodeNumber {
+	if len(sa.sm.storemanPeers)+1 < mpcprotocol.MpcSchnrThr {
 		return []byte{}, mpcprotocol.ErrTooLessStoreman
 	}
 
@@ -540,7 +556,7 @@ func (sa *StoremanAPI) CreateGPK(ctx context.Context) (pk hexutil.Bytes, err err
 func (sa *StoremanAPI) SignData(ctx context.Context, data mpcprotocol.SendData) (result mpcprotocol.SignedResult, err error) {
 	//Todo  check the input parameter
 
-	if len(sa.sm.peers) < mpcprotocol.MPCDegree*2 {
+	if len(sa.sm.storemanPeers)+1 < mpcprotocol.MpcSchnrThr {
 		return mpcprotocol.SignedResult{R: []byte{}, S: []byte{}}, mpcprotocol.ErrTooLessStoreman
 	}
 

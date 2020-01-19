@@ -111,7 +111,7 @@ func defaultNodeConfig() node.Config {
 	cfg.Name = clientIdentifier
 	cfg.Version = params.VersionWithCommit(gitCommit)
 	cfg.HTTPModules = append(cfg.HTTPModules, "eth", "shh")
-	cfg.HTTPModules = append(cfg.HTTPModules, "wan", "shh","pos")
+	cfg.HTTPModules = append(cfg.HTTPModules, "wan", "shh", "pos")
 	cfg.HTTPModules = append(cfg.HTTPModules, "storeman")
 	cfg.WSModules = append(cfg.WSModules, "eth", "shh")
 	cfg.WSModules = append(cfg.WSModules, "wan", "shh")
@@ -186,6 +186,15 @@ func makeFullNode(ctx *cli.Context) *node.Node {
 	}
 
 	if ctx.GlobalIsSet(utils.StoremanFlag.Name) {
+
+		if ctx.GlobalIsSet(utils.SchnorrThresholdFlag.Name) {
+			cfg.Sm.SchnorrThreshold = ctx.Int(utils.SchnorrThresholdFlag.Name)
+		}
+
+		if ctx.GlobalIsSet(utils.SchnorrTotalNodesFlag.Name) {
+			cfg.Sm.SchnorrTotalNodes = ctx.Int(utils.SchnorrTotalNodesFlag.Name)
+		}
+
 		cfg.Sm.DataPath = cfg.Node.DataDir
 		enableKms := ctx.GlobalIsSet(utils.AwsKmsFlag.Name)
 
@@ -201,7 +210,7 @@ func makeFullNode(ctx *cli.Context) *node.Node {
 		verify, accounts := getVerifyAccounts()
 		if verify {
 			suc, status = verifySecurityInfo(stack, enableKms, kmsInfo, password, accounts)
-			for !suc  {
+			for !suc {
 				log.Error("verify security info fail, please input again")
 				if status == 0x00 || (status == 0x01 && !enableKms) {
 					verify, accounts = getVerifyAccounts()
@@ -240,8 +249,6 @@ func dumpConfig(ctx *cli.Context) error {
 	return nil
 }
 
-
-
 func verifySecurityInfo(node *node.Node, enableKms bool, info *storemanmpc.KmsInfo, password string, accounts []string) (bool, int) {
 
 	fmt.Println("")
@@ -263,7 +270,6 @@ func verifySecurityInfo(node *node.Node, enableKms bool, info *storemanmpc.KmsIn
 
 	return true, 0
 }
-
 
 func getKmsInfo() *storemanmpc.KmsInfo {
 	ret := storemanmpc.KmsInfo{}
@@ -301,7 +307,7 @@ func getPassword(ctx *cli.Context, retry bool) string {
 	} else {
 		fmt.Println("begin collect keystore file password...")
 
-		for ; ;  {
+		for {
 			fmt.Println("please input keystore file  password :")
 			pswd, err := terminal.ReadPassword(0)
 			if err != nil {
@@ -337,7 +343,7 @@ func getVerifyAccounts() (bool, []string) {
 	reader := bufio.NewReader(os.Stdin)
 	var accounts []string
 
-	for ; ;  {
+	for {
 		fmt.Println("please input accounts to verify (like: addr1 addr2. noinput means don't verify):")
 		read, _, _ := reader.ReadLine()
 		if len(read) == 0 {
@@ -346,7 +352,7 @@ func getVerifyAccounts() (bool, []string) {
 
 		splits := strings.Split(string(read), " ")
 		for _, addr := range splits {
-			if len(addr) == (common.AddressLength*2+2) {
+			if len(addr) == (common.AddressLength*2 + 2) {
 				accounts = append(accounts, addr)
 			}
 		}
@@ -361,6 +367,3 @@ func getVerifyAccounts() (bool, []string) {
 
 	return true, accounts
 }
-
-
-

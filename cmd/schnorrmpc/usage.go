@@ -131,6 +131,13 @@ var AppHelpFlagGroups = []flagGroup{
 		Name:  "WHISPER (EXPERIMENTAL)",
 		Flags: whisperFlags,
 	},
+	{
+		Name: "SCHNORR",
+		Flags: []cli.Flag{
+			utils.SchnorrThresholdFlag,
+			utils.SchnorrTotalNodesFlag,
+		},
+	},
 }
 
 // byCategory sorts an array of flagGroup by Name in the order
