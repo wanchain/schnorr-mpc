@@ -65,6 +65,7 @@ func New(cfg *Config, accountManager *accounts.Manager, aKID, secretKey, region 
 	}
 	log.Info("=========New storeman", "SchnorrThreshold", mpcprotocol.MpcSchnrThr)
 	log.Info("=========New storeman", "SchnorrTotalNodes", mpcprotocol.MpcSchnrNodeNumber)
+	mpcprotocol.MPCDegree = mpcprotocol.MpcSchnrThr -1
 
 	storeman.mpcDistributor = storemanmpc.CreateMpcDistributor(accountManager,
 		storeman,
