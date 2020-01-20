@@ -289,23 +289,7 @@ func (sm *Storeman) Protocols() []p2p.Protocol {
 // of the Whisper protocol.
 func (sm *Storeman) Start(server *p2p.Server) error {
 
-	sm.mpcDistributor.Self = server.Self()
-	sm.mpcDistributor.StoreManGroup = make([]discover.NodeID, mpcprotocol.MpcSchnrNodeNumber)
-	sm.storemanPeers = make(map[discover.NodeID]bool)
-	sm.server = server
 
-	for _, item := range server.StoremanNodes {
-		sm.storemanPeers[item.ID] = true
-	}
-
-	go sm.checkPeerInfo()
-	//go sm.checkAllPeerConnect()
-	go sm.buildStoremanGroup()
-
-	return nil
-
-
-	/*
 	sm.mpcDistributor.Self = server.Self()
 	sm.mpcDistributor.StoreManGroup = make([]discover.NodeID, len(server.StoremanNodes))
 	sm.storemanPeers = make(map[discover.NodeID]bool)
@@ -317,52 +301,8 @@ func (sm *Storeman) Start(server *p2p.Server) error {
 
 	sm.mpcDistributor.InitStoreManGroup()
 	go sm.checkPeerInfo()
-
 	return nil
-	*/
 
-}
-
-func (sm *Storeman) checkAllPeerConnect() {
-	checkTimer := time.NewTicker(mpcprotocol.CheckAllPeerConnected * time.Second)
-	for {
-		select {
-		case <-checkTimer.C:
-			sm.peerMu.Lock()
-			if len(sm.peers) == mpcprotocol.MpcSchnrNodeNumber -1 {
-				log.SyslogInfo("Storeman","checkAllPeerConnect","Have got all peer nodes......")
-				sm.allPeersConnected <- true
-				sm.peerMu.Unlock()
-				break
-			}
-			sm.peerMu.Unlock()
-		}
-	}
-}
-
-
-func (sm *Storeman) buildStoremanGroup() {
-	log.SyslogInfo("Entering Storeman buildStoremanGroup......")
-	<- sm.allPeersConnected
-	sm.isSentPeer = true
-
-	sm.mpcDistributor.StoreManGroup[0] = sm.server.Self().ID
-	sm.storemanPeers[sm.server.Self().ID] = true
-
-	i := 0
-
-	sm.peerMu.Lock()
-	log.Info("Storeman buildStoremanGroup","len of storemanPeers", len(sm.storemanPeers))
-	log.Info("Storeman buildStoremanGroup","len of StoreManGroup", len(sm.mpcDistributor.StoreManGroup))
-	for nd, _ := range sm.storemanPeers {
-		if i< len(sm.mpcDistributor.StoreManGroup){
-			sm.mpcDistributor.StoreManGroup[i] = nd
-		}
-		i += 1
-	}
-	sm.peerMu.Unlock()
-
-	sm.mpcDistributor.InitStoreManGroup()
 }
 
 func (sm *Storeman) checkPeerInfo() {
