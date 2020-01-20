@@ -229,7 +229,7 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 					//if allready exist,check next
 					url := "enode://" + allp.Nodeid[i] + "@" + allp.Ip[i] + ":" + allp.Port[i]
 
-					//log.Info("got peer, url=","",url)
+					log.Info("got peer, url=","",url)
 
 					nd, err := discover.ParseNode(url)
 					if err != nil {
@@ -315,16 +315,9 @@ func (sm *Storeman) checkPeerInfo() {
 			case <-keepQuest.C:
 				//log.Info("Entering checkPeerInfo for loop")
 				if sm.IsActivePeer(&leaderid) {
-
-					if len( sm.server.StoremanNodes) +1 >= mpcprotocol.MpcSchnrNodeNumber  {
-
-						log.Debug("all peers added", "", len(sm.server.StoremanNodes))
-
-					} else {
 						splits := strings.Split(sm.server.ListenAddr, ":")
 						//log.Info("send get allpeers require, loalport is","",splits[len(splits)-1])
 						sm.SendToPeer(&leaderid, mpcprotocol.GetPeersInfo, StrmanGetPeers{splits[len(splits)-1]})
-					}
 
 				}
 
