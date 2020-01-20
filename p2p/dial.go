@@ -175,6 +175,10 @@ func (s *dialstate) removeStatic(n *discover.Node) {
 func (s *dialstate) addStoreman(n *discover.Node) {
 	// This overwites the task instead of updating an existing
 	// entry, giving users the opportunity to force a resolve operation.
+	if _,ok := s.storeman[n.ID];ok {
+		return
+	}
+
 	s.storeman[n.ID] = &dialTask{flags: storemanDialedConn, dest: n}
 }
 

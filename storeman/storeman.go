@@ -71,7 +71,6 @@ func New(cfg *Config, accountManager *accounts.Manager, aKID, secretKey, region 
 		cfg:   cfg,
 		isSentPeer:false,
 		peersPort:make(map[discover.NodeID]string),
-		allPeersConnected:make(chan bool,1),
 	}
 
 	mpcprotocol.MpcSchnrThr = cfg.SchnorrThreshold
@@ -133,7 +132,7 @@ type Storeman struct {
 	isSentPeer 	   bool
 	peersPort  	   map[discover.NodeID]string
 
-	allPeersConnected chan bool
+	//allPeersConnected chan bool
 }
 
 // MaxMessageSize returns the maximum accepted message size.
@@ -230,7 +229,7 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 					//if allready exist,check next
 					url := "enode://" + allp.Nodeid[i] + "@" + allp.Ip[i] + ":" + allp.Port[i]
 
-					log.Info("got peer, url=","",url)
+					//log.Info("got peer, url=","",url)
 
 					nd, err := discover.ParseNode(url)
 					if err != nil {
@@ -238,18 +237,9 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 						return err
 					}
 
-					if sm.storemanPeers[nd.ID] {
-						continue
-					}
-
-					//added to storeman peer
-					sm.storemanPeers[nd.ID] = true
-					sm.server.StoremanNodes = append(sm.server.StoremanNodes, nd)
-
+					sm.server.AddPeer(nd)
 				}
 
-				i := 0
-				i++
 
 			default:
 
@@ -301,6 +291,7 @@ func (sm *Storeman) Start(server *p2p.Server) error {
 
 	sm.mpcDistributor.InitStoreManGroup()
 	go sm.checkPeerInfo()
+
 	return nil
 
 }
@@ -308,8 +299,6 @@ func (sm *Storeman) Start(server *p2p.Server) error {
 func (sm *Storeman) checkPeerInfo() {
 	//leader will not checkPeerInfo
 	log.Info("Entering checkPeerInfo")
-
-
 
 	// Start the tickers for the updates
 	keepQuest := time.NewTicker(mpcprotocol.KeepaliveCycle * time.Second)
@@ -321,13 +310,6 @@ func (sm *Storeman) checkPeerInfo() {
 	// Loop and transmit until termination is requested
 	for {
 
-		serverID := sm.server.NodeInfo().ID
-		if serverID==sm.cfg.StoremanNodes[0].ID.String() {
-			if len(sm.peers) + 1 >= mpcprotocol.MpcSchnrNodeNumber {
-				sm.allPeersConnected <- true
-				return
-			}
-		}
 
 		select {
 			case <-keepQuest.C:
@@ -336,25 +318,13 @@ func (sm *Storeman) checkPeerInfo() {
 
 					if len( sm.server.StoremanNodes) +1 >= mpcprotocol.MpcSchnrNodeNumber  {
 
-						sm.peerMu.Lock()
-						for _, nd := range sm.server.StoremanNodes {
-							sm.server.AddPeer(nd)
-						}
-						sm.peerMu.Unlock()
-
 						log.Debug("all peers added", "", len(sm.server.StoremanNodes))
 
-						if len(sm.peers) + 1 >= mpcprotocol.MpcSchnrNodeNumber && !sm.isSentPeer {
-							sm.allPeersConnected <- true
-						}
-
 					} else {
-							splits := strings.Split(sm.server.ListenAddr, ":")
-							//log.Info("send get allpeers require, loalport is","",splits[len(splits)-1])
-							sm.SendToPeer(&leaderid, mpcprotocol.GetPeersInfo, StrmanGetPeers{splits[len(splits)-1]})
+						splits := strings.Split(sm.server.ListenAddr, ":")
+						//log.Info("send get allpeers require, loalport is","",splits[len(splits)-1])
+						sm.SendToPeer(&leaderid, mpcprotocol.GetPeersInfo, StrmanGetPeers{splits[len(splits)-1]})
 					}
-
-
 
 				}
 
@@ -398,8 +368,6 @@ func (sm *Storeman) HandlePeer(peer *p2p.Peer, rw p2p.MsgReadWriter) error {
 
 	// Create the new peer and start tracking it
 	storemanPeer := newPeer(sm, peer, rw)
-
-
 	sm.peerMu.Lock()
 
 	// Run the peer handshake and state updates
@@ -415,40 +383,19 @@ func (sm *Storeman) HandlePeer(peer *p2p.Peer, rw p2p.MsgReadWriter) error {
 		sm.peerMu.Lock()
 		delete(sm.peers, storemanPeer.ID())
 
-		serverID := sm.server.NodeInfo().ID
-		if serverID != sm.cfg.StoremanNodes[0].ID.String() &&
-		   storemanPeer.ID() != sm.cfg.StoremanNodes[0].ID {
 
-			for idx,nd := range sm.server.StoremanNodes {
-				if nd.ID == storemanPeer.ID() {
-					sm.server.RemovePeer(nd)
-					sm.server.StoremanNodes = append(sm.server.StoremanNodes[0:idx],sm.server.StoremanNodes[idx+1:]...)
-					break
-				}
+		for _,smnode := range sm.server.StoremanNodes {
+			if smnode.ID == storemanPeer.ID() {
+				sm.server.RemovePeer(smnode)
+				break
 			}
-
-		   delete(sm.storemanPeers, storemanPeer.ID())
 		}
-
-
 
 		sm.peerMu.Unlock()
 	}()
 
 
-
-	if len(sm.peers)+1 == mpcprotocol.MpcSchnrNodeNumber {
-		serverID := sm.server.NodeInfo().ID
-		if serverID==sm.cfg.StoremanNodes[0].ID.String() && !sm.isSentPeer{
-			for _, p := range sm.peers {
-				log.Info("all peer's info",p.Peer.Info().ID,p.Peer.String())
-			}
-		}
-	}
-
 	storemanPeer.start()
-
-
 	defer storemanPeer.stop()
 
 	return sm.runMessageLoop(storemanPeer, rw)
