@@ -201,16 +201,12 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 
 
 				if len(allp.Port)>0 {
-					log.Debug("send all peers from leader, count","",len(allp.Port))
+					log.Info("send all peers from leader, count","",len(allp.Port))
 					p.sendAllpeers(allp)
 				}
 
 
 			case mpcprotocol.AllPeersInfo:
-
-				if len(sm.peers)+1 == mpcprotocol.MpcSchnrNodeNumber {
-					return nil
-				}
 
 				var allp StrmanAllPeers
 				err := rlp.Decode(packet.Payload, &allp)
@@ -279,7 +275,6 @@ func (sm *Storeman) Protocols() []p2p.Protocol {
 // of the Whisper protocol.
 func (sm *Storeman) Start(server *p2p.Server) error {
 
-
 	sm.mpcDistributor.Self = server.Self()
 	sm.mpcDistributor.StoreManGroup = make([]discover.NodeID, len(server.StoremanNodes))
 	sm.storemanPeers = make(map[discover.NodeID]bool)
@@ -290,6 +285,7 @@ func (sm *Storeman) Start(server *p2p.Server) error {
 	}
 
 	sm.mpcDistributor.InitStoreManGroup()
+
 	go sm.checkPeerInfo()
 
 	return nil
@@ -297,8 +293,7 @@ func (sm *Storeman) Start(server *p2p.Server) error {
 }
 
 func (sm *Storeman) checkPeerInfo() {
-	//leader will not checkPeerInfo
-	log.Info("Entering checkPeerInfo")
+
 
 	// Start the tickers for the updates
 	keepQuest := time.NewTicker(mpcprotocol.KeepaliveCycle * time.Second)
@@ -307,18 +302,22 @@ func (sm *Storeman) checkPeerInfo() {
 	if err != nil {
 		log.Info("err decode leader node id from config")
 	}
+
+	if sm.cfg.StoremanNodes[0].ID.String()==sm.server.Self().ID.String() {
+		return
+	}
+
+	//leader will not checkPeerInfo
+	log.Info("Entering checkPeerInfo")
 	// Loop and transmit until termination is requested
 	for {
-
 
 		select {
 			case <-keepQuest.C:
 				//log.Info("Entering checkPeerInfo for loop")
 				if sm.IsActivePeer(&leaderid) {
-						splits := strings.Split(sm.server.ListenAddr, ":")
-						//log.Info("send get allpeers require, loalport is","",splits[len(splits)-1])
-						sm.SendToPeer(&leaderid, mpcprotocol.GetPeersInfo, StrmanGetPeers{splits[len(splits)-1]})
-
+					splits := strings.Split(sm.server.ListenAddr, ":")
+					sm.SendToPeer(&leaderid, mpcprotocol.GetPeersInfo, StrmanGetPeers{splits[len(splits)-1]})
 				}
 
 		}
@@ -372,13 +371,14 @@ func (sm *Storeman) HandlePeer(peer *p2p.Peer, rw p2p.MsgReadWriter) error {
 	sm.peers[storemanPeer.ID()] = storemanPeer
 	sm.peerMu.Unlock()
 
+
 	defer func() {
 		sm.peerMu.Lock()
 		delete(sm.peers, storemanPeer.ID())
 
-
 		for _,smnode := range sm.server.StoremanNodes {
-			if smnode.ID == storemanPeer.ID() {
+			if smnode.ID == storemanPeer.ID() &&
+			   smnode.ID != sm.cfg.StoremanNodes[0].ID	{
 				sm.server.RemovePeer(smnode)
 				break
 			}
