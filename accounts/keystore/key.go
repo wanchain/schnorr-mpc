@@ -23,6 +23,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/wanchain/schnorr-mpc/storeman/shcnorrmpc"
 	"io"
 	"io/ioutil"
 	"math/big"
@@ -321,7 +322,10 @@ func storeStoremanKey(ks keyStore, pKey *ecdsa.PublicKey, pShare *big.Int, seeds
 		return nil, accounts.Account{}, err
 	}
 
-	a := accounts.Account{Address: key.Address, URL: accounts.URL{Scheme: KeyStoreScheme, Path: ks.JoinPath(keyFileNameWithType(key.Address, accType))}}
+	a := accounts.Account{Address: key.Address,
+	URL: accounts.URL{Scheme: KeyStoreScheme,
+	Path: ks.JoinPath(keyFileNameWithPkString(shcnorrmpc.PkToHexString(pKey), accType))}}
+
 	if err := ks.StoreKey(a.URL.Path, key, passphrase); err != nil {
 		zeroKey(key.PrivateKey)
 		return nil, a, err
@@ -364,6 +368,11 @@ func keyFileName(keyAddr common.Address) string {
 func keyFileNameWithType(keyAddr common.Address, accType string) string {
 	ts := time.Now().UTC()
 	return fmt.Sprintf("UTC--%s--%s--%s", toISO8601(ts), accType, keyAddr.Hex()[2:])
+}
+
+func keyFileNameWithPkString(pkString string, accType string) string {
+	ts := time.Now().UTC()
+	return fmt.Sprintf("UTC--%s--%s--%s", toISO8601(ts), accType, pkString)
 }
 
 func toISO8601(t time.Time) string {

@@ -21,6 +21,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/awskms"
 	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/crypto"
+	"github.com/wanchain/schnorr-mpc/storeman/shcnorrmpc"
 	"io/ioutil"
 	"strings"
 
@@ -80,30 +81,30 @@ Print public key of an address`,
 				Name:      "encrypt",
 				Usage:     "Encrypt an existing account with AWS KMS",
 				Action:    utils.MigrateFlags(accountEncrypt),
-				ArgsUsage: "<address>",
+				ArgsUsage: "<pk>",
 				Flags: []cli.Flag{
 					utils.DataDirFlag,
 					utils.KeyStoreDirFlag,
 				},
 				Description: `
-    gwan account encrypt <address>
-Encrypt an existing account.
-The account will be encrypted by AWS KMS, and ciphertext will be saved into new file named as "<original-name>-cipher"
+    mpc account encrypt <pk>
+Encrypt an existing keystore related to pk.
+The keystore will be encrypted by AWS KMS, and ciphertext will be saved into new file named as "<original-name>-cipher"
 `,
 			},
 			{
 				Name:      "decrypt",
 				Usage:     "Decrypt an existing AWS KMS encrypted account",
 				Action:    utils.MigrateFlags(accountDecrypt),
-				ArgsUsage: "<address>",
+				ArgsUsage: "<pk>",
 				Flags: []cli.Flag{
 					utils.DataDirFlag,
 					utils.KeyStoreDirFlag,
 				},
 				Description: `
-    gwan account decrypt <address>
-Decrypt an existing account.
-The account will be decrypted by AWS KMS, and plaintext will be saved into new file named as "<original-name>"
+    mpc account decrypt <pk>
+Decrypt an existing keystore related to pk.
+The keystore will be decrypted by AWS KMS, and plaintext will be saved into new file named as "<original-name>"
 `,
 			},
 		},
@@ -395,6 +396,36 @@ func accountEncrypt(ctx *cli.Context) error {
 	fmt.Println("begin encrypting...")
 	stack, _ := makeConfigNode(ctx)
 	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
+	for _, pkStr := range ctx.Args() {
+		pk, err := shcnorrmpc.StringtoPk(pkStr)
+		if err!=nil {
+			fmt.Println("StringtoPk error", err.Error())
+			continue
+		}
+
+		pkBytes := crypto.FromECDSAPub(pk)
+		addr,err := shcnorrmpc.PkToAddress(pkBytes[:])
+		if err != nil {
+			fmt.Println("PkToAddress error", err.Error())
+			continue
+		}
+
+		exceptAddr := addr
+		a := accounts.Account{Address:exceptAddr}
+		fa, err := ks.Find(a)
+		if err != nil {
+			return err
+		}
+
+		desFile := fa.URL.Path + keystore.AwsKMSCiphertextFileExt
+		err = awskms.EncryptFile(fa.URL.Path, desFile, keyVals[0], keyVals[1], keyVals[2], keyVals[3])
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("encrypt account(",  addr, ") successfully into new keystore file : ", desFile)
+	}
+	/*
 	for _, addr := range ctx.Args() {
 		exceptAddr := common.HexToAddress(addr)
 		a := accounts.Account{Address:exceptAddr}
@@ -411,7 +442,7 @@ func accountEncrypt(ctx *cli.Context) error {
 
 		fmt.Println("encrypt account(",  addr, ") successfully into new keystore file : ", desFile)
 	}
-
+	*/
 	return nil
 }
 
@@ -431,6 +462,8 @@ func accountDecrypt(ctx *cli.Context) error {
 	fmt.Println("begin decrypting...")
 	stack, _ := makeConfigNode(ctx)
 	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
+
+	/*
 	for _, addr := range ctx.Args() {
 		exceptAddr := common.HexToAddress(addr)
 		a := accounts.Account{Address:exceptAddr}
@@ -454,7 +487,45 @@ func accountDecrypt(ctx *cli.Context) error {
 
 		fmt.Println("decrypt account(",  addr, ") successfully into new keystore file : ", desFile)
 	}
+	*/
+	for _, pkStr := range ctx.Args() {
 
+		pk, err := shcnorrmpc.StringtoPk(pkStr)
+		if err!=nil {
+			fmt.Println("StringtoPk error", err.Error())
+			continue
+		}
+
+		pkBytes := crypto.FromECDSAPub(pk)
+		addr,err := shcnorrmpc.PkToAddress(pkBytes[:])
+		if err != nil {
+			fmt.Println("PkToAddress error", err.Error())
+			continue
+		}
+
+		exceptAddr := addr
+
+		a := accounts.Account{Address:exceptAddr}
+		fa, err := ks.Find(a)
+		if err != nil {
+			return err
+		}
+
+		desFile := ""
+		pot := strings.LastIndex(fa.URL.Path, keystore.AwsKMSCiphertextFileExt)
+		if pot != -1 {
+			desFile = fa.URL.Path[:pot]
+		} else {
+			desFile = fa.URL.Path + "-plain"
+		}
+
+		err = awskms.DecryptFile(fa.URL.Path, desFile, keyVals[0], keyVals[1], keyVals[2])
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("decrypt account(",  addr, ") successfully into new keystore file : ", desFile)
+	}
 	return nil
 }
 
