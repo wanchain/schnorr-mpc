@@ -5,6 +5,7 @@ import (
 	Rand "crypto/rand"
 	"errors"
 	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"math/big"
 )
@@ -163,4 +164,18 @@ func PkToAddress(PkBytes []byte) (common.Address, error) {
 	pk := crypto.ToECDSAPub(PkBytes[:])
 	address := crypto.PubkeyToAddress(*pk)
 	return address, nil
+}
+
+func PkToHexString(pk *ecdsa.PublicKey) (string) {
+	pkByte := crypto.FromECDSAPub(pk)
+	return hexutil.Encode(pkByte)
+}
+
+func StringtoPk(str string) (*ecdsa.PublicKey, error) {
+	pkBytes, err := hexutil.Decode(str)
+	if err != nil {
+		return nil,err
+	}
+	pk := crypto.ToECDSAPub(pkBytes)
+	return pk, nil
 }

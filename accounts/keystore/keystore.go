@@ -464,6 +464,18 @@ func (ks *KeyStore) NewAccount(passphrase string) (accounts.Account, error) {
 	return account, nil
 }
 
+//func (ks *KeyStore) NewStoremanAccount(pKey *ecdsa.PublicKey, pShare *big.Int, seeds []uint64, passphrase string, accType string) (accounts.Account, error) {
+//	_, account, err := storeStoremanKey(ks.storage, pKey, pShare, seeds, passphrase, accType)
+//	if err != nil {
+//		return accounts.Account{}, err
+//	}
+//	// Add the account to the cache immediately rather
+//	// than waiting for file system notifications to pick it up.
+//	ks.cache.add(account)
+//	ks.refreshWallets()
+//	return account, nil
+//}
+
 func (ks *KeyStore) NewStoremanAccount(pKey *ecdsa.PublicKey, pShare *big.Int, seeds []uint64, passphrase string, accType string) (accounts.Account, error) {
 	_, account, err := storeStoremanKey(ks.storage, pKey, pShare, seeds, passphrase, accType)
 	if err != nil {
@@ -475,7 +487,6 @@ func (ks *KeyStore) NewStoremanAccount(pKey *ecdsa.PublicKey, pShare *big.Int, s
 	ks.refreshWallets()
 	return account, nil
 }
-
 
 
 // Export exports as a JSON key, encrypted with newPassphrase.
