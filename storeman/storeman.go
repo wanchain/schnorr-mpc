@@ -166,7 +166,7 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 					return err
 				}
 
-				sm.peerMu.RLock()
+				sm.peerMu.Lock()
 
 				sm.peersPort[p.ID()] = peerGeting.LocalPort
 				if err != nil {
@@ -203,7 +203,7 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 
 					log.Debug("append peer addrs,port",splits[0],sm.peersPort[smpr.ID()])
 				}
-				sm.peerMu.RUnlock()
+				sm.peerMu.Unlock()
 
 				if len(allp.Port)>0 {
 					log.Debug("send all peers from leader, count","",len(allp.Port))
