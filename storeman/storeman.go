@@ -206,7 +206,7 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 				sm.peerMu.RUnlock()
 
 				if len(allp.Port)>0 {
-					log.Info("send all peers from leader, count","",len(allp.Port))
+					log.Debug("send all peers from leader, count","",len(allp.Port))
 					p.sendAllpeers(allp)
 				}
 
