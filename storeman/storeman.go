@@ -175,6 +175,7 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 
 				allp := &StrmanAllPeers{make([]string, 0),make([]string,0),make([]string,0)}
 
+				sm.peerMu.RLock()
 				for _, smpr := range sm.peers {
 
 					if sm.peersPort[smpr.Peer.ID()] == "" {
@@ -198,7 +199,7 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 
 					log.Debug("append peer addrs,port",splits[0],sm.peersPort[smpr.ID()])
 				}
-
+				sm.peerMu.RUnlock()
 
 				if len(allp.Port)>0 {
 					log.Info("send all peers from leader, count","",len(allp.Port))
@@ -360,8 +361,8 @@ func (sm *Storeman) HandlePeer(peer *p2p.Peer, rw p2p.MsgReadWriter) error {
 
 	// Create the new peer and start tracking it
 	storemanPeer := newPeer(sm, peer, rw)
-	sm.peerMu.Lock()
 
+	sm.peerMu.Lock()
 	// Run the peer handshake and state updates
 	if err := storemanPeer.handshake(); err != nil {
 		log.SyslogErr("storemanPeer.handshake failed", "peerID", peer.ID().String(), "err", err.Error())
