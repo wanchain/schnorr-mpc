@@ -7,10 +7,10 @@
 GOBIN = build/bin
 GO ?= latest
 
-linuxDir=$(shell echo gwan-linux-amd64-`cat ./VERSION`-`git rev-parse --short=8 HEAD`)
-windowsDir=$(shell echo gwan-windows-amd64-`cat ./VERSION`-`git rev-parse --short=8 HEAD`)
-darwinDir=$(shell echo gwan-mac-amd64-`cat ./VERSION`-`git rev-parse --short=8 HEAD`)
-# The gwan target build gwan binary
+linuxDir=$(shell echo schnorrmpc-linux-amd64-`cat ./VERSION`-`git rev-parse --short=8 HEAD`)
+windowsDir=$(shell echo schnorrmpc-windows-amd64-`cat ./VERSION`-`git rev-parse --short=8 HEAD`)
+darwinDir=$(shell echo schnorrmpc-mac-amd64-`cat ./VERSION`-`git rev-parse --short=8 HEAD`)
+# The schnorrmpc target build schnorrmpc binary
 
 schnorrmpc:
 	build/env.sh  go run   -gcflags "-N -l"    build/ci.go   install ./cmd/schnorrmpc
@@ -39,26 +39,26 @@ devtools:
 schnorrmpc-linux-amd64:
 	build/env.sh go run build/ci.go xgo -- --go=$(GO) --targets=linux/amd64 --ldflags "-s -w"  -v ./cmd/schnorrmpc
 	@echo "Linux amd64 cross compilation done:"
-	@ls -ld $(GOBIN)/gwan-linux-* | grep amd64
+	@ls -ld $(GOBIN)/schnorrmpc-linux-* | grep amd64
 	mkdir -p ${linuxDir}
-	cp ./build/bin/gwan-linux-* ${linuxDir}/schnorrmpc
+	cp ./build/bin/schnorrmpc-linux-* ${linuxDir}/schnorrmpc
 	tar zcf ${linuxDir}.tar.gz ${linuxDir}/schnorrmpc
 
 schnorrmpc-darwin-amd64:
 	build/env.sh go run build/ci.go xgo -- --go=$(GO) --targets=darwin/amd64 --ldflags "-s -w"  -v ./cmd/schnorrmpc
 	@echo "Darwin amd64 cross compilation done:"
-	@ls -ld $(GOBIN)/gwan-darwin-* | grep amd64
+	@ls -ld $(GOBIN)/schnorrmpc-darwin-* | grep amd64
 	mkdir -p ${darwinDir}
-	cp ./build/bin/gwan-darwin-* ${darwinDir}/schnorrmpc
+	cp ./build/bin/schnorrmpc-darwin-* ${darwinDir}/schnorrmpc
 	tar zcf ${darwinDir}.tar.gz ${darwinDir}/schnorrmpc
 
 
 schnorrmpc-windows-amd64:
 	build/env.sh go run build/ci.go xgo -- --go=$(GO) --targets=windows/amd64 --ldflags "-s -w"  -v ./cmd/schnorrmpc
 	@echo "Windows amd64 cross compilation done:"
-	@ls -ld $(GOBIN)/gwan-windows-* | grep amd64
+	@ls -ld $(GOBIN)/schnorrmpc-windows-* | grep amd64
 	mkdir -p ${windowsDir}
-	cp ./build/bin/gwan-windows-* ${windowsDir}/schnorrmpc.exe
+	cp ./build/bin/schnorrmpc-windows-* ${windowsDir}/schnorrmpc.exe
 	zip ${windowsDir}.zip ${windowsDir}/schnorrmpc.exe
 
 release: clean schnorrmpc-linux-amd64 schnorrmpc-windows-amd64 schnorrmpc-darwin-amd64
