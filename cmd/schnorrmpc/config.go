@@ -23,8 +23,10 @@ import (
 	"fmt"
 	"github.com/wanchain/schnorr-mpc/accounts/keystore"
 	"github.com/wanchain/schnorr-mpc/common"
+	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/storeman"
+	"github.com/wanchain/schnorr-mpc/storeman/shcnorrmpc"
 	"github.com/wanchain/schnorr-mpc/storeman/storemanmpc"
 	"golang.org/x/crypto/ssh/terminal"
 	"io"
@@ -249,7 +251,7 @@ func dumpConfig(ctx *cli.Context) error {
 	return nil
 }
 
-func verifySecurityInfo(node *node.Node, enableKms bool, info *storemanmpc.KmsInfo, password string, accounts []string) (bool, int) {
+func verifySecurityInfo(node *node.Node, enableKms bool, info *storemanmpc.KmsInfo, password string, accounts []common.Address) (bool, int) {
 
 	fmt.Println("")
 	fmt.Println("should verify ", len(accounts), " accounts")
@@ -258,7 +260,8 @@ func verifySecurityInfo(node *node.Node, enableKms bool, info *storemanmpc.KmsIn
 	for _, acc := range accounts {
 		fmt.Println("begin verify ", acc)
 
-		_, status, err := storemanmpc.GetPrivateShare(ks, common.HexToAddress(acc), enableKms, info, password)
+		//_, status, err := storemanmpc.GetPrivateShare(ks, common.HexToAddress(acc), enableKms, info, password)
+		_, status, err := storemanmpc.GetPrivateShare(ks, acc, enableKms, info, password)
 		if err == nil {
 			fmt.Println("verify keystore file security info succeed")
 			continue
@@ -338,21 +341,34 @@ func getPassword(ctx *cli.Context, retry bool) string {
 	return confirmed
 }
 
-func getVerifyAccounts() (bool, []string) {
+func getVerifyAccounts() (bool, []common.Address) {
 	fmt.Println("")
 	reader := bufio.NewReader(os.Stdin)
-	var accounts []string
+	var accounts []common.Address
 
 	for {
-		fmt.Println("please input accounts to verify (like: addr1 addr2. noinput means don't verify):")
+		fmt.Println("please input pks to verify (like: pk1 pk2 (0x..). noinput means don't verify):")
 		read, _, _ := reader.ReadLine()
 		if len(read) == 0 {
 			return false, accounts
 		}
 
 		splits := strings.Split(string(read), " ")
-		for _, addr := range splits {
-			if len(addr) == (common.AddressLength*2 + 2) {
+		for _, pkStr := range splits {
+			log.Info("getVerifyAccounts","StringtoPk :",pkStr)
+			pk, err := shcnorrmpc.StringtoPk(pkStr)
+			if err != nil{
+				log.Error("getVerifyAccounts","StringtoPk error:",err.Error())
+				continue
+			}
+			pkBytes := crypto.FromECDSAPub(pk)
+			addr,err := shcnorrmpc.PkToAddress(pkBytes[:])
+			if err != nil {
+				log.Error("getVerifyAccounts","PkToAddress error:",err.Error())
+				continue
+			}
+			log.Info("getVerifyAccounts","addr :",addr,"len(addr)",len(addr))
+			if len(addr) == (common.AddressLength) {
 				accounts = append(accounts, addr)
 			}
 		}
