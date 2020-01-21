@@ -20,6 +20,8 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/wanchain/schnorr-mpc/crypto"
+	"github.com/wanchain/schnorr-mpc/storeman/shcnorrmpc"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -309,7 +311,21 @@ func (ac *accountCache) scanAccounts() error {
 		if strings.LastIndex(path, AwsKMSCiphertextFileExt) == (len(path) - len(AwsKMSCiphertextFileExt)) {
 			addrBegin := strings.LastIndex(path[:len(path) - len(AwsKMSCiphertextFileExt)], "-")
 			if addrBegin != -1 {
-				return &accounts.Account{Address: common.HexToAddress(path[addrBegin+1:addrBegin+41]), URL: accounts.URL{Scheme: KeyStoreScheme, Path: path}}
+
+				pkStr := path[addrBegin+1:addrBegin+133]
+				log.Info("scanAccounts","pkstr",pkStr)
+
+				pk,err:= shcnorrmpc.StringtoPk(pkStr)
+				if err != nil {
+					log.Error("StringtoPk","error",err.Error())
+				}
+				pkByptes := crypto.FromECDSAPub(pk)
+				addrFromPK, err := shcnorrmpc.PkToAddress(pkByptes)
+				if err != nil {
+					log.Error("PkToAddress","error",err.Error())
+				}
+				//return &accounts.Account{Address: common.HexToAddress(path[addrBegin+1:addrBegin+41]), URL: accounts.URL{Scheme: KeyStoreScheme, Path: path}}
+				return &accounts.Account{Address: addrFromPK, URL: accounts.URL{Scheme: KeyStoreScheme, Path: path}}
 			}
 		}
 
