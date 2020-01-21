@@ -165,6 +165,8 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 					return err
 				}
 
+				sm.peerMu.RLock()
+
 				sm.peersPort[p.ID()] = peerGeting.LocalPort
 				if err != nil {
 					log.SyslogErr("failed decode port info", "err", err.Error())
@@ -175,7 +177,7 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 
 				allp := &StrmanAllPeers{make([]string, 0),make([]string,0),make([]string,0)}
 
-				sm.peerMu.RLock()
+
 				for _, smpr := range sm.peers {
 
 					if sm.peersPort[smpr.Peer.ID()] == "" {
@@ -193,6 +195,7 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 					splits := strings.Split(addr.String(),":")
 
 					allp.Ip = append(allp.Ip,splits[0])
+
 
 					allp.Port = append(allp.Port, sm.peersPort[smpr.Peer.ID()])
 					allp.Nodeid = append(allp.Nodeid,smpr.ID().String())
