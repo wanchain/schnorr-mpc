@@ -44,10 +44,10 @@ const (
 
 const (
 	// devp2p message codes
-	handshakeMsg = 0x00
-	discMsg      = 0x01
-	pingMsg      = 0x02
-	pongMsg      = 0x03
+	handshakeMsg = 0x10
+	discMsg      = 0x11
+	pingMsg      = 0x12
+	pongMsg      = 0x13
 )
 
 // protoHandshake is the RLP structure of the protocol handshake.
