@@ -20,7 +20,7 @@ const (
 	MpcSignPeer
 )
 const (
-	StatusCode = iota + 0 // used by storeman protocol
+	StatusCode = iota + 10 // used by storeman protocol
 	KeepaliveCode
 	KeepaliveOkCode
 	MPCError
@@ -37,7 +37,7 @@ const (
 	//MPCTimeOut = time.Second * 10
 	MPCTimeOut = time.Second * 20
 	PName      = "storeman"
-	PVer       = uint64(1)
+	PVer       = uint64(10)
 	PVerStr    = "1.1"
 )
 const (
