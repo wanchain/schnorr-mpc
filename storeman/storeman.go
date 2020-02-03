@@ -320,10 +320,10 @@ func (sm *Storeman) checkPeerInfo() {
 		select {
 			case <-keepQuest.C:
 				//log.Info("Entering checkPeerInfo for loop")
-				if sm.IsActivePeer(&leaderid) {
+				//if sm.IsActivePeer(&leaderid) {
 					splits := strings.Split(sm.server.ListenAddr, ":")
 					sm.SendToPeer(&leaderid, mpcprotocol.GetPeersInfo, StrmanGetPeers{splits[len(splits)-1]})
-				}
+				//}
 
 		}
 	}
