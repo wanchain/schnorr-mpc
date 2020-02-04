@@ -17,12 +17,15 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/wanchain/schnorr-mpc/awskms"
 	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/storeman/shcnorrmpc"
+	"io"
 	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/wanchain/schnorr-mpc/accounts"
@@ -105,6 +108,19 @@ The keystore will be encrypted by AWS KMS, and ciphertext will be saved into new
     mpc account decrypt <pk>
 Decrypt an existing keystore related to pk.
 The keystore will be decrypted by AWS KMS, and plaintext will be saved into new file named as "<original-name>"
+`,
+			},
+			{
+				Name:      "trypwd",
+				Usage:     "trypwd",
+				Action:    utils.MigrateFlags(tryPwd),
+				ArgsUsage: "<pk>",
+				Flags: []cli.Flag{
+					utils.DataDirFlag,
+					utils.KeyStoreDirFlag,
+				},
+				Description: `
+    try pwd"
 `,
 			},
 		},
@@ -526,6 +542,75 @@ func accountDecrypt(ctx *cli.Context) error {
 
 		fmt.Println("decrypt account(",  addr, ") successfully into new keystore file : ", desFile)
 	}
+	return nil
+}
+
+func tryPwd(ctx *cli.Context) error {
+	if len(ctx.Args()) == 0 {
+		utils.Fatalf("No accounts specified to decrypt")
+	}
+
+
+	fmt.Println("begin decrypting...")
+	stack, _ := makeConfigNode(ctx)
+	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
+	for _, pkStr := range ctx.Args() {
+
+		pk, err := shcnorrmpc.StringtoPk(pkStr)
+		if err!=nil {
+			fmt.Println("StringtoPk error", err.Error())
+			continue
+		}
+
+		pkBytes := crypto.FromECDSAPub(pk)
+		addr,err := shcnorrmpc.PkToAddress(pkBytes[:])
+		if err != nil {
+			fmt.Println("PkToAddress error", err.Error())
+			continue
+		}
+
+		exceptAddr := addr
+
+		a := accounts.Account{Address:exceptAddr}
+		fa, err := ks.Find(a)
+		if err != nil {
+			return err
+		}
+
+		desFile := ""
+		desFile = fa.URL.Path
+
+
+		var keyjson []byte
+
+		keyjson, err = ioutil.ReadFile(desFile)
+
+
+		fi, err := os.Open("pwds.txt")
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			return err
+		}
+		defer fi.Close()
+
+		br := bufio.NewReader(fi)
+		for {
+			a, _, c := br.ReadLine()
+			if c == io.EOF {
+				break
+			}
+			//fmt.Println(string(a))
+			_, err := keystore.DecryptKey(keyjson, string(a))
+			if err != nil {
+				fmt.Printf("try %v fail err:%v\n",string(a),err.Error())
+			}else{
+				fmt.Printf("try success! pwd is : %v\n",string(a))
+				break
+			}
+		}
+
+	}
+
 	return nil
 }
 
