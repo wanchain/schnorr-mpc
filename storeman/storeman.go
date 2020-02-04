@@ -181,7 +181,8 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 
 				for _, smpr := range sm.peers {
 
-					if sm.peersPort[smpr.Peer.ID()] == "" {
+					if sm.peersPort[smpr.Peer.ID()] == "" ||
+						smpr.Peer.ID().String() == sm.cfg.StoremanNodes[0].ID.String(){
 						continue
 					}
 
@@ -231,7 +232,7 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 					//if allready exist,check next
 					url := "enode://" + allp.Nodeid[i] + "@" + allp.Ip[i] + ":" + allp.Port[i]
 
-					log.Debug("got peer, url=","",url)
+					log.Info("got peer, url=","",url)
 
 					nd, err := discover.ParseNode(url)
 					if err != nil {
@@ -387,9 +388,7 @@ func (sm *Storeman) HandlePeer(peer *p2p.Peer, rw p2p.MsgReadWriter) error {
 		delete(sm.peers, storemanPeer.ID())
 
 		for _,smnode := range sm.server.StoremanNodes {
-			if smnode.ID == storemanPeer.ID() &&
-			   smnode.ID != sm.cfg.StoremanNodes[0].ID	{
-
+			if smnode.ID == storemanPeer.ID() {
 				sm.server.RemovePeer(smnode)
 				break
 			}

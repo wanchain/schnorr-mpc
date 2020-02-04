@@ -175,9 +175,17 @@ func (s *dialstate) removeStatic(n *discover.Node) {
 func (s *dialstate) addStoreman(n *discover.Node) {
 	// This overwites the task instead of updating an existing
 	// entry, giving users the opportunity to force a resolve operation.
-	if _,ok := s.storeman[n.ID];ok {
-		return
+
+
+	if stmdest,ok := s.storeman[n.ID];ok {
+
+		if stmdest.dest.String() != n.String() {
+			delete(s.storeman,n.ID)
+		} else {
+			return
+		}
 	}
+
 
 	s.storeman[n.ID] = &dialTask{flags: storemanDialedConn, dest: n}
 }
@@ -234,7 +242,9 @@ func (s *dialstate) newTasks(nRunning int, peers map[discover.NodeID]*Peer, now 
 
 	// Create dials for storeman nodes if they are not connected.
 	for id, t := range s.storeman {
+
 		err := s.checkDial(t.dest, peers)
+
 		switch err {
 		case errNotWhitelisted, errSelf:
 			log.Warn("Removing storeman dial candidate", "id", t.dest.ID, "addr", &net.TCPAddr{IP: t.dest.IP, Port: int(t.dest.TCP)}, "err", err)
