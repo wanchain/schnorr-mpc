@@ -197,6 +197,45 @@ func approveOneData(approveData mpcprotocol.SendData) error {
 	}
 	return nil
 }
+func addOneValidData(approveData mpcprotocol.SendData) error {
+
+
+	sdb, err := GetDB()
+	if err != nil {
+		log.SyslogErr("addOneValidData, getting storeman database fail", "err", err.Error())
+		return err	}
+
+	key := buildKeyFromData(&approveData, mpcprotocol.MpcApproved)
+	exist, err := sdb.Has(key)
+	if exist {
+		log.SyslogErr("addOneValidData, has in approved db")
+		return errors.New("has in approved db")
+	}
+	if err != nil {
+		log.SyslogErr("addOneValidData, sdb.Has error", "err:", err.Error())
+		return err
+	}
+	// in approving db
+	// add in approved DB
+	log.SyslogInfo("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& addOneValidData, begin",
+		"pk", hexutil.Encode(approveData.PKBytes),
+		"data", hexutil.Encode([]byte(approveData.Data)),
+		"Extern", hexutil.Encode([]byte(approveData.Extern)))
+
+	val, err := json.Marshal(&approveData)
+	if err != nil {
+		log.SyslogErr("addOneValidData, marshal fail", "err", err.Error())
+		return err
+	}
+
+	log.SyslogInfo("=============== approveOneData", "data", approveData.String(), "approved key", hexutil.Encode(key))
+	err = addKeyValueToDB(key, val)
+	if err != nil {
+		log.SyslogErr("addOneValidData, addKeyValueToDB fail", "err", err.Error())
+		return err
+	}
+	return nil
+}
 
 func ApproveData(approveData []mpcprotocol.SendData) []error {
 	retResult := make([]error, len(approveData))
@@ -399,6 +438,10 @@ func addApprovingData(dataItem *mpcprotocol.SendData) error {
 
 func addApprovedData(data *mpcprotocol.SendData) error {
 	return approveOneData(*data)
+}
+
+func AddValidData(data *mpcprotocol.SendData) error {
+	return addOneValidData(*data)
 }
 
 //TODO need delete the approved data when signature complete successfully.

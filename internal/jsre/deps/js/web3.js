@@ -13749,6 +13749,11 @@ module.exports = Wan;
             call: 'storeman_signData',
             params: 1
       });
+        var signDataByApprove = new Method ({
+            name: 'signDataByApprove',
+            call: 'storeman_signDataByApprove',
+            params: 1
+        });
       var addValidData = new Method ({
         name: 'addValidData',
         call: 'storeman_addValidData',
@@ -13773,6 +13778,7 @@ module.exports = Wan;
           version,
           createGpk,
           signData,
+          signDataByApprove,
           addValidData,
           getDataForApprove,
           approveData,

@@ -438,6 +438,29 @@ func (sa *StoremanAPI) CreateGPK(ctx context.Context) (pk hexutil.Bytes, err err
 	return gpk, err
 }
 
+func (sa *StoremanAPI) SignDataByApprove(ctx context.Context, data mpcprotocol.SendData) (result mpcprotocol.SignedResult, err error) {
+	//Todo  check the input parameter
+
+	if len(sa.sm.storemanPeers)+1 < mpcprotocol.MpcSchnrThr {
+		return mpcprotocol.SignedResult{R: []byte{}, S: []byte{}}, mpcprotocol.ErrTooLessStoreman
+	}
+
+	PKBytes := data.PKBytes
+
+	//signed, err := sa.sm.mpcDistributor.CreateReqMpcSign([]byte(data.Data), PKBytes)
+	signed, err := sa.sm.mpcDistributor.CreateReqMpcSign([]byte(data.Data), []byte(data.Extern), PKBytes,1)
+
+	// signed   R // s
+	if err == nil {
+		log.SyslogInfo("SignMpcTransaction end", "signed", common.ToHex(signed))
+	} else {
+		log.SyslogErr("SignMpcTransaction end", "err", err.Error())
+		return mpcprotocol.SignedResult{R: []byte{}, S: []byte{}}, err
+	}
+
+	return mpcprotocol.SignedResult{R: signed[0:65], S: signed[65:]}, nil
+}
+
 func (sa *StoremanAPI) SignData(ctx context.Context, data mpcprotocol.SendData) (result mpcprotocol.SignedResult, err error) {
 	//Todo  check the input parameter
 
@@ -448,7 +471,7 @@ func (sa *StoremanAPI) SignData(ctx context.Context, data mpcprotocol.SendData) 
 	PKBytes := data.PKBytes
 
 	//signed, err := sa.sm.mpcDistributor.CreateReqMpcSign([]byte(data.Data), PKBytes)
-	signed, err := sa.sm.mpcDistributor.CreateReqMpcSign([]byte(data.Data), []byte(data.Extern), PKBytes)
+	signed, err := sa.sm.mpcDistributor.CreateReqMpcSign([]byte(data.Data), []byte(data.Extern), PKBytes,0)
 
 	// signed   R // s
 	if err == nil {
@@ -462,7 +485,7 @@ func (sa *StoremanAPI) SignData(ctx context.Context, data mpcprotocol.SendData) 
 }
 
 func (sa *StoremanAPI) AddValidData(ctx context.Context, data mpcprotocol.SendData) error {
-	return validator.AddApprovedData(&data)
+	return validator.AddValidData(&data)
 }
 
 // non leader node polling the data received from leader node

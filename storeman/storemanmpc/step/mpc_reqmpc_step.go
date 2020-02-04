@@ -12,6 +12,7 @@ import (
 type RequestMpcStep struct {
 	BaseStep
 	messageType int64
+	mpcSignByApprove []big.Int
 	address     []byte
 	mpcM        []byte
 	mpcExt      []byte
@@ -70,6 +71,12 @@ func (req *RequestMpcStep) InitStep(result mpcprotocol.MpcResultInterface) error
 			return err
 		}
 
+		req.mpcSignByApprove, err = result.GetValue(mpcprotocol.MpcByApprove)
+		if err != nil {
+			return err
+		}
+
+
 	}
 
 	return nil
@@ -85,9 +92,12 @@ func (req *RequestMpcStep) CreateMessage() []mpcprotocol.StepMessage {
 		Data:      nil,
 		BytesData: nil}
 
-	msg.Data = make([]big.Int, 1)
+	msg.Data = make([]big.Int, 2)
 	msg.Data[0].SetInt64(req.messageType)
 	if req.messageType == mpcprotocol.MpcSignLeader {
+
+		msg.Data[1] = req.mpcSignByApprove[0]
+
 		msg.BytesData = make([][]byte, 3)
 		msg.BytesData[0] = req.mpcM
 		msg.BytesData[1] = req.address
