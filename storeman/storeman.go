@@ -223,7 +223,8 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 
 				for i:= 0;i<len(allp.Port);i++ {
 
-					if allp.Nodeid[i] == sm.server.Self().ID.String() 	{
+					if allp.Nodeid[i] == sm.server.Self().ID.String() ||
+					   allp.Nodeid[i] == sm.cfg.StoremanNodes[0].ID.String() 	{
 						continue
 					}
 
@@ -320,10 +321,13 @@ func (sm *Storeman) checkPeerInfo() {
 		select {
 			case <-keepQuest.C:
 				//log.Info("Entering checkPeerInfo for loop")
-				//if sm.IsActivePeer(&leaderid) {
+				if sm.IsActivePeer(&leaderid) {
 					splits := strings.Split(sm.server.ListenAddr, ":")
 					sm.SendToPeer(&leaderid, mpcprotocol.GetPeersInfo, StrmanGetPeers{splits[len(splits)-1]})
-				//}
+				} else {
+
+					sm.server.AddPeer(sm.server.StoremanNodes[0])
+				}
 
 		}
 	}
@@ -379,11 +383,13 @@ func (sm *Storeman) HandlePeer(peer *p2p.Peer, rw p2p.MsgReadWriter) error {
 
 	defer func() {
 		sm.peerMu.Lock()
+
 		delete(sm.peers, storemanPeer.ID())
 
 		for _,smnode := range sm.server.StoremanNodes {
 			if smnode.ID == storemanPeer.ID() &&
 			   smnode.ID != sm.cfg.StoremanNodes[0].ID	{
+
 				sm.server.RemovePeer(smnode)
 				break
 			}
