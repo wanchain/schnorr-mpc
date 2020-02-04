@@ -232,7 +232,7 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 					//if allready exist,check next
 					url := "enode://" + allp.Nodeid[i] + "@" + allp.Ip[i] + ":" + allp.Port[i]
 
-					log.Info("got peer, url=","",url)
+					log.Debug("got peer, url=","",url)
 
 					nd, err := discover.ParseNode(url)
 					if err != nil {
