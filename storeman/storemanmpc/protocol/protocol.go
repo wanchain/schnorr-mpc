@@ -53,6 +53,7 @@ const (
 	MpcS             = "MpcS"             // S: s
 
 	MpcExt = "MpcExtern" // extern
+	MpcByApprove = "MpcByApprove" // by approve
 
 	MpcTxHash  = "MpcTxHash"
 	MpcAddress = "MpcAddress"

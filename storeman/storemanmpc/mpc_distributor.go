@@ -245,14 +245,15 @@ func (mpcServer *MpcDistributor) CreateRequestGPK() ([]byte, error) {
 	}
 }
 
-func (mpcServer *MpcDistributor) CreateReqMpcSign(data []byte, extern []byte, pkBytes []byte) ([]byte, error) {
+func (mpcServer *MpcDistributor) CreateReqMpcSign(data []byte, extern []byte, pkBytes []byte, byApprove int64) ([]byte, error) {
 
 	log.SyslogInfo("CreateReqMpcSign begin")
 
 	value, err := mpcServer.createRequestMpcContext(mpcprotocol.MpcSignLeader,
 		MpcValue{mpcprotocol.MpcAddress, nil, pkBytes[:]},
 		MpcValue{mpcprotocol.MpcM, nil, data},
-		MpcValue{mpcprotocol.MpcExt, nil, extern})
+		MpcValue{mpcprotocol.MpcExt, nil, extern},
+		MpcValue{mpcprotocol.MpcByApprove, []big.Int{*(big.NewInt(byApprove))}, nil})
 
 	return value, err
 }
@@ -441,6 +442,7 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 
 	var ctxType int
 	nType := mpcMessage.Data[0].Int64()
+	nByApprove := mpcMessage.Data[1].Int64()
 	if nType == mpcprotocol.MpcGPKLeader {
 		ctxType = mpcprotocol.MpcGPKPeer
 	} else {
@@ -477,24 +479,27 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 
 		receivedData := &mpcprotocol.SendData{PKBytes: address, Data: mpcM[:], Extern: string(mpcExt[:])}
 
-		addApprovingResult := validator.AddApprovingData(receivedData)
-		if addApprovingResult != nil {
-			mpcMsg := &mpcprotocol.MpcMessage{ContextID: mpcMessage.ContextID,
-				StepID: 0,
-				Peers:  []byte(mpcprotocol.ErrFailedAddApproving.Error())}
-			peerInfo := mpcServer.getMessagePeers(mpcMessage)
-			peerIDs := make([]discover.NodeID, 0)
-			for _, item := range *peerInfo {
-				peerIDs = append(peerIDs, item.PeerID)
+		if nByApprove != 0 {
+			addApprovingResult := validator.AddApprovingData(receivedData)
+			if addApprovingResult != nil {
+				mpcMsg := &mpcprotocol.MpcMessage{ContextID: mpcMessage.ContextID,
+					StepID: 0,
+					Peers:  []byte(mpcprotocol.ErrFailedAddApproving.Error())}
+				peerInfo := mpcServer.getMessagePeers(mpcMessage)
+				peerIDs := make([]discover.NodeID, 0)
+				for _, item := range *peerInfo {
+					peerIDs = append(peerIDs, item.PeerID)
+				}
+
+				//mpcServer.BroadcastMessage(peerIDs, mpcprotocol.MPCError, mpcMsg)
+				mpcServer.P2pMessage(&mpcServer.Self.ID, mpcprotocol.MPCError, mpcMsg)
+
+				log.SyslogErr("createMpcContext, AddApprovingData  fail",
+					"ContextID", mpcMessage.ContextID, "err", addApprovingResult.Error())
+				return mpcprotocol.ErrFailedAddApproving
 			}
-
-			//mpcServer.BroadcastMessage(peerIDs, mpcprotocol.MPCError, mpcMsg)
-			mpcServer.P2pMessage(&mpcServer.Self.ID, mpcprotocol.MPCError, mpcMsg)
-
-			log.SyslogErr("createMpcContext, AddApprovingData  fail",
-				"ContextID", mpcMessage.ContextID, "err", addApprovingResult.Error())
-			return mpcprotocol.ErrFailedAddApproving
 		}
+
 
 		verifyResult, err := validator.ValidateData(receivedData)
 
