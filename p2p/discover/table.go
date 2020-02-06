@@ -420,6 +420,7 @@ loop:
 	close(tab.closed)
 }
 
+
 // doRefresh performs a lookup for a random target to keep buckets
 // full. seed nodes are inserted if the table is empty (initial
 // bootstrap or discarded faulty peers).
@@ -448,6 +449,10 @@ func (tab *Table) doRefresh(done chan struct{}) {
 }
 
 func (tab *Table) loadSeedNodes(bond bool) {
+	log.Debug("removed this step for Found seed node in database")
+}
+
+func (tab *Table) loadSeedNodes_Old(bond bool) {
 	seeds := tab.db.querySeeds(seedCount, seedMaxAge)
 	seeds = append(seeds, tab.nursery...)
 	if bond {
