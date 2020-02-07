@@ -82,13 +82,31 @@ func (p *Peer) sendAllpeers(allp *StrmanAllPeers) {
 // handshake sends the protocol initiation status message to the remote peer and
 // verifies the remote status too.
 func (p *Peer) handshake() error {
+
+
 	// Send the handshake status message asynchronously
 	errc := make(chan error, 1)
+
+
 	go func() {
 		errc <- p2p.Send(p.ws, mpcprotocol.StatusCode, mpcprotocol.PVer)
 	}()
 
-	//p2p.Send(p.ws, mpcprotocol.StatusCode, mpcprotocol.PVer)
+	select {
+		case err := <-errc:
+			log.SyslogErr("storeman peer failed to send status packet", "peer", p.ID().String(), "err", err)
+			return fmt.Errorf("storeman peer [%s] failed to send status packet: %v", p.ID().String(), err)
+		case <-time.After(20 * time.Second):
+			log.Info("storeman peer send status packet time out", "peer", p.ID().String())
+			return fmt.Errorf("storeman peer [%s] failed to send status packet: %v time out", p.ID().String())
+	}
+
+	//// Wait until out own status is consumed too
+	//if err := <-errc; err != nil {
+	//	log.SyslogErr("storeman peer failed to send status packet", "peer", p.ID().String(), "err", err)
+	//	return fmt.Errorf("storeman peer [%s] failed to send status packet: %v", p.ID().String(), err)
+	//}
+
 	// Fetch the remote status packet and verify protocol match
 	packet, err := p.ws.ReadMsg()
 	if err != nil {
@@ -120,11 +138,8 @@ func (p *Peer) handshake() error {
 			mpcprotocol.PVer)
 
 	}
-	// Wait until out own status is consumed too
-	if err := <-errc; err != nil {
-		log.SyslogErr("storeman peer failed to send status packet", "peer", p.ID().String(), "err", err)
-		return fmt.Errorf("storeman peer [%s] failed to send status packet: %v", p.ID().String(), err)
-	}
+
+
 	return nil
 }
 

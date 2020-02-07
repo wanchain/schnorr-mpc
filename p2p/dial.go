@@ -178,10 +178,10 @@ func (s *dialstate) addStoreman(n *discover.Node) {
 	// This overwites the task instead of updating an existing
 	// entry, giving users the opportunity to force a resolve operation.
 
-
 	if stmdest,ok := s.storeman[n.ID];ok {
 
 		if stmdest.dest.String() != n.String() {
+
 			delete(s.storeman,n.ID)
 		} else {
 			return
@@ -195,6 +195,8 @@ func (s *dialstate) addStoreman(n *discover.Node) {
 func (s *dialstate) removeStoreman(n *discover.Node) {
 	// This removes a task so future attempts to connect will not be made.
 	delete(s.storeman, n.ID)
+
+	s.hist.remove(n.ID)
 }
 
 func (s *dialstate) newTasks(nRunning int, peers map[discover.NodeID]*Peer, now time.Time) []task {
@@ -412,11 +414,17 @@ type dialError struct {
 
 // dial performs the actual connection attempt.
 func (t *dialTask) dial(srv *Server, dest *discover.Node) error {
+
+	if dest.TCP != srv.StoremanNodes[0].TCP {
+		return &dialError{errors.New("the port is not same with storeman leader")}
+	}
+
 	fd, err := srv.Dialer.Dial(dest)
 	if err != nil {
 		return &dialError{err}
 	}
 	mfd := newMeteredConn(fd, false)
+
 	return srv.SetupConn(mfd, t.flags, dest)
 }
 

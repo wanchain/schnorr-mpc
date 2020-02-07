@@ -575,8 +575,10 @@ func (srv *Server) run(dialstate dialer) {
 		i := 0
 		for ; len(runningTasks) < maxActiveDialTasks && i < len(ts); i++ {
 			t := ts[i]
+
 			srv.log.Trace("New dial task", "task", t)
 			go func() { t.Do(srv); taskdone <- t }()
+
 			runningTasks = append(runningTasks, t)
 		}
 		return ts[i:]
@@ -588,6 +590,8 @@ func (srv *Server) run(dialstate dialer) {
 		// Query dialer for new tasks and start as many as possible now.
 		if len(runningTasks) < maxActiveDialTasks {
 			nt := dialstate.newTasks(len(runningTasks)+len(queuedTasks), peers, time.Now())
+
+
 			queuedTasks = append(queuedTasks, startTasks(nt)...)
 		}
 	}
@@ -625,9 +629,11 @@ running:
 			srv.log.Debug("Removing static node", "node", n)
 
 			rmsm := false;
-			for _,smnode := range srv.StoremanNodes {
+			for idx,smnode := range srv.StoremanNodes {
 				if smnode.ID == n.ID {
-					dialstate.removeStoreman(n)
+					if idx != 0 {
+						dialstate.removeStoreman(n)
+					}
 					rmsm = true
 				}
 			}
