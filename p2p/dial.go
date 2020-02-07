@@ -414,11 +414,6 @@ type dialError struct {
 
 // dial performs the actual connection attempt.
 func (t *dialTask) dial(srv *Server, dest *discover.Node) error {
-
-	if dest.TCP != srv.StoremanNodes[0].TCP {
-		return &dialError{errors.New("the port is not same with storeman leader")}
-	}
-
 	fd, err := srv.Dialer.Dial(dest)
 	if err != nil {
 		return &dialError{err}
