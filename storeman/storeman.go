@@ -326,7 +326,7 @@ func (sm *Storeman) checkPeerInfo() {
 					splits := strings.Split(sm.server.ListenAddr, ":")
 					sm.SendToPeer(&leaderid, mpcprotocol.GetPeersInfo, StrmanGetPeers{splits[len(splits)-1]})
 				} else {
-
+					log.Info("leader is connecting...")
 					sm.server.AddPeer(sm.server.StoremanNodes[0])
 				}
 
