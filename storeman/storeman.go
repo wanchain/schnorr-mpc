@@ -371,20 +371,16 @@ func (sm *Storeman) HandlePeer(peer *p2p.Peer, rw p2p.MsgReadWriter) error {
 	// Create the new peer and start tracking it
 	storemanPeer := newPeer(sm, peer, rw)
 
+
 	sm.peerMu.Lock()
-
 	sm.peers[storemanPeer.ID()] = storemanPeer
-
+	sm.peerMu.Unlock()
 
 	// Run the peer handshake and state updates
 	if err := storemanPeer.handshake(); err != nil {
 		log.SyslogErr("storemanPeer.handshake failed", "peerID", peer.ID().String(), "err", err.Error())
-		sm.peerMu.Unlock()
 		return err
 	}
-
-
-	sm.peerMu.Unlock()
 
 
 	defer func() {

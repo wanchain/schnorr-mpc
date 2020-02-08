@@ -83,65 +83,67 @@ func (p *Peer) sendAllpeers(allp *StrmanAllPeers) {
 // verifies the remote status too.
 func (p *Peer) handshake() error {
 
-
 	// Send the handshake status message asynchronously
 	errc := make(chan error, 1)
-
-
 	go func() {
 		errc <- p2p.Send(p.ws, mpcprotocol.StatusCode, mpcprotocol.PVer)
 	}()
 
-
-	//select {
-	//	case err := <-errc:
-	//		log.SyslogErr("storeman peer failed to send status packet", "peer", p.ID().String(), "err", err)
-	//		return fmt.Errorf("storeman peer [%s] failed to send status packet: %v", p.ID().String(), err)
-	//	case <-time.After(20 * time.Second):
-	//		log.Info("storeman peer send status packet time out", "peer", p.ID().String())
-	//		return fmt.Errorf("storeman peer [%s] failed to send status packet: %v time out", p.ID().String())
-	//}
-
-
 	// Fetch the remote status packet and verify protocol match
-	packet, err := p.ws.ReadMsg()
-	if err != nil {
-		log.SyslogErr("storeman peer read msg fail", "peer", p.ID().String(), "err", err.Error())
-		return err
+	select {
+
+		case <-time.After(20 * time.Second):
+			log.Info("reading handshake msg time out", "peer", p.ID().String())
+			return fmt.Errorf("storeman peer [%s] failed to send status packet: %v time out", p.ID().String())
+
+		default:
+			log.Info("reading handshake msg")
+
+			packet, err := p.ws.ReadMsg()
+			if err != nil {
+				log.SyslogErr("storeman peer read msg fail", "peer", p.ID().String(), "err", err.Error())
+				return err
+			}
+			defer packet.Discard()
+
+			log.SyslogInfo("storeman received handshake", "peer", p.ID().String(), "code", packet.Code)
+			if packet.Code != mpcprotocol.StatusCode {
+				log.SyslogErr("storeman peer sent packet before status packet", "peer", p.ID().String(), "code", packet.Code)
+				return fmt.Errorf("storeman peer [%s] sent packet %x before status packet", p.ID().String(), packet.Code)
+			}
+			s := rlp.NewStream(packet.Payload, uint64(packet.Size))
+			peerVersion, err := s.Uint()
+			if err != nil {
+				log.SyslogErr("storeman peer sent bad status message", "peer", p.ID().String(), "err", err)
+				return fmt.Errorf("storeman peer [%s] sent bad status message: %v", p.ID().String(), err)
+			}
+			if peerVersion != mpcprotocol.PVer {
+				log.SyslogErr("storeman peer: protocol version not mismatch",
+					"peer", p.ID().String(),
+					"actual version", peerVersion,
+					"expect version", mpcprotocol.PVer)
+
+				return fmt.Errorf("storeman peer [%s]: protocol version mismatch %d != %d",
+					p.ID().String(),
+					peerVersion,
+					mpcprotocol.PVer)
+
+			}
 	}
-	defer packet.Discard()
 
-	log.SyslogInfo("storeman received handshake", "peer", p.ID().String(), "code", packet.Code)
-	if packet.Code != mpcprotocol.StatusCode {
-		log.SyslogErr("storeman peer sent packet before status packet", "peer", p.ID().String(), "code", packet.Code)
-		return fmt.Errorf("storeman peer [%s] sent packet %x before status packet", p.ID().String(), packet.Code)
+
+	log.Info("wait handshake sending response")
+	select {
+		case err := <-errc:
+			if err != nil {
+				log.Info("storeman peer failed to send status packet", "peer", p.ID().String(), "err", err)
+				return fmt.Errorf("storeman peer [%s] failed to send status packet: %v", p.ID().String(), err)
+			}
+		case <-time.After(20 * time.Second):
+
+			log.Info("storeman peer send status packet time out", "peer", p.ID().String())
+			return fmt.Errorf("storeman peer [%s] failed to send status packet: %v time out", p.ID().String())
 	}
-	s := rlp.NewStream(packet.Payload, uint64(packet.Size))
-	peerVersion, err := s.Uint()
-	if err != nil {
-		log.SyslogErr("storeman peer sent bad status message", "peer", p.ID().String(), "err", err)
-		return fmt.Errorf("storeman peer [%s] sent bad status message: %v", p.ID().String(), err)
-	}
-	if peerVersion != mpcprotocol.PVer {
-		log.SyslogErr("storeman peer: protocol version not mismatch",
-			"peer", p.ID().String(),
-			"actual version", peerVersion,
-			"expect version", mpcprotocol.PVer)
-
-		return fmt.Errorf("storeman peer [%s]: protocol version mismatch %d != %d",
-			p.ID().String(),
-			peerVersion,
-			mpcprotocol.PVer)
-
-	}
-
-
-	//Wait until out own status is consumed too
-	if err := <-errc; err != nil {
-		log.SyslogErr("storeman peer failed to send status packet", "peer", p.ID().String(), "err", err)
-		return fmt.Errorf("storeman peer [%s] failed to send status packet: %v", p.ID().String(), err)
-	}
-
 
 	return nil
 }
