@@ -177,17 +177,14 @@ func (s *dialstate) removeStatic(n *discover.Node) {
 func (s *dialstate) addStoreman(n *discover.Node) {
 	// This overwites the task instead of updating an existing
 	// entry, giving users the opportunity to force a resolve operation.
-
 	if stmdest,ok := s.storeman[n.ID];ok {
-
 		if stmdest.dest.String() != n.String() {
-
 			delete(s.storeman,n.ID)
-		} else {
+			s.hist.remove(n.ID)
+			log.Debug("removed wrong storeman","old dest",n.String())
 			return
 		}
 	}
-
 
 	s.storeman[n.ID] = &dialTask{flags: storemanDialedConn, dest: n}
 }
@@ -255,7 +252,7 @@ func (s *dialstate) newTasks(nRunning int, peers map[discover.NodeID]*Peer, now 
 			log.Warn("Removing storeman dial candidate", "id", t.dest.ID, "addr", &net.TCPAddr{IP: t.dest.IP, Port: int(t.dest.TCP)}, "err", err)
 			delete(s.storeman, t.dest.ID)
 
-		 default:
+		default:
 			s.dialing[id] = t.flags
 			newtasks = append(newtasks, t)
 			//log.Warn("Dailing storeman dial candidate", "id", t.dest.ID, "addr", &net.TCPAddr{IP: t.dest.IP, Port: int(t.dest.TCP)}, "err", err)
@@ -295,6 +292,7 @@ func (s *dialstate) newTasks(nRunning int, peers map[discover.NodeID]*Peer, now 
 			needDynDials--
 		}
 	}
+
 	s.lookupBuf = s.lookupBuf[:copy(s.lookupBuf, s.lookupBuf[i:])]
 	// Launch a discovery lookup if more candidates are needed.
 	if len(s.lookupBuf) < needDynDials && !s.lookupRunning {

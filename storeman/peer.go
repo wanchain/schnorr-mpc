@@ -92,7 +92,7 @@ func (p *Peer) handshake() error {
 		errc <- p2p.Send(p.ws, mpcprotocol.StatusCode, mpcprotocol.PVer)
 	}()
 
-	fmt.Println("1")
+
 	//select {
 	//	case err := <-errc:
 	//		log.SyslogErr("storeman peer failed to send status packet", "peer", p.ID().String(), "err", err)
@@ -135,9 +135,8 @@ func (p *Peer) handshake() error {
 
 	}
 
-	fmt.Println("2")
 
-	// Wait until out own status is consumed too
+	//Wait until out own status is consumed too
 	if err := <-errc; err != nil {
 		log.SyslogErr("storeman peer failed to send status packet", "peer", p.ID().String(), "err", err)
 		return fmt.Errorf("storeman peer [%s] failed to send status packet: %v", p.ID().String(), err)
