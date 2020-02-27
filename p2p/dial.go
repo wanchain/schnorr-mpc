@@ -252,7 +252,7 @@ func (s *dialstate) newTasks(nRunning int, peers map[discover.NodeID]*Peer, now 
 			log.Warn("Removing storeman dial candidate", "id", t.dest.ID, "addr", &net.TCPAddr{IP: t.dest.IP, Port: int(t.dest.TCP)}, "err", err)
 			delete(s.storeman, t.dest.ID)
 
-		default:
+		case nil:
 			s.dialing[id] = t.flags
 			newtasks = append(newtasks, t)
 			//log.Warn("Dailing storeman dial candidate", "id", t.dest.ID, "addr", &net.TCPAddr{IP: t.dest.IP, Port: int(t.dest.TCP)}, "err", err)
