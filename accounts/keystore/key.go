@@ -81,6 +81,9 @@ type keyStore interface {
 	GetKey(addr common.Address, filename string, auth string) (*Key, error)
 	// Decrypts the key from keyjson
 	GetKeyFromKeyJson(addr common.Address, keyjson []byte, auth string) (*Key, error)
+
+	GetKeyFromKeyJsonMpc(addr common.Address, keyjson []byte, auth string) (*Key, error)
+
 	// Loads an encrypted keyfile from disk
 	GetEncryptedKey(addr common.Address, filename string) (*Key, error)
 	// Writes and encrypts the key

@@ -123,6 +123,20 @@ The keystore will be decrypted by AWS KMS, and plaintext will be saved into new 
     try pwd"
 `,
 			},
+			{
+				Name:      "update",
+				Usage:     "change password of the keystore",
+				Action:    utils.MigrateFlags(accountUpdate),
+				ArgsUsage: "<hex string of gpk>",
+				Flags: []cli.Flag{
+					utils.DataDirFlag,
+					utils.KeyStoreDirFlag,
+				},
+				Description: `
+	for example:schnorrmpc --datadir <path of data> account update <hex string of gpk(0x1234...abef)>
+change the password of the keystore file.
+`,
+			},
 		},
 	}
 )
@@ -306,12 +320,43 @@ func accountUpdate(ctx *cli.Context) error {
 	stack, _ := makeConfigNode(ctx)
 	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 
-	for _, addr := range ctx.Args() {
-		account, oldPassword := unlockAccount(ctx, ks, addr, 0, nil)
+	for _, pkStr := range ctx.Args() {
+
+		pk, err := shcnorrmpc.StringtoPk(pkStr)
+		if err!=nil {
+			fmt.Println("StringtoPk error", err.Error())
+			continue
+		}
+
+		pkBytes := crypto.FromECDSAPub(pk)
+		addr,err := shcnorrmpc.PkToAddress(pkBytes[:])
+		if err != nil {
+			fmt.Println("PkToAddress error", err.Error())
+			continue
+		}
+
+		//a := accounts.Account{Address:addr}
+		//fa, err := ks.Find(a)
+		//if err != nil {
+		//	fmt.Println("can not find\n")
+		//	return err
+		//}
+
+		//desFile := ""
+		//desFile = fa.URL.Path
+		//fmt.Printf("gpk=%v\n",desFile)
+		log.Info("change password","gpk",pkStr,"account",addr.String())
+
+		//account, oldPassword := unlockAccount(ctx, ks, addr.String(), 0, nil)
+		account, oldPassword := unlockAccount(ctx, ks, addr.String(), 0, nil)
 		newPassword := getPassPhrase("Please give a new password. Do not forget this password.", true, 0, nil)
-		if err := ks.Update(account, oldPassword, newPassword); err != nil {
+
+
+		if err := ks.UpdateStoreman(account, oldPassword, newPassword); err != nil {
 			utils.Fatalf("Could not update the account: %v", err)
 		}
+
+		fmt.Printf("Change password of %v successfully\n",pkStr)
 	}
 	return nil
 }

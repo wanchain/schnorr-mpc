@@ -412,7 +412,8 @@ func (ks *KeyStore) getDecryptedKey(a accounts.Account, auth string) (accounts.A
 }
 
 func (ks *KeyStore) getDecryptedKeyFromMemJson(a accounts.Account, keyjson []byte, auth string) (accounts.Account, *Key, error) {
-	key, err := ks.storage.GetKeyFromKeyJson(a.Address, keyjson, auth)
+	//key, err := ks.storage.GetKeyFromKeyJson(a.Address, keyjson, auth)
+	key, err := ks.storage.GetKeyFromKeyJsonMpc(a.Address, keyjson, auth)
 	return a, key, err
 }
 
@@ -546,21 +547,31 @@ func (ks *KeyStore) importKey(key *Key, passphrase string) (accounts.Account, er
 }
 
 // Update transitions an account from a previous format to the current one, also providing the possibility to change the pass-phrase
+//func (ks *KeyStore) Update(a accounts.Account, passphrase, newPassphrase string) error {
+//	a, key, err := ks.getDecryptedKey(a, passphrase)
+//	if err != nil {
+//		return err
+//	}
+//	if key.PrivateKey2 == nil {
+//		sk2, err := crypto.GenerateKey()
+//		if err != nil {
+//			return err
+//		}
+//		key.PrivateKey2 = sk2
+//	}
+//	updateWaddress(key)
+//	return ks.storage.StoreKey(a.URL.Path, key, newPassphrase)
+//}
+
+// Update transitions an account from a previous format to the current one, also providing the possibility to change the pass-phrase
 func (ks *KeyStore) Update(a accounts.Account, passphrase, newPassphrase string) error {
 	a, key, err := ks.getDecryptedKey(a, passphrase)
 	if err != nil {
 		return err
 	}
-	if key.PrivateKey2 == nil {
-		sk2, err := crypto.GenerateKey()
-		if err != nil {
-			return err
-		}
-		key.PrivateKey2 = sk2
-	}
-	updateWaddress(key)
 	return ks.storage.StoreKey(a.URL.Path, key, newPassphrase)
 }
+
 
 func (ks *KeyStore) UpdateStoreman(a accounts.Account, passphrase, newPassphrase string) error {
 	fa, err := ks.Find(a)
@@ -568,7 +579,7 @@ func (ks *KeyStore) UpdateStoreman(a accounts.Account, passphrase, newPassphrase
 		return errors.New("storeman keystore file doesn't exist")
 	}
 
-	fmt.Println("find keystore file : ", fa.URL.Path)
+	//fmt.Println("find keystore file : ", fa.URL.Path)
 	keyjson, err := ioutil.ReadFile(fa.URL.Path)
 	if err != nil {
 		return err

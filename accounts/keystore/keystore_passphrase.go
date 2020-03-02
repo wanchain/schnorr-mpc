@@ -90,7 +90,8 @@ func (ks keyStorePassphrase) GetKey(addr common.Address, filename, auth string) 
 		return nil, err
 	}
 
-	return ks.GetKeyFromKeyJson(addr, keyjson, auth)
+	//return ks.GetKeyFromKeyJson(addr, keyjson, auth)
+	return ks.GetKeyFromKeyJsonMpc(addr, keyjson, auth)
 }
 
 func (ks keyStorePassphrase) GetKeyFromKeyJson(addr common.Address, keyjson []byte, auth string) (*Key, error) {
@@ -106,6 +107,24 @@ func (ks keyStorePassphrase) GetKeyFromKeyJson(addr common.Address, keyjson []by
 	if key.Address != addr {
 		return nil, fmt.Errorf("key content mismatch: have account %x, want %x", key.Address, addr)
 	}
+	return key, nil
+}
+
+
+func (ks keyStorePassphrase) GetKeyFromKeyJsonMpc(addr common.Address, keyjson []byte, auth string) (*Key, error) {
+	if len(keyjson) == 0 {
+		return nil, fmt.Errorf("key content invalid")
+	}
+
+	key, err := DecryptKey(keyjson, auth)
+	if err != nil {
+		return nil, err
+	}
+	// Make sure we're really operating on the requested key (no swap attacks)
+	// Privatekey.address is not equal addr, because keystore stores private keys' pieces, not the whole private key.
+	//if key.Address != addr {
+	//	return nil, fmt.Errorf("key content mismatch: have account %x, want %x", key.Address, addr)
+	//}
 	return key, nil
 }
 
