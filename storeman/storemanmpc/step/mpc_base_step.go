@@ -14,6 +14,7 @@ type BaseStep struct {
 	waiting int
 	waitAll bool // true: wait all
 	stepId  int
+	notRecvPeers map[discover.NodeID]*discover.NodeID
 }
 
 func CreateBaseStep(peers *[]mpcprotocol.PeerInfo, wait int) *BaseStep {
@@ -28,6 +29,12 @@ func CreateBaseStep(peers *[]mpcprotocol.PeerInfo, wait int) *BaseStep {
 		step.waiting = len(*peers)
 	}
 	step.waitAll = true
+
+	step.notRecvPeers = make(map[discover.NodeID]*discover.NodeID)
+	for _, peer := range *peers {
+		step.notRecvPeers[peer.PeerID] = &peer.PeerID
+	}
+
 	return step
 }
 
@@ -99,6 +106,9 @@ func (step *BaseStep) HandleMessage(msger mpcprotocol.GetMessageInterface) error
 				"receive step", msg.StepId)
 		} else {
 			if step.waiting > 0 && msger.HandleMessage(msg) {
+
+				delete(step.notRecvPeers, *msg.PeerID)
+
 				step.waiting--
 				if step.waiting <= 0 {
 					step.finish <- nil

@@ -10,6 +10,8 @@ type MpcSStep struct {
 	BaseMpcStep
 	resultKeys []string
 	signNum    int
+
+
 }
 
 func CreateMpcSStep(peers *[]mpcprotocol.PeerInfo, preValueKeys []string, resultKeys []string) *MpcSStep {
@@ -17,10 +19,12 @@ func CreateMpcSStep(peers *[]mpcprotocol.PeerInfo, preValueKeys []string, result
 	log.SyslogInfo("CreateMpcSStep begin")
 	signNum := len(preValueKeys)
 	mpc := &MpcSStep{*CreateBaseMpcStep(peers, signNum), resultKeys, signNum}
+	//mpc := &MpcSStep{*CreateBaseMpcStep(peers, signNum), resultKeys, signNum,make(map[uint64]discover.NodeID)}
 
 	for i := 0; i < signNum; i++ {
 		mpc.messages[i] = createSGenerator(preValueKeys[i])
 	}
+
 	return mpc
 }
 
@@ -63,7 +67,6 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 
 		pointer.message[seed] = msg.Data[2*i]
 	}
-
 	return true
 }
 
@@ -71,6 +74,9 @@ func (msStep *MpcSStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mp
 	log.SyslogInfo("MpcSStep.FinishStep begin")
 	err := msStep.BaseMpcStep.FinishStep()
 	if err != nil {
+		_,retHash := msStep.BaseMpcStep.GetSignedDataHash(result)
+		msStep.BaseMpcStep.ShowNotArriveNodes(retHash,mpc.SelfNodeId())
+
 		return err
 	}
 
@@ -87,3 +93,4 @@ func (msStep *MpcSStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mp
 	log.SyslogInfo("MpcSStep.FinishStep succeed")
 	return nil
 }
+

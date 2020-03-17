@@ -17,7 +17,10 @@ func CreateMpcRStep(peers *[]mpcprotocol.PeerInfo, accType string) *MpcRStep {
 
 func (addStep *MpcRStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mpcprotocol.StoremanManager) error {
 	err := addStep.MpcPointStep.FinishStep(result, mpc)
+
 	if err != nil {
+		_,retHash := addStep.BaseMpcStep.GetSignedDataHash(result)
+		addStep.BaseMpcStep.ShowNotArriveNodes(retHash,mpc.SelfNodeId())
 		return err
 	}
 

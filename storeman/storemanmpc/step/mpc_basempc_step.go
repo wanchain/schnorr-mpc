@@ -1,7 +1,10 @@
 package step
 
 import (
+	"crypto/sha256"
+	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 )
 
@@ -48,4 +51,28 @@ func (mpcStep *BaseMpcStep) FinishStep() error {
 	}
 
 	return nil
+}
+
+func (mpcStep *BaseMpcStep) ShowNotArriveNodes(hash common.Hash, selfNodeId *discover.NodeID){
+	if len(mpcStep.notRecvPeers) != 0 {
+		for peerId,_ := range mpcStep.notRecvPeers {
+			if peerId != *selfNodeId {
+				//log.SyslogErr(fmt.Sprintf("Not received data from %v", peerId.String()))
+				log.SyslogErr("ShowNotArriveNodes","hash(signedData)",hash.String(),"Not received data from ", peerId.String())
+			}
+		}
+	}
+}
+
+
+func (mpcStep *BaseMpcStep) GetSignedDataHash(result mpcprotocol.MpcResultInterface)(error,common.Hash){
+	var retHash = common.Hash{}
+	// check signVerify
+	M, err := result.GetByteValue(mpcprotocol.MpcM)
+	if err != nil {
+		log.SyslogErr("GetSignedDataHash . err", err.Error())
+		return err,retHash
+	}
+	retHash = sha256.Sum256(M)
+	return nil, retHash
 }
