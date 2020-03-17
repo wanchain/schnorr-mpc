@@ -2,6 +2,7 @@ package step
 
 import (
 	"encoding/hex"
+	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/log"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
@@ -50,12 +51,12 @@ func (ptStep *MpcPointStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		"seed", seed)
 
 	if seed == 0 {
-		log.SyslogErr("MpcPointStep.HandleMessage, get peer seed fail. peer:%s", msg.PeerID.String())
+		log.SyslogErr("MpcPointStep:HandleMessage","MpcPointStep.HandleMessage, get peer seed fail. peer", msg.PeerID.String())
 		return false
 	}
 
 	if len(msg.Data) != 2*ptStep.signNum {
-		log.SyslogErr("MpcPointStep HandleMessage, msg data len doesn't match requirement, dataLen:%d", len(msg.Data))
+		log.SyslogErr("HandleMessage","MpcPointStep HandleMessage, msg data len doesn't match requirement, dataLen", len(msg.Data))
 		return false
 	}
 
@@ -63,7 +64,7 @@ func (ptStep *MpcPointStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		pointer := ptStep.messages[i].(*mpcPointGenerator)
 		_, exist := pointer.message[seed]
 		if exist {
-			log.SyslogErr("MpcPointStep.HandleMessage, get msg from seed fail. peer:%s", msg.PeerID.String())
+			log.SyslogErr("HandleMessage","MpcPointStep.HandleMessage, get msg from seed fail. peer", msg.PeerID.String())
 			return false
 		}
 
@@ -83,13 +84,18 @@ func (ptStep *MpcPointStep) FinishStep(result mpcprotocol.MpcResultInterface, mp
 	for i := 0; i < ptStep.signNum; i++ {
 		pointer := ptStep.messages[i].(*mpcPointGenerator)
 		//PublicKeyResult
+		//log.Info("generated gpk MpcPointStep::FinishStep",
+		//	"result key", ptStep.resultKeys[i],
+		//	"result value", pointer.result[:])
+
 		log.Info("generated gpk MpcPointStep::FinishStep",
 			"result key", ptStep.resultKeys[i],
-			"result value", pointer.result[:])
+			"result value x", hexutil.Encode(pointer.result[0].Bytes()),
+			"result value y", hexutil.Encode(pointer.result[1].Bytes()))
 
 		err = result.SetValue(ptStep.resultKeys[i], pointer.result[:])
 		if err != nil {
-			log.SyslogErr("MpcPointStep.FinishStep, SetValue fail. err:%s", err.Error())
+			log.SyslogErr("HandleMessage","MpcPointStep.FinishStep, SetValue fail. err", err.Error())
 			return err
 		}
 	}

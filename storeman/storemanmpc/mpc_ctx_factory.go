@@ -1,6 +1,7 @@
 package storemanmpc
 
 import (
+	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/log"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 )
@@ -13,16 +14,21 @@ func (*MpcCtxFactory) CreateContext(ctxType int,
 	peers []mpcprotocol.PeerInfo,
 	preSetValue ...MpcValue) (MpcInterface, error) {
 
-	log.Info("============================ CreateContext=====================")
-	log.Info("CreateContext", "ctxType", ctxType)
+	log.SyslogInfo("============================ CreateContext=====================")
+	log.SyslogInfo("CreateContext", "ctxType", ctxType)
 	for i := 0; i < len(preSetValue); i++ {
-		if preSetValue[i].Value != nil {
-			log.Info("preSetValue", "key", preSetValue[i].Key, "value", preSetValue[i].Value)
-		} else if preSetValue[i].ByteValue != nil {
-			log.Info("preSetValue", "key", preSetValue[i].Key, "bytevalue", preSetValue[i].ByteValue)
+		if preSetValue[i].Key != mpcprotocol.MpcPrivateShare {
+			if preSetValue[i].Value != nil {
+				//log.Info("preSetValue", "key", preSetValue[i].Key, "value", preSetValue[i].Value)
+				log.SyslogInfo("preSetValue", "key", preSetValue[i].Key, "value", hexutil.Encode(preSetValue[i].Value[0].Bytes()))
+			} else if preSetValue[i].ByteValue != nil {
+				//log.Info("preSetValue", "key", preSetValue[i].Key, "bytevalue", preSetValue[i].ByteValue)
+				log.SyslogInfo("preSetValue", "key", preSetValue[i].Key, "bytevalue", hexutil.Encode(preSetValue[i].ByteValue))
+			}
 		}
+
 	}
-	log.Info("============================ CreateContext=====================")
+	log.SyslogInfo("============================ CreateContext=====================")
 
 	switch ctxType {
 	case mpcprotocol.MpcGPKLeader:

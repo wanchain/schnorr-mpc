@@ -80,7 +80,7 @@ func (point *mpcPointGenerator) calculateResult() error {
 	result := shcnorrmpc.LagrangeECC(gpkshares, seeds[:], mpcprotocol.MPCDegree)
 
 	if !shcnorrmpc.ValidatePublicKey(result) {
-		log.SyslogErr("mpcPointGenerator.ValidatePublicKey fail. err:%s", mpcprotocol.ErrPointZero.Error())
+		log.SyslogErr("mpcPointGenerator::calculateResult","mpcPointGenerator.ValidatePublicKey fail. err", mpcprotocol.ErrPointZero.Error())
 		return mpcprotocol.ErrPointZero
 	}
 

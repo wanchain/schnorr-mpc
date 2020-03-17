@@ -44,16 +44,16 @@ func (msStep *MpcSStep) CreateMessage() []mpcprotocol.StepMessage {
 }
 
 func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
-	log.SyslogInfo("MpcSStep.HandleMessage begin, peerID:%s", msg.PeerID.String())
+	log.SyslogInfo("MpcSStep::HandleMessage","MpcSStep.HandleMessage begin, peerID", msg.PeerID.String())
 
 	seed := msStep.getPeerSeed(msg.PeerID)
 	if seed == 0 {
-		log.SyslogErr("MpcSStep.HandleMessage, get peer seed fail. peer:%s", msg.PeerID.String())
+		log.SyslogErr("MpcSStep::HandleMessage","MpcSStep.HandleMessage, get peer seed fail. peer", msg.PeerID.String())
 		return false
 	}
 
 	if len(msg.Data) != msStep.signNum {
-		log.SyslogErr("MpcSStep HandleMessage, msg data len doesn't match requiremant, dataLen:%d", len(msg.Data))
+		log.SyslogErr("MpcSStep::HandleMessage","MpcSStep HandleMessage, msg data len doesn't match requiremant, dataLen", len(msg.Data))
 		return false
 	}
 
@@ -61,7 +61,7 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		pointer := msStep.messages[i].(*mpcSGenerator)
 		_, exist := pointer.message[seed]
 		if exist {
-			log.SyslogErr("MpcSStep.HandleMessage, get msg from seed fail. peer:%s", msg.PeerID.String())
+			log.SyslogErr("MpcSStep::HandleMessage","MpcSStep.HandleMessage, get msg from seed fail. peer", msg.PeerID.String())
 			return false
 		}
 
@@ -85,7 +85,7 @@ func (msStep *MpcSStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mp
 		// MpcS
 		err = result.SetValue(msStep.resultKeys[i], []big.Int{pointer.result})
 		if err != nil {
-			log.SyslogErr("MpcSStep.FinishStep, SetValue fail. err:%s", err.Error())
+			log.SyslogErr("MpcSStep::FinishStep","MpcSStep.FinishStep, SetValue fail. err", err.Error())
 			return err
 		}
 	}

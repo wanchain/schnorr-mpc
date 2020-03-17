@@ -61,13 +61,13 @@ func (jrss *MpcSKShareStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		"peerId", msg.PeerID.String(),
 		"seed", seed)
 	if seed == 0 {
-		log.SyslogErr("MpcJRSS_Step, can't find peer seed. peerID:%s", msg.PeerID.String())
+		log.SyslogErr("MpcSKShareStep::HandleMessage","MpcSKShareStep, can't find peer seed. peerID", msg.PeerID.String())
 	}
 
 	JRSSvalue := jrss.messages[0].(*RandomPolynomialValue)
 	_, exist := JRSSvalue.message[seed]
 	if exist {
-		log.SyslogErr("MpcJRSS_Step, can't find msg . peerID:%s, seed:%d", msg.PeerID.String(), seed)
+		log.SyslogErr("MpcSKShareStep::HandleMessage","MpcSKShareStep, can't find msg . peerID",msg.PeerID.String(), " seed",seed)
 		return false
 	}
 

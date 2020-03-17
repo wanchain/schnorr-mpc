@@ -38,14 +38,14 @@ func (mars *MpcAckRSStep) InitStep(result mpcprotocol.MpcResultInterface) error 
 	log.SyslogInfo("MpcAckRSStep.InitStep begin")
 	value, err := result.GetValue(mpcprotocol.RPublicKeyResult)
 	if err != nil {
-		log.SyslogErr("ack mpc account step, init fail. err:%s", err.Error())
+		log.SyslogErr("MpcAckRSStep::InitStep","ack mpc account step, init fail. err", err.Error())
 		return err
 	}
 	mars.mpcR[0], mars.mpcR[1] = value[0], value[1]
 
 	sValue, err := result.GetValue(mpcprotocol.MpcS)
 	if err != nil {
-		log.SyslogErr("ack mpc account step, init fail. err:%s", err.Error())
+		log.SyslogErr("MpcAckRSStep::InitStep","ack mpc account step, init fail. err", err.Error())
 		return err
 	}
 	mars.mpcS = sValue[0]
@@ -91,7 +91,7 @@ func (mars *MpcAckRSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	log.SyslogInfo("MpcAckRSStep.HandleMessage begin")
 	_, exist := mars.message[*msg.PeerID]
 	if exist {
-		log.SyslogErr("MpcAckRSStep.HandleMessage fail. peer doesn't exist in task peer group. peerID:%s",
+		log.SyslogErr("MpcAckRSStep::HandleMessage","MpcAckRSStep.HandleMessage fail. peer doesn't exist in task peer group. peerID",
 			msg.PeerID.String())
 		return false
 	}
@@ -126,7 +126,7 @@ func (mars *MpcAckRSStep) verifyRS(result mpcprotocol.MpcResultInterface) error 
 	// check signVerify
 	M, err := result.GetByteValue(mpcprotocol.MpcM)
 	if err != nil {
-		log.SyslogErr("ack MpcAckRSStep get MpcM . err:%s", err.Error())
+		log.SyslogErr("MpcAckRSStep::verifyRS","ack MpcAckRSStep get MpcM . err", err.Error())
 		return err
 	}
 
@@ -136,7 +136,7 @@ func (mars *MpcAckRSStep) verifyRS(result mpcprotocol.MpcResultInterface) error 
 	// gpk
 	gpkItem, err := result.GetValue(mpcprotocol.PublicKeyResult)
 	if err != nil {
-		log.SyslogErr("ack MpcAckRSStep get PublicKeyResult . err:%s", err.Error())
+		log.SyslogErr("MpcAckRSStep::verifyRS","ack MpcAckRSStep get PublicKeyResult . err", err.Error())
 		return err
 	}
 	gpk := new(ecdsa.PublicKey)

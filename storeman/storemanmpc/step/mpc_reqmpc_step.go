@@ -122,10 +122,11 @@ func (req *RequestMpcStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc
 }
 
 func (req *RequestMpcStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
-	log.SyslogInfo("RequestMpcStep.HandleMessage begin, peerID:%s", msg.PeerID.String())
+	log.SyslogInfo("RequestMpcStep::HandleMessage","RequestMpcStep.HandleMessage begin, peerID", msg.PeerID.String())
 	_, exist := req.message[*msg.PeerID]
 	if exist {
-		log.SyslogErr("RequestMpcStep.HandleMessage, get message from peerID fail. peer:%s", msg.PeerID.String())
+		log.SyslogErr("RequestMpcStep::HandleMessage","RequestMpcStep.HandleMessage, get message from peerID fail. peer",
+			msg.PeerID.String())
 		return false
 	}
 

@@ -57,13 +57,13 @@ func (jrss *MpcRSKShare_Step) FinishStep(result mpcprotocol.MpcResultInterface, 
 func (jrss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	seed := jrss.getPeerSeed(msg.PeerID)
 	if seed == 0 {
-		log.SyslogErr("MpcJRSS_Step, can't find peer seed. peerID:%s", msg.PeerID.String())
+		log.SyslogErr("MpcJRSS_Step::HandleMessage", " can't find peer seed. peerID", msg.PeerID.String())
 	}
 
 	JRSSvalue := jrss.messages[0].(*RandomPolynomialValue)
 	_, exist := JRSSvalue.message[seed]
 	if exist {
-		log.SyslogErr("MpcJRSS_Step, can't find msg . peerID:%s, seed:%d", msg.PeerID.String(), seed)
+		log.SyslogErr("MpcJRSS_Step::HandleMessage"," can't find msg . peerID",msg.PeerID.String()," seed",seed)
 		return false
 	}
 

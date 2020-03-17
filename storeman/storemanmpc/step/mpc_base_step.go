@@ -50,7 +50,7 @@ func (step *BaseStep) InitMessageLoop(msger mpcprotocol.GetMessageInterface) err
 				err := step.HandleMessage(msger)
 				if err != nil {
 					if err != mpcprotocol.ErrQuit {
-						log.SyslogErr("InitMessageLoop fail, get message err, err:%s", err.Error())
+						log.SyslogErr("BaseStep::InitMessageLoop","InitMessageLoop fail, get message err, err", err.Error())
 					}
 
 					break
@@ -71,7 +71,7 @@ func (step *BaseStep) FinishStep() error {
 	select {
 	case err := <-step.finish:
 		if err != nil {
-			log.SyslogErr("BaseStep.FinishStep, get a step finish error. err:%s", err.Error())
+			log.SyslogErr("BaseStep::FinishStep"," get a step finish error. err", err.Error())
 		}
 
 		step.msgChan <- nil

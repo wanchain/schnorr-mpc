@@ -29,7 +29,7 @@ func (poly *RandomPolynomialValue) initialize(peers *[]mpcprotocol.PeerInfo,
 
 	s, err := rand.Int(rand.Reader, crypto.S256().Params().N)
 	if err != nil {
-		log.SyslogErr("RandomPolynomialValue::initialize, rand.Int fail. err:%s", err.Error())
+		log.SyslogErr("RandomPolynomialValue::initialize", "rand.Int fail. err", err.Error())
 		return err
 	}
 	cof := shcnorrmpc.RandPoly(degree, *s)
