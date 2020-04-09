@@ -200,6 +200,8 @@ func makeFullNode(ctx *cli.Context) *node.Node {
 		cfg.Sm.DataPath = cfg.Node.DataDir
 		enableKms := ctx.GlobalIsSet(utils.AwsKmsFlag.Name)
 
+		enableCheckGpk := ctx.GlobalIsSet(utils.CheckGpkFlag.Name)
+
 		var status int
 		var suc bool
 
@@ -209,13 +211,13 @@ func makeFullNode(ctx *cli.Context) *node.Node {
 		}
 
 		password := getPassword(ctx, false)
-		verify, accounts := getVerifyAccounts()
+		verify, accounts := getVerifyAccounts(enableCheckGpk)
 		if verify {
 			suc, status = verifySecurityInfo(stack, enableKms, kmsInfo, password, accounts)
 			for !suc {
 				log.Error("verify security info fail, please input again")
 				if status == 0x00 || (status == 0x01 && !enableKms) {
-					verify, accounts = getVerifyAccounts()
+					verify, accounts = getVerifyAccounts(enableCheckGpk)
 				} else if status == 0x01 {
 					kmsInfo = getKmsInfo()
 				} else {
@@ -341,7 +343,10 @@ func getPassword(ctx *cli.Context, retry bool) string {
 	return confirmed
 }
 
-func getVerifyAccounts() (bool, []common.Address) {
+func getVerifyAccounts(checkGpk bool) (bool, []common.Address) {
+	if !checkGpk {
+		return false, nil
+	}
 	fmt.Println("")
 	reader := bufio.NewReader(os.Stdin)
 	var accounts []common.Address

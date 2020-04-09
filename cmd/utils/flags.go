@@ -299,6 +299,11 @@ var (
 		Usage: "Enable AWS KMS encrypted keystore file",
 	}
 
+	CheckGpkFlag = cli.BoolFlag{
+		Name:  "checkGpk",
+		Usage: "Enable check gpk address",
+	}
+
 	SchnorrThresholdFlag = cli.IntFlag{
 		Name:  "threshold",
 		Usage: "threshold of the schnorr signature",

@@ -80,6 +80,7 @@ var AppHelpFlagGroups = []flagGroup{
 			utils.UnlockedAccountFlag,
 			utils.PasswordFileFlag,
 			utils.AwsKmsFlag,
+			utils.CheckGpkFlag,
 		},
 	},
 

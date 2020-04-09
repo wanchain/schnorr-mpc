@@ -367,6 +367,7 @@ func addApprovingData(dataItem *mpcprotocol.SendData) error {
 		return err
 	}
 	if isExist {
+		log.SyslogInfo("addApprovingData", "isExist in approvedDB", "true")
 		return nil
 	}
 	// check in approving keys

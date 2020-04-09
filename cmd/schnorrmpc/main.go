@@ -66,6 +66,7 @@ var (
 		configFileFlag,
 		utils.StoremanFlag,
 		utils.AwsKmsFlag,
+		utils.CheckGpkFlag,
 	}
 
 	rpcFlags = []cli.Flag{
