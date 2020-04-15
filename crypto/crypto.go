@@ -21,6 +21,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/sha512"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -872,4 +873,14 @@ func otaAddress(address common.Address) string {
 	result := Encode(append(FactoidPrefix, Hex2Bytes(address.Hex())...))
 
 	return result
+}
+
+
+/////////////////////////////////////////Jacob added////////////////////////////////////////////////////////////////
+func Sign(priv *ecdsa.PrivateKey, hash []byte) (r, s *big.Int, err error) {
+	return ecdsa.Sign(rand.Reader,priv,hash)
+}
+
+func Verify(pub *ecdsa.PublicKey, hash []byte, r, s *big.Int) bool {
+	return ecdsa.Verify(pub,hash,r,s)
 }
