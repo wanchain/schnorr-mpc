@@ -49,6 +49,33 @@ func GetOsmConf() (*OsmConf){
 	return osmConf
 }
 
+//-----------------------mange config file ---------------------------------
+
+// todo rw lock
+func (cnf *OsmConf) LoadCnf(confPath string) error {
+	defer cnf.wrLock.Unlock()
+	return nil
+}
+
+// todo rw lock
+func (cnf *OsmConf) FreshCnf(confPath string) error {
+	defer cnf.wrLock.Unlock()
+	return nil
+}
+
+// todo rw lock
+func (cnf *OsmConf) GetThresholdNum()(uint16, error){
+	defer cnf.wrLock.Unlock()
+	return 3, nil
+}
+
+// todo rw lock
+func (cnf *OsmConf) GetTotalNum()(uint16, error){
+	defer cnf.wrLock.Unlock()
+	return 4, nil
+}
+
+//-----------------------get pk ---------------------------------
 // todo rw lock
 // get working pk
 func (cnf *OsmConf) GetPK(grpId string, smInx uint16) (*ecdsa.PublicKey, error){
@@ -63,17 +90,8 @@ func (cnf *OsmConf) GetPKShare(grpId string, smInx uint16) (*ecdsa.PublicKey, er
 	return nil,nil
 }
 
-// todo rw lock
-func (cnf *OsmConf) LoadCnf(confPath string) error {
-	defer cnf.wrLock.Unlock()
-	return nil
-}
 
-// todo rw lock
-func (cnf *OsmConf) FreshCnf(confPath string) error {
-	defer cnf.wrLock.Unlock()
-	return nil
-}
+//-----------------------get self---------------------------------
 // todo rw lock
 func (cnf *OsmConf) GetSelfPrvKey() (*ecdsa.PrivateKey, error){
 	defer cnf.wrLock.Unlock()
@@ -86,6 +104,7 @@ func (cnf *OsmConf) GetSelfInx(grpId string)(uint16, error){
 	return 0, nil
 }
 
+//-----------------------get group---------------------------------
 // todo rw lock
 func (cnf *OsmConf) GetGrpElemsInxes(grpId string)(*ArrayGrpElemsInx, error){
 	defer cnf.wrLock.Unlock()
@@ -104,8 +123,17 @@ func (cnf *OsmConf) GetGrpItem(grpId string, smInx uint16)(*GrpElem, error){
 }
 
 // todo rw lock
+func (cnf *OsmConf) GetGrpInxByGpk(gpk hexutil.Bytes)(string, error){
+	defer cnf.wrLock.Unlock()
+	grpId := "groupId1"
+	return grpId, nil
+}
+
+
+//-----------------------others ---------------------------------
+// todo rw lock
 // compute f(x) x=hash(pk)
-func (cnf *OsmConf) GetPkHash(grpId string, smInx uint16)(common.Hash, error){
+func (cnf *OsmConf) getPkHash(grpId string, smInx uint16)(common.Hash, error){
 	defer cnf.wrLock.Unlock()
 	return common.Hash{}, nil
 }
@@ -113,27 +141,11 @@ func (cnf *OsmConf) GetPkHash(grpId string, smInx uint16)(common.Hash, error){
 // todo rw lock
 // compute f(x) x=hash(pk) bigInt s[i][j]
 func (cnf *OsmConf) GetPkToBigInt(grpId string, smInx uint16)(*big.Int, error){
-	defer cnf.wrLock.Unlock()
-	return big.NewInt(0), nil
-}
-
-// todo rw lock
-func (cnf *OsmConf) GetTotalNum()(uint16, error){
-	defer cnf.wrLock.Unlock()
-	return 4, nil
-}
-
-// todo rw lock
-func (cnf *OsmConf) GetThresholdNum()(uint16, error){
-	defer cnf.wrLock.Unlock()
-	return 3, nil
-}
-
-// todo rw lock
-func (cnf *OsmConf) GetGrpInxByGpk(gpk hexutil.Bytes)(string, error){
-	defer cnf.wrLock.Unlock()
-	grpId := "groupId1"
-	return grpId, nil
+	h, err := cnf.getPkHash(grpId,smInx)
+	if err != nil {
+		return big.NewInt(0), err
+	}
+	return big.NewInt(0).SetBytes(h.Bytes()), nil
 }
 
 func (cnf *OsmConf) GetInxByNodeId(grpId string,id *discover.NodeID)(uint16, error){

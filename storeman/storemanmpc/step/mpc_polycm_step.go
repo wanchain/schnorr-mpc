@@ -26,7 +26,7 @@ type MpcPolycmStep struct {
 	grpId		string
 }
 
-func CreateMpcPolycmStep(peers *[]mpcprotocol.PeerInfo, messageType int64) *MpcPolycmStep {
+func CreateMpcPolycmStep(peers *[]mpcprotocol.PeerInfo) *MpcPolycmStep {
 
 	return &MpcPolycmStep{
 		BaseStep:    *CreateBaseStep(peers, len(*peers)-1),
@@ -105,7 +105,7 @@ func (req *MpcPolycmStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc 
 	if err != nil {
 		return err
 	}
-	// save data to the mpc context
+	// save other poly commit to the mpc context
 	for index, polyCms := range req.polycmGMap {
 		key := mpcprotocol.MPCRPolyCMG + strconv.Itoa(int(index))
 		var buf bytes.Buffer
@@ -114,6 +114,14 @@ func (req *MpcPolycmStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc 
 		}
 		result.SetByteValue(key, buf.Bytes())
 	}
+	// save self poly commit coff to the mpc context
+	key := mpcprotocol.MPCRPolyCoff + strconv.Itoa(int(req.selfIndex))
+
+	coff := make([]big.Int, 0)
+	for _, polyCmCoffItem := range req.polyCoff{
+		coff = append(coff, polyCmCoffItem)
+	}
+	result.SetValue(key, coff[:])
 	return nil
 }
 

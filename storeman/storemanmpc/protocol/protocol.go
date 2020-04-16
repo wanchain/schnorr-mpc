@@ -61,6 +61,7 @@ const (
 	MPCAction  = "MPCAction"
 
 	MPCRPolyCMG = "MPCRPolyCommitG"	 // node0's comment : MPCRPolyCMG + "0"
+	MPCRPolyCoff = "MPCRPolyCoff"
 )
 
 const (
