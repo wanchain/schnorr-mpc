@@ -21,7 +21,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
-	"crypto/sha512"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -42,9 +41,8 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rsa"
-	
-	"github.com/wanchain/schnorr-mpc/log"
 
+	"github.com/wanchain/schnorr-mpc/log"
 )
 
 var (
@@ -877,10 +875,10 @@ func otaAddress(address common.Address) string {
 
 
 /////////////////////////////////////////Jacob added////////////////////////////////////////////////////////////////
-func Sign(priv *ecdsa.PrivateKey, hash []byte) (r, s *big.Int, err error) {
+func SignInternalData(priv *ecdsa.PrivateKey, hash []byte) (r, s *big.Int, err error) {
 	return ecdsa.Sign(rand.Reader,priv,hash)
 }
 
-func Verify(pub *ecdsa.PublicKey, hash []byte, r, s *big.Int) bool {
+func VerifyInternalData(pub *ecdsa.PublicKey, hash []byte, r, s *big.Int) bool {
 	return ecdsa.Verify(pub,hash,r,s)
 }

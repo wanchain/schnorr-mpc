@@ -179,3 +179,12 @@ func StringtoPk(str string) (*ecdsa.PublicKey, error) {
 	pk := crypto.ToECDSAPub(pkBytes)
 	return pk, nil
 }
+
+//sg
+func SkG(s big.Int) (*ecdsa.PublicKey, error) {
+	sG := new(ecdsa.PublicKey)
+	sG.Curve = crypto.S256()
+	sG.X, sG.Y = crypto.S256().ScalarBaseMult(s.Bytes())
+	return sG, nil
+}
+

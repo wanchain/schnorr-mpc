@@ -15,6 +15,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/p2p"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	"github.com/wanchain/schnorr-mpc/rlp"
+	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
 	"github.com/wanchain/schnorr-mpc/storeman/shcnorrmpc"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"github.com/wanchain/schnorr-mpc/storeman/validator"
@@ -248,8 +249,9 @@ func (mpcServer *MpcDistributor) CreateRequestGPK() ([]byte, error) {
 func (mpcServer *MpcDistributor) CreateReqMpcSign(data []byte, extern []byte, pkBytes []byte, byApprove int64) ([]byte, error) {
 
 	log.SyslogInfo("CreateReqMpcSign begin")
-
+	grpId, _ := osmconf.GetOsmConf().GetGrpInxByGpk(pkBytes)
 	value, err := mpcServer.createRequestMpcContext(mpcprotocol.MpcSignLeader,
+		MpcValue{mpcprotocol.MpcGrpId, nil, []byte(grpId)},
 		MpcValue{mpcprotocol.MpcAddress, nil, pkBytes[:]},
 		MpcValue{mpcprotocol.MpcM, nil, data},
 		MpcValue{mpcprotocol.MpcExt, nil, extern},

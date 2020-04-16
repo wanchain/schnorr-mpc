@@ -54,10 +54,13 @@ const (
 
 	MpcExt = "MpcExtern" // extern
 	MpcByApprove = "MpcByApprove" // by approve
+	MpcGrpId	= "MpcGrpId"	 	// group ID
 
 	MpcTxHash  = "MpcTxHash"
 	MpcAddress = "MpcAddress"
 	MPCAction  = "MPCAction"
+
+	MPCRPolyCMG = "MPCRPolyCommitG"	 // node0's comment : MPCRPolyCMG + "0"
 )
 
 const (
@@ -102,4 +105,3 @@ type MpcMessage struct {
 	Data      []big.Int //message data
 	BytesData [][]byte
 }
-
