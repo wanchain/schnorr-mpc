@@ -269,6 +269,15 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 
 	peers := []mpcprotocol.PeerInfo{}
 
+	var grpId string
+	for _, item := range preSetValue {
+		if item.Key == mpcprotocol.MpcGrpId {
+			grpId = string(item.ByteValue)
+			break
+		}
+	}
+
+
 	var address common.Address
 	if ctxType == mpcprotocol.MpcSignLeader {
 		for _, item := range preSetValue {
@@ -281,7 +290,7 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 			}
 		}
 		// peers1: the peers which are used to create the group public key, used to build the sign data.
-		value, value1, peers1, err := mpcServer.loadStoremanAddress(&address)
+		value, value1, _, err := mpcServer.loadStoremanAddress(&address)
 		if err != nil {
 
 			log.SyslogErr("MpcDistributor createRequestMpcContext, loadStoremanAddress fail",
@@ -296,13 +305,19 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 
 		// mpc gpk for sign
 		preSetValue = append(preSetValue, *value1)
-
-		peers = peers1
-	} else {
+		// todo
+		//peers = peers1
+	} /*else {
 		for i := 0; i < len(mpcServer.StoreManGroup); i++ {
 			peers = append(peers, mpcprotocol.PeerInfo{PeerID: mpcServer.StoreManGroup[i], Seed: 0})
 		}
+	}*/
+	// todo error
+	grpElems, _ := osmconf.GetOsmConf().GetGrpElems(grpId)
+	for _, grpElem := range *grpElems {
+		peers = append(peers, mpcprotocol.PeerInfo{PeerID: *grpElem.NodeId, Seed: 0})
 	}
+
 	mpc, err := mpcServer.mpcCreater.CreateContext(ctxType,
 		mpcID,
 		peers,

@@ -12,28 +12,24 @@ import (
 var osmConf *OsmConf
 
 type GrpElem struct {
-	inx uint16
-	workingPk *ecdsa.PublicKey
-	nodeId	*discover.NodeID
-	pkShare	*ecdsa.PublicKey
+	Inx uint16
+	WorkingPk *ecdsa.PublicKey
+	NodeId	*discover.NodeID
+	PkShare	*ecdsa.PublicKey
 }
 
-type ArrayGrpElem struct {
-	grpElms []GrpElem
-}
+type ArrayGrpElem []GrpElem
 
-type ArrayGrpElemsInx struct {
-	indxes  []uint16
-}
+type ArrayGrpElemsInx []uint16
 
 type GrpInfoItem struct {
-	grpGpkBytes	hexutil.Bytes
-	leaderInx uint16
-	arrayGrpElems ArrayGrpElem
+	GrpGpkBytes	hexutil.Bytes
+	LeaderInx uint16
+	ArrGrpElems ArrayGrpElem
 }
 
 type OsmConf struct {
-	grpInfoMap map[string]GrpInfoItem
+	GrpInfoMap map[string]GrpInfoItem
 	wrLock	sync.RWMutex
 }
 

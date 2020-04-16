@@ -18,34 +18,34 @@ func CreateMpcRSKShareStep(degree int, peers *[]mpcprotocol.PeerInfo) *MpcRSKSha
 	return mpc
 }
 
-func (jrss *MpcRSKShare_Step) CreateMessage() []mpcprotocol.StepMessage {
-	message := make([]mpcprotocol.StepMessage, len(*jrss.peers))
-	JRSSvalue := jrss.messages[0].(*RandomPolynomialValue)
-	for i := 0; i < len(*jrss.peers); i++ {
+func (rss *MpcRSKShare_Step) CreateMessage() []mpcprotocol.StepMessage {
+	message := make([]mpcprotocol.StepMessage, len(*rss.peers))
+	skpv := rss.messages[0].(*RandomPolynomialValue)
+	for i := 0; i < len(*rss.peers); i++ {
 		message[i].MsgCode = mpcprotocol.MPCMessage
-		message[i].PeerID = &(*jrss.peers)[i].PeerID
+		message[i].PeerID = &(*rss.peers)[i].PeerID
 		message[i].Data = make([]big.Int, 1)
-		message[i].Data[0] = JRSSvalue.polyValue[i]
+		message[i].Data[0] = skpv.polyValue[i]
 	}
 
 	return message
 }
 
-func (jrss *MpcRSKShare_Step) FinishStep(result mpcprotocol.MpcResultInterface, mpc mpcprotocol.StoremanManager) error {
-	err := jrss.BaseMpcStep.FinishStep()
+func (rss *MpcRSKShare_Step) FinishStep(result mpcprotocol.MpcResultInterface, mpc mpcprotocol.StoremanManager) error {
+	err := rss.BaseMpcStep.FinishStep()
 	if err != nil {
 		return err
 	}
 
 	// gskshare
-	JRSSvalue := jrss.messages[0].(*RandomPolynomialValue)
-	err = result.SetValue(mpcprotocol.RMpcPrivateShare, []big.Int{*JRSSvalue.result})
+	skpv := rss.messages[0].(*RandomPolynomialValue)
+	err = result.SetValue(mpcprotocol.RMpcPrivateShare, []big.Int{*skpv.result})
 	if err != nil {
 		return err
 	}
 	// gpkshare
 	var gpkShare ecdsa.PublicKey
-	gpkShare.X, gpkShare.Y = crypto.S256().ScalarBaseMult((*JRSSvalue.result).Bytes())
+	gpkShare.X, gpkShare.Y = crypto.S256().ScalarBaseMult((*skpv.result).Bytes())
 	err = result.SetValue(mpcprotocol.RMpcPublicShare, []big.Int{*gpkShare.X, *gpkShare.Y})
 	if err != nil {
 		return err
@@ -54,19 +54,19 @@ func (jrss *MpcRSKShare_Step) FinishStep(result mpcprotocol.MpcResultInterface, 
 	return nil
 }
 
-func (jrss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
-	seed := jrss.getPeerSeed(msg.PeerID)
+func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
+	seed := rss.getPeerSeed(msg.PeerID)
 	if seed == 0 {
 		log.SyslogErr("MpcJRSS_Step::HandleMessage", " can't find peer seed. peerID", msg.PeerID.String())
 	}
 
-	JRSSvalue := jrss.messages[0].(*RandomPolynomialValue)
-	_, exist := JRSSvalue.message[seed]
+	skpv := rss.messages[0].(*RandomPolynomialValue)
+	_, exist := skpv.message[seed]
 	if exist {
 		log.SyslogErr("MpcJRSS_Step::HandleMessage"," can't find msg . peerID",msg.PeerID.String()," seed",seed)
 		return false
 	}
 
-	JRSSvalue.message[seed] = msg.Data[0] //message.Value
+	skpv.message[seed] = msg.Data[0] //message.Value
 	return true
 }
