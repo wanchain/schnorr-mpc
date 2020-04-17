@@ -312,17 +312,13 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 			peers = append(peers, mpcprotocol.PeerInfo{PeerID: mpcServer.StoreManGroup[i], Seed: 0})
 		}
 	}*/
-	// todo error
-	grpElems, _ := osmconf.GetOsmConf().GetGrpElems(grpId)
-	for _, grpElem := range *grpElems {
-		peers = append(peers, mpcprotocol.PeerInfo{PeerID: *grpElem.NodeId, Seed: 0})
-	}
 
+	// todo error
+	peers, _ = osmconf.GetOsmConf().GetPeers(grpId)
 	mpc, err := mpcServer.mpcCreater.CreateContext(ctxType,
 		mpcID,
 		peers,
 		preSetValue...)
-
 	if err != nil {
 		log.SyslogErr("MpcDistributor createRequestMpcContext, CreateContext fail", "err", err.Error())
 		return []byte{}, err
@@ -382,6 +378,7 @@ func (mpcServer *MpcDistributor) loadStoremanAddress(address *common.Address) (*
 		value.peers,
 		nil
 }
+
 
 func (mpcServer *MpcDistributor) SetMessagePeers(mpcMessage *mpcprotocol.MpcMessage, peers *[]mpcprotocol.PeerInfo) {
 	if peers == nil || len(*peers) == 0 {
@@ -467,6 +464,7 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 	}
 
 	log.SyslogInfo("createMpcCtx", "ctxType", ctxType, "ctxId", mpcMessage.ContextID)
+	var grpId string
 	if ctxType == mpcprotocol.MpcSignPeer {
 		log.SyslogInfo("createMpcCtx MpcSignPeer")
 		mpcM := mpcMessage.BytesData[0]
@@ -488,6 +486,9 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 			return err
 		}
 
+		grpId, _ = osmconf.GetOsmConf().GetGrpInxByGpk(address[:])
+
+		preSetValue = append(preSetValue, MpcValue{mpcprotocol.MpcGrpId, nil, []byte(grpId)})
 		preSetValue = append(preSetValue, MpcValue{mpcprotocol.MpcAddress, nil, address})
 		preSetValue = append(preSetValue, MpcValue{mpcprotocol.MpcM, nil, mpcM})
 		preSetValue = append(preSetValue, MpcValue{mpcprotocol.MpcExt, nil, mpcExt})
@@ -502,9 +503,9 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 				mpcMsg := &mpcprotocol.MpcMessage{ContextID: mpcMessage.ContextID,
 					StepID: 0,
 					Peers:  []byte(mpcprotocol.ErrFailedAddApproving.Error())}
-				peerInfo := mpcServer.getMessagePeers(mpcMessage)
+				peerInfo,_:= osmconf.GetOsmConf().GetPeers(grpId)
 				peerIDs := make([]discover.NodeID, 0)
-				for _, item := range *peerInfo {
+				for _, item := range peerInfo {
 					peerIDs = append(peerIDs, item.PeerID)
 				}
 
@@ -525,9 +526,9 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 				StepID: 0,
 				//Peers:  []byte(mpcprotocol.ErrFailedDataVerify.Error())}
 				Peers: []byte(err.Error())}
-			peerInfo := mpcServer.getMessagePeers(mpcMessage)
+			peerInfo,_:= osmconf.GetOsmConf().GetPeers(grpId)
 			peerIDs := make([]discover.NodeID, 0)
-			for _, item := range *peerInfo {
+			for _, item := range peerInfo {
 				peerIDs = append(peerIDs, item.PeerID)
 			}
 
@@ -544,9 +545,10 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 		//ToDo change reqMPC message sent
 	}
 
+	msgPeers, _ := osmconf.GetOsmConf().GetPeers(grpId)
 	mpc, err := mpcServer.mpcCreater.CreateContext(ctxType,
 		mpcMessage.ContextID,
-		*mpcServer.getMessagePeers(mpcMessage),
+		msgPeers,
 		preSetValue...)
 
 	if err != nil {
@@ -589,7 +591,8 @@ func (mpcServer *MpcDistributor) getMpcMessage(PeerID *discover.NodeID, mpcMessa
 	mpc, exist := mpcServer.mpcMap[mpcMessage.ContextID]
 	mpcServer.mu.RUnlock()
 	if exist {
-		return mpc.getMessage(PeerID, mpcMessage, mpcServer.getMessagePeers(mpcMessage))
+		//return mpc.getMessage(PeerID, mpcMessage, mpcServer.getMessagePeers(mpcMessage))
+		return mpc.getMessage(PeerID, mpcMessage, nil)
 	}
 
 	return nil

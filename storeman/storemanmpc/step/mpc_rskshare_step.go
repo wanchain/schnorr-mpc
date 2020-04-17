@@ -14,11 +14,12 @@ type MpcRSKShare_Step struct {
 
 func CreateMpcRSKShareStep(degree int, peers *[]mpcprotocol.PeerInfo) *MpcRSKShare_Step {
 	mpc := &MpcRSKShare_Step{*CreateBaseMpcStep(peers, 1)}
-	mpc.messages[0] = createSkPolyValue(degree, len(*peers))
+	mpc.messages[0] = createSkPolyGen(degree, len(*peers))
 	return mpc
 }
 
 func (rss *MpcRSKShare_Step) CreateMessage() []mpcprotocol.StepMessage {
+	// data: grpId + bigInt + R(bigInt) + S(bigInt)
 	message := make([]mpcprotocol.StepMessage, len(*rss.peers))
 	skpv := rss.messages[0].(*RandomPolynomialValue)
 	for i := 0; i < len(*rss.peers); i++ {

@@ -5,6 +5,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
+	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
 	"sync"
 )
@@ -147,3 +148,15 @@ func (cnf *OsmConf) GetPkToBigInt(grpId string, smInx uint16)(*big.Int, error){
 func (cnf *OsmConf) GetInxByNodeId(grpId string,id *discover.NodeID)(uint16, error){
 	return 0, nil
 }
+
+func (cnf *OsmConf) GetPeers(grpId string)([]mpcprotocol.PeerInfo, error){
+
+	peers := []mpcprotocol.PeerInfo{}
+	grpElems, _ := cnf.GetGrpElems(grpId)
+	for _, grpElem := range *grpElems {
+		peers = append(peers, mpcprotocol.PeerInfo{PeerID: *grpElem.NodeId, Seed: 0})
+	}
+	return peers, nil
+}
+
+
