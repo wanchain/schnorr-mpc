@@ -132,7 +132,7 @@ func (mpcCtx *MpcContext) mainMPCProcess(StoremanManager mpcprotocol.StoremanMan
 						StepID:    uint64(i),
 						Data:      item.Data,
 						BytesData: item.BytesData}
-					StoremanManager.SetMessagePeers(mpcMsg, item.Peers)
+					//StoremanManager.SetMessagePeers(mpcMsg, item.Peers)
 					if item.PeerID != nil {
 						StoremanManager.P2pMessage(item.PeerID, item.MsgCode, mpcMsg)
 						log.SyslogInfo("step send a p2p msg", "ctxid", mpcCtx.ContextID, "stepId", i)
