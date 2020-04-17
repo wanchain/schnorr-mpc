@@ -8,7 +8,8 @@ type GetMpcReadyStep struct {
 	BaseStep
 }
 
-func (ready *GetMpcReadyStep) InitStep(mpcprotocol.MpcResultInterface) error {
+func (ready *GetMpcReadyStep) InitStep(result mpcprotocol.MpcResultInterface) error {
+	ready.BaseStep.InitStep(result)
 	return nil
 }
 

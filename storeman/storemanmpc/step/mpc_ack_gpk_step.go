@@ -24,6 +24,7 @@ func CreateAckMpcGPKStep(peers *[]mpcprotocol.PeerInfo) *AckMpcGPKStep {
 }
 
 func (ack *AckMpcGPKStep) InitStep(result mpcprotocol.MpcResultInterface) error {
+	ack.BaseStep.InitStep(result)
 	log.SyslogInfo("AckMpcAccountStep.InitStep begin")
 	mpcGpk, err := result.GetByteValue(mpcprotocol.MpcContextResult)
 	if err != nil {

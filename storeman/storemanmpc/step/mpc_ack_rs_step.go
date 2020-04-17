@@ -36,6 +36,7 @@ func CreateAckMpcRSStep(peers *[]mpcprotocol.PeerInfo, accType string) *MpcAckRS
 
 func (mars *MpcAckRSStep) InitStep(result mpcprotocol.MpcResultInterface) error {
 	log.SyslogInfo("MpcAckRSStep.InitStep begin")
+	mars.BaseStep.InitStep(result)
 	value, err := result.GetValue(mpcprotocol.RPublicKeyResult)
 	if err != nil {
 		log.SyslogErr("MpcAckRSStep::InitStep","ack mpc account step, init fail. err", err.Error())

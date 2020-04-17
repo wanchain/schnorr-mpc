@@ -18,7 +18,8 @@ func CreateAckMpcStep(peers *[]mpcprotocol.PeerInfo, messageType int64) *AckMpcS
 		*CreateBaseStep(peers, 0), messageType}
 }
 
-func (ack *AckMpcStep) InitStep(mpcprotocol.MpcResultInterface) error {
+func (ack *AckMpcStep) InitStep(result mpcprotocol.MpcResultInterface) error {
+	ack.BaseStep.InitStep(result)
 	return nil
 }
 

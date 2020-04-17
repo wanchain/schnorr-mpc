@@ -25,6 +25,7 @@ func CreateBaseMpcStep(peers *[]mpcprotocol.PeerInfo, messageNum int) *BaseMpcSt
 }
 
 func (mpcStep *BaseMpcStep) InitStep(result mpcprotocol.MpcResultInterface) error {
+	mpcStep.BaseStep.InitStep(result)
 	for _, message := range mpcStep.messages {
 		err := message.initialize(mpcStep.peers, result)
 		if err != nil {

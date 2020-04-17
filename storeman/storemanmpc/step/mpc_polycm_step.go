@@ -37,6 +37,7 @@ func CreateMpcPolycmStep(peers *[]mpcprotocol.PeerInfo) *MpcPolycmStep {
 
 func (req *MpcPolycmStep) InitStep(result mpcprotocol.MpcResultInterface) error {
 	log.SyslogInfo("MpcPolycm Step.InitStep begin")
+	req.BaseStep.InitStep(result)
 	// build self polynomial
 	threshold, _ := osmconf.GetOsmConf().GetThresholdNum()
 	degree := threshold -1

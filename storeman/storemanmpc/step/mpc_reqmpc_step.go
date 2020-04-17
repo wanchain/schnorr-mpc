@@ -29,7 +29,7 @@ func CreateRequestMpcStep(peers *[]mpcprotocol.PeerInfo, messageType int64) *Req
 
 func (req *RequestMpcStep) InitStep(result mpcprotocol.MpcResultInterface) error {
 	log.SyslogInfo("RequestMpcStep.InitStep begin")
-
+	req.BaseStep.InitStep(result)
 	if req.messageType == mpcprotocol.MpcGPKLeader {
 		findMap := make(map[uint64]bool)
 		rand.Seed(time.Now().UnixNano())
