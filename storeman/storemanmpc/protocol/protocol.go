@@ -62,6 +62,9 @@ const (
 
 	MPCRPolyCMG = "MPCRPolyCommitG"	 // node0's comment : MPCRPolyCMG + "0"
 	MPCRPolyCoff = "MPCRPolyCoff"
+
+	MPCRSkErrNum 		= "MPCRErrNum"
+	MPCRSkErrInfos 	= "MPCRErrInfos"
 )
 
 const (

@@ -14,10 +14,11 @@ import (
 
 type MpcRSKShare_Step struct {
 	BaseMpcStep
+	RSkErrNum uint16
 }
 
 func CreateMpcRSKShareStep(degree int, peers *[]mpcprotocol.PeerInfo) *MpcRSKShare_Step {
-	mpc := &MpcRSKShare_Step{*CreateBaseMpcStep(peers, 1)}
+	mpc := &MpcRSKShare_Step{*CreateBaseMpcStep(peers, 1),0}
 	mpc.messages[0] = createSkPolyGen(degree, len(*peers))
 	return mpc
 }
@@ -88,6 +89,7 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	}
 
 	selfNodeId , _ := osmconf.GetOsmConf().GetSelfNodeId()
+	selfIndex, _ := osmconf.GetOsmConf().GetSelfInx(grpIdString)
 	xValue, _ := osmconf.GetOsmConf().GetXValueByNodeId(grpIdString,selfNodeId)
 
 	// 2. check sij*G=si+a[i][0]*X+a[i][1]*X^2+...+a[i][n]*x^(n-1)
@@ -106,6 +108,9 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		log.SyslogErr("MpcRSKShare_Step::HandleMessage",
 			" verify sk data fail", msg.PeerID.String(),
 			"groupId",grpIdString)
+
+		rss.RSkErrNum += 1
+
 	}
 
 	skpv := rss.messages[0].(*RandomPolynomialGen)
@@ -117,7 +122,26 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	}
 
 	// 3. write error s[i][j]
+	// 3.1 write error count
+	// 3.2 write error info
+	if rss.RSkErrNum > 1 {
+		rskErrInfo := make([]big.Int,5)
+		// sendIndex, rvcIndex, s[i][j], r, s
+		rskErrInfo[0] = *big.NewInt(0).SetInt64(int64(senderIndex))
+		rskErrInfo[1] = *big.NewInt(0).SetInt64(int64(selfIndex))
+		rskErrInfo[2] = sij
+		rskErrInfo[3] =	r
+		rskErrInfo[4] =	s
 
+		keyErrInfo := mpcprotocol.MPCRSkErrInfos + strconv.Itoa(int(rss.RSkErrNum) -1)
+		rss.mpcResult.SetValue(keyErrInfo,rskErrInfo)
+
+
+		keyErrNum := mpcprotocol.MPCRSkErrNum
+		rskErrInfoNum := make([]big.Int,1)
+		rskErrInfoNum[0] = *big.NewInt(0).SetInt64(int64(rss.RSkErrNum))
+		rss.mpcResult.SetValue(keyErrNum,rskErrInfoNum)
+	}
 	skpv.message[*msg.PeerID] = msg.Data[0] //message.Value
 	return true
 }
