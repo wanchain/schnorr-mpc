@@ -4,15 +4,14 @@ import (
 	"crypto/rand"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
-	"github.com/wanchain/schnorr-mpc/p2p/discover"
-	"github.com/wanchain/schnorr-mpc/storeman/shcnorrmpc"
+	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
 )
 
 type RandomPolynomialValue struct {
 	randCoefficient []big.Int          //coefficient
-	message         map[discover.NodeID]big.Int //Polynomial result
+	message         map[uint64]big.Int //Polynomial result
 	polyValue       []big.Int
 	result          *big.Int
 }
@@ -33,11 +32,11 @@ func (poly *RandomPolynomialValue) initialize(peers *[]mpcprotocol.PeerInfo,
 		log.SyslogErr("RandomPolynomialValue::initialize", "rand.Int fail. err", err.Error())
 		return err
 	}
-	cof := shcnorrmpc.RandPoly(degree, *s)
+	cof := schnorrmpc.RandPoly(degree, *s)
 	copy(poly.randCoefficient, cof)
 
 	for i := 0; i < len(poly.polyValue); i++ {
-		poly.polyValue[i] = shcnorrmpc.EvaluatePoly(poly.randCoefficient,
+		poly.polyValue[i] = schnorrmpc.EvaluatePoly(poly.randCoefficient,
 			new(big.Int).SetUint64((*peers)[i].Seed),
 			degree)
 		log.Info("RandomPolynomialValue::initialize poly ",

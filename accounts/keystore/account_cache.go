@@ -21,7 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/wanchain/schnorr-mpc/crypto"
-	"github.com/wanchain/schnorr-mpc/storeman/shcnorrmpc"
+	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -323,12 +323,12 @@ func (ac *accountCache) scanAccounts() error {
 				pkStr := path[addrBegin+1:addrBegin+133]
 				log.Info("scanAccounts","pkstr",pkStr)
 
-				pk,err:= shcnorrmpc.StringtoPk(pkStr)
+				pk,err:= schnorrmpc.StringtoPk(pkStr)
 				if err != nil {
 					log.Error("StringtoPk","error",err.Error())
 				}
 				pkByptes := crypto.FromECDSAPub(pk)
-				addrFromPK, err := shcnorrmpc.PkToAddress(pkByptes)
+				addrFromPK, err := schnorrmpc.PkToAddress(pkByptes)
 				if err != nil {
 					log.Error("PkToAddress","error",err.Error())
 				}

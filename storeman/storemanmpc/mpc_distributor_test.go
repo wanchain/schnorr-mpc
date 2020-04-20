@@ -3,7 +3,7 @@ package storemanmpc
 import (
 	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
-	"github.com/wanchain/schnorr-mpc/storeman/shcnorrmpc"
+	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
 	"testing"
@@ -13,7 +13,7 @@ func TestMpcSelectPeers(t *testing.T) {
 	var mpcID uint64
 	var err error
 	for {
-		mpcID, err = shcnorrmpc.UintRand(uint64(1<<64 - 1))
+		mpcID, err = schnorrmpc.UintRand(uint64(1<<64 - 1))
 		if err != nil {
 		} else {
 			break

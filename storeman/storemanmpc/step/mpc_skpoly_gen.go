@@ -3,8 +3,9 @@ package step
 import (
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
-	"github.com/wanchain/schnorr-mpc/storeman/shcnorrmpc"
+	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
 	"strconv"
@@ -12,7 +13,7 @@ import (
 
 type RandomPolynomialGen struct {
 	randCoefficient []big.Int          //coefficient
-	message         map[uint64]big.Int //Polynomial result
+	message         map[discover.NodeID]big.Int //Polynomial result
 	polyValue       []big.Int
 	polyValueSigR   []*big.Int
 	polyValueSigS   []*big.Int
@@ -21,7 +22,7 @@ type RandomPolynomialGen struct {
 
 func createSkPolyGen(degree int, peerNum int) *RandomPolynomialGen {
 	return &RandomPolynomialGen{make([]big.Int, degree+1),
-	make(map[uint64]big.Int),
+	make(map[discover.NodeID]big.Int),
 	make([]big.Int, peerNum),
 	make([]*big.Int, peerNum),
 	make([]*big.Int, peerNum),
@@ -48,11 +49,11 @@ func (poly *RandomPolynomialGen) initialize(peers *[]mpcprotocol.PeerInfo,
 	for i := 0; i < len(poly.polyValue); i++ {
 		nodeId := &(*peers)[i].PeerID
 		xValue,_ := osmconf.GetOsmConf().GetXValueByNodeId(grpIdString,nodeId)
-		poly.polyValue[i] = shcnorrmpc.EvaluatePoly(poly.randCoefficient,
+		poly.polyValue[i] = schnorrmpc.EvaluatePoly(poly.randCoefficient,
 			xValue,
 			degree)
 		// todo handle error
-		poly.polyValueSigR[i], poly.polyValueSigS[i], _ = crypto.SignInternalData(poly.polyValue[i].Bytes())
+		poly.polyValueSigR[i], poly.polyValueSigS[i], _ = schnorrmpc.SignInternalData(poly.polyValue[i].Bytes())
 		log.Info("RandomPolynomialGen::initialize poly ",
 			"poly peerId", (*peers)[i].PeerID.String(),
 			"poly x seed", xValue,

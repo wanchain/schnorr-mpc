@@ -7,7 +7,7 @@ import (
 	"encoding/hex"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
-	"github.com/wanchain/schnorr-mpc/storeman/shcnorrmpc"
+	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
 )
@@ -66,7 +66,7 @@ func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcpr
 		log.SyslogErr("mpcSGenerator.initialize get MpcPrivateShare fail")
 		return err
 	}
-	sigShare := shcnorrmpc.SchnorrSign(gskShare[0], rskShare[0], *m)
+	sigShare := schnorrmpc.SchnorrSign(gskShare[0], rskShare[0], *m)
 	msg.seed = sigShare
 
 	log.Info("@@@@@@@@@@@@@@ SchnorrSign @@@@@@@@@@@@@@",
@@ -96,7 +96,7 @@ func (msg *mpcSGenerator) calculateResult() error {
 	if len(sigshares) < mpcprotocol.MpcSchnrThr {
 		return mpcprotocol.ErrTooLessDataCollected
 	}
-	result := shcnorrmpc.Lagrange(sigshares, seeds[:], mpcprotocol.MPCDegree)
+	result := schnorrmpc.Lagrange(sigshares, seeds[:], mpcprotocol.MPCDegree)
 	msg.result = result
 	log.SyslogInfo("mpcSGenerator.calculateResult succeed")
 

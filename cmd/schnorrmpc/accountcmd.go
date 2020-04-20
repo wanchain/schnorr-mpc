@@ -22,7 +22,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/awskms"
 	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/crypto"
-	"github.com/wanchain/schnorr-mpc/storeman/shcnorrmpc"
+	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	"io"
 	"io/ioutil"
 	"os"
@@ -322,14 +322,14 @@ func accountUpdate(ctx *cli.Context) error {
 
 	for _, pkStr := range ctx.Args() {
 
-		pk, err := shcnorrmpc.StringtoPk(pkStr)
+		pk, err := schnorrmpc.StringtoPk(pkStr)
 		if err!=nil {
 			fmt.Println("StringtoPk error", err.Error())
 			continue
 		}
 
 		pkBytes := crypto.FromECDSAPub(pk)
-		addr,err := shcnorrmpc.PkToAddress(pkBytes[:])
+		addr,err := schnorrmpc.PkToAddress(pkBytes[:])
 		if err != nil {
 			fmt.Println("PkToAddress error", err.Error())
 			continue
@@ -458,14 +458,14 @@ func accountEncrypt(ctx *cli.Context) error {
 	stack, _ := makeConfigNode(ctx)
 	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 	for _, pkStr := range ctx.Args() {
-		pk, err := shcnorrmpc.StringtoPk(pkStr)
+		pk, err := schnorrmpc.StringtoPk(pkStr)
 		if err!=nil {
 			fmt.Println("StringtoPk error", err.Error())
 			continue
 		}
 
 		pkBytes := crypto.FromECDSAPub(pk)
-		addr,err := shcnorrmpc.PkToAddress(pkBytes[:])
+		addr,err := schnorrmpc.PkToAddress(pkBytes[:])
 		if err != nil {
 			fmt.Println("PkToAddress error", err.Error())
 			continue
@@ -551,14 +551,14 @@ func accountDecrypt(ctx *cli.Context) error {
 	*/
 	for _, pkStr := range ctx.Args() {
 
-		pk, err := shcnorrmpc.StringtoPk(pkStr)
+		pk, err := schnorrmpc.StringtoPk(pkStr)
 		if err!=nil {
 			fmt.Println("StringtoPk error", err.Error())
 			continue
 		}
 
 		pkBytes := crypto.FromECDSAPub(pk)
-		addr,err := shcnorrmpc.PkToAddress(pkBytes[:])
+		addr,err := schnorrmpc.PkToAddress(pkBytes[:])
 		if err != nil {
 			fmt.Println("PkToAddress error", err.Error())
 			continue
@@ -601,14 +601,14 @@ func tryPwd(ctx *cli.Context) error {
 	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 	for _, pkStr := range ctx.Args() {
 
-		pk, err := shcnorrmpc.StringtoPk(pkStr)
+		pk, err := schnorrmpc.StringtoPk(pkStr)
 		if err!=nil {
 			fmt.Println("StringtoPk error", err.Error())
 			continue
 		}
 
 		pkBytes := crypto.FromECDSAPub(pk)
-		addr,err := shcnorrmpc.PkToAddress(pkBytes[:])
+		addr,err := schnorrmpc.PkToAddress(pkBytes[:])
 		if err != nil {
 			fmt.Println("PkToAddress error", err.Error())
 			continue

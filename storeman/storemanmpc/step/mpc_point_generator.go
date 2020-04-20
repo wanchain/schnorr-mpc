@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
-	"github.com/wanchain/schnorr-mpc/storeman/shcnorrmpc"
+	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
 )
@@ -77,9 +77,9 @@ func (point *mpcPointGenerator) calculateResult() error {
 		return mpcprotocol.ErrTooLessDataCollected
 	}
 
-	result := shcnorrmpc.LagrangeECC(gpkshares, seeds[:], mpcprotocol.MPCDegree)
+	result := schnorrmpc.LagrangeECC(gpkshares, seeds[:], mpcprotocol.MPCDegree)
 
-	if !shcnorrmpc.ValidatePublicKey(result) {
+	if !schnorrmpc.ValidatePublicKey(result) {
 		log.SyslogErr("mpcPointGenerator::calculateResult","mpcPointGenerator.ValidatePublicKey fail. err", mpcprotocol.ErrPointZero.Error())
 		return mpcprotocol.ErrPointZero
 	}

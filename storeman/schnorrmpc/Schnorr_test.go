@@ -1,4 +1,4 @@
-package shcnorrmpc
+package schnorrmpc
 
 import (
 	"bytes"

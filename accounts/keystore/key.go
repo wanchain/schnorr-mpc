@@ -23,7 +23,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/wanchain/schnorr-mpc/storeman/shcnorrmpc"
+	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	"io"
 	"io/ioutil"
 	"math/big"
@@ -327,7 +327,7 @@ func storeStoremanKey(ks keyStore, pKey *ecdsa.PublicKey, pShare *big.Int, seeds
 
 	a := accounts.Account{Address: key.Address,
 	URL: accounts.URL{Scheme: KeyStoreScheme,
-	Path: ks.JoinPath(keyFileNameWithPkString(shcnorrmpc.PkToHexString(pKey), accType))}}
+	Path: ks.JoinPath(keyFileNameWithPkString(schnorrmpc.PkToHexString(pKey), accType))}}
 
 	if err := ks.StoreKey(a.URL.Path, key, passphrase); err != nil {
 		zeroKey(key.PrivateKey)

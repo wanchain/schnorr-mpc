@@ -16,7 +16,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	"github.com/wanchain/schnorr-mpc/rlp"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
-	"github.com/wanchain/schnorr-mpc/storeman/shcnorrmpc"
+	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"github.com/wanchain/schnorr-mpc/storeman/validator"
 	"io/ioutil"
@@ -282,7 +282,7 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 	if ctxType == mpcprotocol.MpcSignLeader {
 		for _, item := range preSetValue {
 			if item.Key == mpcprotocol.MpcAddress {
-				address, err = shcnorrmpc.PkToAddress(item.ByteValue)
+				address, err = schnorrmpc.PkToAddress(item.ByteValue)
 				if err != nil {
 					return []byte{}, err
 				}
@@ -419,7 +419,7 @@ func (mpcServer *MpcDistributor) getMpcID() (uint64, error) {
 	var mpcID uint64
 	var err error
 	for {
-		mpcID, err = shcnorrmpc.UintRand(uint64(1<<64 - 1))
+		mpcID, err = schnorrmpc.UintRand(uint64(1<<64 - 1))
 		if err != nil {
 			log.SyslogErr("MpcDistributor getMpcID, UnitRand fail", "err", err.Error())
 			return 0, err
@@ -474,7 +474,7 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 		//add := common.Address{}
 		//copy(add[:], address)
 
-		add, err := shcnorrmpc.PkToAddress(address[:])
+		add, err := schnorrmpc.PkToAddress(address[:])
 		if err != nil {
 			return err
 		}

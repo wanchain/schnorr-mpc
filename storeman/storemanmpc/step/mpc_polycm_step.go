@@ -7,7 +7,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
-	"github.com/wanchain/schnorr-mpc/storeman/shcnorrmpc"
+	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
 	"strconv"
@@ -19,8 +19,8 @@ const (
 type MpcPolycmStep struct {
 	BaseStep
 	message     map[discover.NodeID]bool
-	polycmGMap  shcnorrmpc.PolyGMap
-	polyCoff	shcnorrmpc.Polynomial
+	polycmGMap  schnorrmpc.PolyGMap
+	polyCoff	schnorrmpc.Polynomial
 	selfIndex	uint16
 	grpId		string
 }
@@ -30,8 +30,8 @@ func CreateMpcPolycmStep(peers *[]mpcprotocol.PeerInfo) *MpcPolycmStep {
 	return &MpcPolycmStep{
 		BaseStep:    *CreateBaseStep(peers, len(*peers)-1),
 		message:     make(map[discover.NodeID]bool),
-		polycmGMap:  make(shcnorrmpc.PolyGMap),
-		polyCoff:	 make(shcnorrmpc.Polynomial,1)}
+		polycmGMap:  make(schnorrmpc.PolyGMap),
+		polyCoff:	 make(schnorrmpc.Polynomial,1)}
 }
 
 func (req *MpcPolycmStep) InitStep(result mpcprotocol.MpcResultInterface) error {
@@ -46,13 +46,13 @@ func (req *MpcPolycmStep) InitStep(result mpcprotocol.MpcResultInterface) error 
 		return err
 	}
 
-	cof := shcnorrmpc.RandPoly(int(degree), *s)
+	cof := schnorrmpc.RandPoly(int(degree), *s)
 	copy(req.polyCoff, cof)
 
 	// build polycmG
-	pg := make(shcnorrmpc.PolynomialG,threshold)
+	pg := make(schnorrmpc.PolynomialG,threshold)
 	for index, value := range cof {
-		skG, _ := shcnorrmpc.SkG(&value)
+		skG, _ := schnorrmpc.SkG(&value)
 		pg[index] = *skG
 	}
 	// todo error
@@ -93,7 +93,7 @@ func (req *MpcPolycmStep) CreateMessage() []mpcprotocol.StepMessage {
 
 	//prv,_ := osmconf.GetOsmConf().GetSelfPrvKey()
 	//h := sha256.Sum256(buf.Bytes())
-	r,s,_ := crypto.SignInternalData(buf.Bytes())
+	r,s,_ := schnorrmpc.SignInternalData(buf.Bytes())
 	msg.Data[0] = *r
 	msg.Data[1] = *s
 
@@ -166,7 +166,7 @@ func (req *MpcPolycmStep) fillCmIntoMap(msg *mpcprotocol.StepMessage) bool {
 
 	threshold, _ := osmconf.GetOsmConf().GetThresholdNum()
 	// build polycmG
-	pg := make(shcnorrmpc.PolynomialG,threshold)
+	pg := make(schnorrmpc.PolynomialG,threshold)
 
 	for i := 1; i< len(msg.BytesData);i++ {
 		pk := crypto.ToECDSAPub(msg.BytesData[i])

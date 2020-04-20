@@ -6,7 +6,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
-	"github.com/wanchain/schnorr-mpc/storeman/shcnorrmpc"
+	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
 	"strconv"
@@ -80,7 +80,7 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	s := msg.Data[2]
 
 	// 1. check sig
-	bVerifySig := crypto.VerifyInternalData(senderPk,sij.Bytes(),&r,&s)
+	bVerifySig := schnorrmpc.VerifyInternalData(senderPk,sij.Bytes(),&r,&s)
 	if !bVerifySig{
 		log.SyslogErr("MpcRSKShare_Step::HandleMessage",
 			" verify sk sig fail", msg.PeerID.String(),
@@ -97,18 +97,18 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	pgBytes,_:= rss.mpcResult.GetByteValue(keyPolyCMG)
 
 	//split the pk list
-	pks, _ := shcnorrmpc.SplitPksFromBytes(pgBytes[:])
-	sijgEval, _ := shcnorrmpc.EvalByPolyG(pks,uint16(len(pks)-1),xValue)
-	sijg,_ := shcnorrmpc.SkG(&sij)
+	pks, _ := schnorrmpc.SplitPksFromBytes(pgBytes[:])
+	sijgEval, _ := schnorrmpc.EvalByPolyG(pks,uint16(len(pks)-1),xValue)
+	sijg,_ := schnorrmpc.SkG(&sij)
 
-	if ok,_ := shcnorrmpc.PkEqual(sijg, sijgEval); !ok{
+	if ok,_ := schnorrmpc.PkEqual(sijg, sijgEval); !ok{
 		// check Not success
 		log.SyslogErr("MpcRSKShare_Step::HandleMessage",
 			" verify sk data fail", msg.PeerID.String(),
 			"groupId",grpIdString)
 	}
 
-	skpv := rss.messages[0].(*RandomPolynomialValue)
+	skpv := rss.messages[0].(*RandomPolynomialGen)
 	_, exist := skpv.message[*msg.PeerID]
 	if exist {
 		log.SyslogErr("MpcRSKShare_Step::HandleMessage"," can't find msg . peerID",

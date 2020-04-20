@@ -21,14 +21,12 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
-	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
-	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
 	"io"
 	"io/ioutil"
 	"math/big"
@@ -873,16 +871,4 @@ func otaAddress(address common.Address) string {
 	result := Encode(append(FactoidPrefix, Hex2Bytes(address.Hex())...))
 
 	return result
-}
-
-
-/////////////////////////////////////////Jacob added////////////////////////////////////////////////////////////////
-func SignInternalData(plainData []byte) (r, s *big.Int, err error) {
-	prv,_ := osmconf.GetOsmConf().GetSelfPrvKey()
-	h := sha256.Sum256(plainData[:])
-	return ecdsa.Sign(rand.Reader,prv,h[:])
-}
-
-func VerifyInternalData(pub *ecdsa.PublicKey, hash []byte, r, s *big.Int) bool {
-	return ecdsa.Verify(pub,hash,r,s)
 }

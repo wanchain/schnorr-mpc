@@ -3,7 +3,7 @@ package step
 import (
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
-	"github.com/wanchain/schnorr-mpc/storeman/shcnorrmpc"
+	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	mpccrypto "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/crypto"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
@@ -197,5 +197,5 @@ func testLagrange(seed []int, peerInfo []mpcprotocol.PeerInfo, jrssResult []big.
 		fx[i] = jrssResult[seed[i]]
 	}
 
-	return shcnorrmpc.Lagrange(fx, x)
+	return schnorrmpc.Lagrange(fx, x)
 }

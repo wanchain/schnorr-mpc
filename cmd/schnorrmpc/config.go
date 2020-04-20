@@ -26,7 +26,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/storeman"
-	"github.com/wanchain/schnorr-mpc/storeman/shcnorrmpc"
+	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	"github.com/wanchain/schnorr-mpc/storeman/storemanmpc"
 	"golang.org/x/crypto/ssh/terminal"
 	"io"
@@ -361,13 +361,13 @@ func getVerifyAccounts(checkGpk bool) (bool, []common.Address) {
 		splits := strings.Split(string(read), " ")
 		for _, pkStr := range splits {
 			log.Info("getVerifyAccounts","StringtoPk :",pkStr)
-			pk, err := shcnorrmpc.StringtoPk(pkStr)
+			pk, err := schnorrmpc.StringtoPk(pkStr)
 			if err != nil{
 				log.Error("getVerifyAccounts","StringtoPk error:",err.Error())
 				continue
 			}
 			pkBytes := crypto.FromECDSAPub(pk)
-			addr,err := shcnorrmpc.PkToAddress(pkBytes[:])
+			addr,err := schnorrmpc.PkToAddress(pkBytes[:])
 			if err != nil {
 				log.Error("getVerifyAccounts","PkToAddress error:",err.Error())
 				continue
