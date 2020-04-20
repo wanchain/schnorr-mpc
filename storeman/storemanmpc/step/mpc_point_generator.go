@@ -5,37 +5,43 @@ import (
 	"encoding/hex"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/p2p/discover"
+	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
 	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
 )
 
 type mpcPointGenerator struct {
-	seed        [2]big.Int
-	message     map[uint64][2]big.Int
-	result      [2]big.Int
+	seed        ecdsa.PublicKey
+	message     map[discover.NodeID]ecdsa.PublicKey
+	result 		ecdsa.PublicKey
 	preValueKey string
+	grpIdString	string
 }
 
 func createPointGenerator(preValueKey string) *mpcPointGenerator {
-	return &mpcPointGenerator{message: make(map[uint64][2]big.Int), preValueKey: preValueKey}
+	return &mpcPointGenerator{message: make(map[discover.NodeID]ecdsa.PublicKey), preValueKey: preValueKey}
 }
 
 func (point *mpcPointGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcprotocol.MpcResultInterface) error {
 	log.SyslogInfo("mpcPointGenerator.initialize begin ")
-
-	value, err := result.GetValue(point.preValueKey)
+	// RPKShare
+	//value, err := result.GetValue(point.preValueKey)
+	value, err := result.GetByteValue(point.preValueKey)
 	log.SyslogInfo("public share mpcPointGenerator.initialize GetValue ",
 		"key", point.preValueKey,
-		"pk share x", hex.EncodeToString(value[0].Bytes()),
-		"pk share y", hex.EncodeToString(value[1].Bytes()))
+		"pk share ", hex.EncodeToString(value))
 
 	if err != nil {
 		log.SyslogErr("mpcPointGenerator.initialize get preValueKey fail")
 		return err
 	}
 
-	point.seed = [2]big.Int{value[0], value[1]}
+	point.seed = *crypto.ToECDSAPub(value)
+
+	grpId,_ := result.GetByteValue(mpcprotocol.MpcGrpId)
+	point.grpIdString = string(grpId)
 
 	log.SyslogInfo("mpcPointGenerator.initialize succeed")
 	return nil
@@ -46,17 +52,17 @@ func (point *mpcPointGenerator) calculateResult() error {
 
 	seeds := make([]big.Int, 0)
 	gpkshares := make([]ecdsa.PublicKey, 0)
-	for seed, value := range point.message {
+	for nodeId, value := range point.message {
 
-		// get seeds, need sort seeds, and make seeds as a key of map, and check the map's count??
-		seeds = append(seeds, *big.NewInt(0).SetUint64(seed))
+		xValue,_ := osmconf.GetOsmConf().GetXValueByNodeId(point.grpIdString,&nodeId)
+		seeds = append(seeds, *xValue)
 
 		// build PK[]
 		var gpkshare ecdsa.PublicKey
 		gpkshare.Curve = crypto.S256()
 
-		gpkshare.X = big.NewInt(0).SetBytes(value[0].Bytes())
-		gpkshare.Y = big.NewInt(0).SetBytes(value[1].Bytes())
+		gpkshare.X = value.X
+		gpkshare.Y = value.Y
 
 		gpkshares = append(gpkshares, gpkshare)
 
@@ -84,10 +90,9 @@ func (point *mpcPointGenerator) calculateResult() error {
 		return mpcprotocol.ErrPointZero
 	}
 
-	point.result = [2]big.Int{*result.X, *result.Y}
+	point.result = *result
 
 	log.SyslogInfo("gpk mpcPointGenerator.calculateResult succeed ",
-		"gpk x", hex.EncodeToString(point.result[0].Bytes()),
-		"gpk y", hex.EncodeToString(point.result[1].Bytes()))
+		"gpk x", hex.EncodeToString(crypto.FromECDSAPub(result)))
 	return nil
 }

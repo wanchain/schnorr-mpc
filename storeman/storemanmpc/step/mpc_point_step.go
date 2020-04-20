@@ -3,9 +3,9 @@ package step
 import (
 	"encoding/hex"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
+	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
-	"math/big"
 )
 
 type MpcPointStep struct {
@@ -29,46 +29,34 @@ func CreateMpcPointStep(peers *[]mpcprotocol.PeerInfo, preValueKeys []string, re
 
 func (ptStep *MpcPointStep) CreateMessage() []mpcprotocol.StepMessage {
 	log.SyslogInfo("MpcPointStep.CreateMessage begin")
-
+	// add public key and r, s.
 	message := make([]mpcprotocol.StepMessage, 1)
 	message[0].MsgCode = mpcprotocol.MPCMessage
 	message[0].PeerID = nil
 
 	for i := 0; i < ptStep.signNum; i++ {
 		pointer := ptStep.messages[i].(*mpcPointGenerator)
-		message[0].Data = append(message[0].Data, pointer.seed[:]...)
+		message[0].BytesData = append(message[0].BytesData,crypto.FromECDSAPub(&pointer.seed))
 	}
 
 	return message
 }
 
 func (ptStep *MpcPointStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
-	seed := ptStep.getPeerSeed(msg.PeerID)
+
 	log.SyslogInfo("MpcPointStep.HandleMessage begin ",
 		"peerID", msg.PeerID.String(),
-		"gpk x", hex.EncodeToString(msg.Data[0].Bytes()),
-		"gpk y", hex.EncodeToString(msg.Data[1].Bytes()),
-		"seed", seed)
-
-	if seed == 0 {
-		log.SyslogErr("MpcPointStep:HandleMessage","MpcPointStep.HandleMessage, get peer seed fail. peer", msg.PeerID.String())
-		return false
-	}
-
-	if len(msg.Data) != 2*ptStep.signNum {
-		log.SyslogErr("HandleMessage","MpcPointStep HandleMessage, msg data len doesn't match requirement, dataLen", len(msg.Data))
-		return false
-	}
+		"gpk x", hex.EncodeToString(msg.BytesData[0]))
 
 	for i := 0; i < ptStep.signNum; i++ {
 		pointer := ptStep.messages[i].(*mpcPointGenerator)
-		_, exist := pointer.message[seed]
+		_, exist := pointer.message[*msg.PeerID]
 		if exist {
 			log.SyslogErr("HandleMessage","MpcPointStep.HandleMessage, get msg from seed fail. peer", msg.PeerID.String())
 			return false
 		}
 
-		pointer.message[seed] = [2]big.Int{msg.Data[2*i+0], msg.Data[2*i+1]}
+		pointer.message[*msg.PeerID] = *crypto.ToECDSAPub(msg.BytesData[i])
 	}
 
 	return true
@@ -83,17 +71,11 @@ func (ptStep *MpcPointStep) FinishStep(result mpcprotocol.MpcResultInterface, mp
 
 	for i := 0; i < ptStep.signNum; i++ {
 		pointer := ptStep.messages[i].(*mpcPointGenerator)
-		//PublicKeyResult
-		//log.Info("generated gpk MpcPointStep::FinishStep",
-		//	"result key", ptStep.resultKeys[i],
-		//	"result value", pointer.result[:])
-
 		log.Info("generated gpk MpcPointStep::FinishStep",
 			"result key", ptStep.resultKeys[i],
-			"result value x", hexutil.Encode(pointer.result[0].Bytes()),
-			"result value y", hexutil.Encode(pointer.result[1].Bytes()))
+			"result value ", hexutil.Encode(crypto.FromECDSAPub(&pointer.result)))
 
-		err = result.SetValue(ptStep.resultKeys[i], pointer.result[:])
+		err = result.SetByteValue(ptStep.resultKeys[i], crypto.FromECDSAPub(&pointer.result))
 		if err != nil {
 			log.SyslogErr("HandleMessage","MpcPointStep.FinishStep, SetValue fail. err", err.Error())
 			return err

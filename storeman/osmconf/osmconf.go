@@ -175,6 +175,26 @@ func (cnf *OsmConf) GetXValueByNodeId(grpId string,id *discover.NodeID)(*big.Int
 	return big.NewInt(0),nil
 }
 
+func (cnf *OsmConf) GetNodeIdByIndex(grpId string,index uint16)(*discover.NodeID, error){
+	// get pk
+	// get pkhash
+	// get x = hash(pk)
+	return &discover.NodeID{},nil
+}
+
+func (cnf *OsmConf) GetXValueByIndex(grpId string,index uint16)(*big.Int, error){
+	// get pk
+	// get pkhash
+	// get x = hash(pk)
+	return big.NewInt(0),nil
+}
+
+func (cnf *OsmConf) GetLeaderIndex(grpId string)(uint16, error){
+	// get pk
+	// get pkhash
+	// get x = hash(pk)
+	return 0,nil
+}
 
 func (cnf *OsmConf) GetPeers(grpId string)([]mpcprotocol.PeerInfo, error){
 

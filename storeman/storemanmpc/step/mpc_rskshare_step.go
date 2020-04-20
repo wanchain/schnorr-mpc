@@ -56,7 +56,7 @@ func (rss *MpcRSKShare_Step) FinishStep(result mpcprotocol.MpcResultInterface, m
 	// gpkshare
 	var gpkShare ecdsa.PublicKey
 	gpkShare.X, gpkShare.Y = crypto.S256().ScalarBaseMult((*skpv.result).Bytes())
-	err = result.SetValue(mpcprotocol.RMpcPublicShare, []big.Int{*gpkShare.X, *gpkShare.Y})
+	err = result.SetByteValue(mpcprotocol.RMpcPublicShare, crypto.FromECDSAPub(&gpkShare))
 	if err != nil {
 		return err
 	}
