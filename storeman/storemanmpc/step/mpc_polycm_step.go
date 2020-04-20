@@ -3,7 +3,6 @@ package step
 import (
 	"bytes"
 	"crypto/rand"
-	"crypto/sha256"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
@@ -53,7 +52,7 @@ func (req *MpcPolycmStep) InitStep(result mpcprotocol.MpcResultInterface) error 
 	// build polycmG
 	pg := make(shcnorrmpc.PolynomialG,threshold)
 	for index, value := range cof {
-		skG, _ := shcnorrmpc.SkG(value)
+		skG, _ := shcnorrmpc.SkG(&value)
 		pg[index] = *skG
 	}
 	// todo error
@@ -92,9 +91,9 @@ func (req *MpcPolycmStep) CreateMessage() []mpcprotocol.StepMessage {
 		msg.BytesData[index+1] = crypto.FromECDSAPub(&cmItem)
 	}
 
-	prv,_ := osmconf.GetOsmConf().GetSelfPrvKey()
-	h := sha256.Sum256(buf.Bytes())
-	r,s,_ := crypto.SignInternalData(prv,h[:])
+	//prv,_ := osmconf.GetOsmConf().GetSelfPrvKey()
+	//h := sha256.Sum256(buf.Bytes())
+	r,s,_ := crypto.SignInternalData(buf.Bytes())
 	msg.Data[0] = *r
 	msg.Data[1] = *s
 

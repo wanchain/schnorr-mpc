@@ -80,6 +80,11 @@ func (cnf *OsmConf) GetPK(grpId string, smInx uint16) (*ecdsa.PublicKey, error){
 	return nil,nil
 }
 
+func (cnf *OsmConf) GetPKByNodeId(grpId string, nodeId *discover.NodeID) (*ecdsa.PublicKey, error){
+	defer cnf.wrLock.Unlock()
+	return nil,nil
+}
+
 // todo rw lock
 // get gpk share (public share)
 func (cnf *OsmConf) GetPKShare(grpId string, smInx uint16) (*ecdsa.PublicKey, error){
@@ -87,6 +92,10 @@ func (cnf *OsmConf) GetPKShare(grpId string, smInx uint16) (*ecdsa.PublicKey, er
 	return nil,nil
 }
 
+func (cnf *OsmConf) GetPKShareByNodeId(grpId string, nodeId *discover.NodeID) (*ecdsa.PublicKey, error){
+	defer cnf.wrLock.Unlock()
+	return nil,nil
+}
 
 //-----------------------get self---------------------------------
 // todo rw lock
@@ -95,10 +104,20 @@ func (cnf *OsmConf) GetSelfPrvKey() (*ecdsa.PrivateKey, error){
 	return nil, nil
 }
 
+func (cnf *OsmConf) GetSelfPubKey() (*ecdsa.PublicKey, error){
+	defer cnf.wrLock.Unlock()
+	return nil, nil
+}
+
 // todo rw lock
 func (cnf *OsmConf) GetSelfInx(grpId string)(uint16, error){
 	defer cnf.wrLock.Unlock()
 	return 0, nil
+}
+
+func (cnf *OsmConf) GetSelfNodeId()(*discover.NodeID, error){
+	defer cnf.wrLock.Unlock()
+	return &discover.NodeID{}, nil
 }
 
 //-----------------------get group---------------------------------
@@ -148,6 +167,14 @@ func (cnf *OsmConf) GetPkToBigInt(grpId string, smInx uint16)(*big.Int, error){
 func (cnf *OsmConf) GetInxByNodeId(grpId string,id *discover.NodeID)(uint16, error){
 	return 0, nil
 }
+
+func (cnf *OsmConf) GetXValueByNodeId(grpId string,id *discover.NodeID)(*big.Int, error){
+	// get pk
+	// get pkhash
+	// get x = hash(pk)
+	return big.NewInt(0),nil
+}
+
 
 func (cnf *OsmConf) GetPeers(grpId string)([]mpcprotocol.PeerInfo, error){
 

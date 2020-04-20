@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	"github.com/wanchain/schnorr-mpc/storeman/shcnorrmpc"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
@@ -11,7 +12,7 @@ import (
 
 type RandomPolynomialValue struct {
 	randCoefficient []big.Int          //coefficient
-	message         map[uint64]big.Int //Polynomial result
+	message         map[discover.NodeID]big.Int //Polynomial result
 	polyValue       []big.Int
 	result          *big.Int
 }
