@@ -7,6 +7,8 @@ import (
 	"encoding/hex"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/p2p/discover"
+	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
 	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
@@ -14,13 +16,14 @@ import (
 
 type mpcSGenerator struct {
 	seed        big.Int
-	message     map[uint64]big.Int
+	message     map[discover.NodeID]big.Int
 	result      big.Int
 	preValueKey string
+	grpIdString	string
 }
 
 func createSGenerator(preValueKey string) *mpcSGenerator {
-	return &mpcSGenerator{message: make(map[uint64]big.Int), preValueKey: preValueKey}
+	return &mpcSGenerator{message: make(map[discover.NodeID]big.Int), preValueKey: preValueKey}
 }
 
 func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcprotocol.MpcResultInterface) error {
@@ -73,6 +76,9 @@ func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcpr
 		"M", hex.EncodeToString(MBytes),
 		"m", hex.EncodeToString(m.Bytes()))
 
+	grpId,_ := result.GetByteValue(mpcprotocol.MpcGrpId)
+	msg.grpIdString = string(grpId)
+
 	log.SyslogInfo("mpcSGenerator.initialize succeed")
 	return nil
 }
@@ -82,9 +88,10 @@ func (msg *mpcSGenerator) calculateResult() error {
 	// x
 	seeds := make([]big.Int, 0)
 	sigshares := make([]big.Int, 0)
-	for seed, value := range msg.message {
+	for nodeId, value := range msg.message {
 		// get seeds, need sort seeds, and make seeds as a key of map, and check the map's count??
-		seeds = append(seeds, *big.NewInt(0).SetUint64(seed))
+		xValue,_ := osmconf.GetOsmConf().GetXValueByNodeId(msg.grpIdString,&nodeId)
+		seeds = append(seeds, *xValue)
 		// sigshares
 		sigshares = append(sigshares, value)
 	}

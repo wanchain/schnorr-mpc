@@ -1,11 +1,17 @@
 package step
 
 import (
+	"bytes"
+	"crypto/sha256"
 	"encoding/hex"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
+	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
+	"math/big"
+	"strconv"
 )
 
 type MpcPointStep struct {
@@ -29,14 +35,21 @@ func CreateMpcPointStep(peers *[]mpcprotocol.PeerInfo, preValueKeys []string, re
 
 func (ptStep *MpcPointStep) CreateMessage() []mpcprotocol.StepMessage {
 	log.SyslogInfo("MpcPointStep.CreateMessage begin")
-	// add public key and r, s.
+	// todo add public key and r, s.
 	message := make([]mpcprotocol.StepMessage, 1)
 	message[0].MsgCode = mpcprotocol.MPCMessage
 	message[0].PeerID = nil
 
 	for i := 0; i < ptStep.signNum; i++ {
 		pointer := ptStep.messages[i].(*mpcPointGenerator)
+		var buf bytes.Buffer
+		buf.Write(crypto.FromECDSAPub(&pointer.seed))
+		h:=sha256.Sum256(buf.Bytes())
+		r,s,_ := schnorrmpc.SignInternalData(h[:])
+		message[0].Data = make([]big.Int,2)
 		message[0].BytesData = append(message[0].BytesData,crypto.FromECDSAPub(&pointer.seed))
+		message[0].Data[0] = *r
+		message[0].Data[1] = *s
 	}
 
 	return message
@@ -56,7 +69,33 @@ func (ptStep *MpcPointStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 			return false
 		}
 
-		pointer.message[*msg.PeerID] = *crypto.ToECDSAPub(msg.BytesData[i])
+		// todo check fail , not save RPKShare
+		// todo check RPKShare sig
+
+		pointPk := crypto.ToECDSAPub(msg.BytesData[i])
+		r := msg.Data[0]
+		s := msg.Data[1]
+
+		grpId,_ := ptStep.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
+		grpIdString := string(grpId)
+		senderPk,_ := osmconf.GetOsmConf().GetPKByNodeId(grpIdString,msg.PeerID)
+		senderIndex,_ := osmconf.GetOsmConf().GetInxByNodeId(grpIdString,msg.PeerID)
+
+		var buf bytes.Buffer
+		buf.Write(msg.BytesData[i])
+		h:=sha256.Sum256(buf.Bytes())
+
+		bVerifySig := schnorrmpc.VerifyInternalData(senderPk,h[:],&r,&s)
+
+		if bVerifySig {
+			pointer.message[*msg.PeerID] = *pointPk
+
+			// save rpkshare for check data of s
+			key := mpcprotocol.RMpcPublicShare + strconv.Itoa(int(senderIndex))
+			ptStep.mpcResult.SetByteValue(key,msg.BytesData[i])
+		}else{
+			log.SyslogErr("MpcPointStep::HandleMessage"," check sig fail")
+		}
 	}
 
 	return true

@@ -88,11 +88,10 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 			"groupId",grpIdString)
 	}
 
+	// 2. check sij*G=si+a[i][0]*X+a[i][1]*X^2+...+a[i][n]*x^(n-1)
 	selfNodeId , _ := osmconf.GetOsmConf().GetSelfNodeId()
 	selfIndex, _ := osmconf.GetOsmConf().GetSelfInx(grpIdString)
 	xValue, _ := osmconf.GetOsmConf().GetXValueByNodeId(grpIdString,selfNodeId)
-
-	// 2. check sij*G=si+a[i][0]*X+a[i][1]*X^2+...+a[i][n]*x^(n-1)
 
 	// get send poly commit
 	keyPolyCMG := mpcprotocol.MPCRPolyCMG + strconv.Itoa(int(senderIndex))
@@ -103,7 +102,7 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	sijgEval, _ := schnorrmpc.EvalByPolyG(pks,uint16(len(pks)-1),xValue)
 	sijg,_ := schnorrmpc.SkG(&sij)
 
-	if ok,_ := schnorrmpc.PkEqual(sijg, sijgEval); !ok{
+	if ok,_ := schnorrmpc.PkEqual(sijg, sijgEval); !ok || !bVerifySig{
 		// check Not success
 		log.SyslogErr("MpcRSKShare_Step::HandleMessage",
 			" verify sk data fail", msg.PeerID.String(),

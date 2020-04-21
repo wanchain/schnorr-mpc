@@ -41,10 +41,11 @@ const (
 	PVerStr    = "1.1"
 )
 const (
-	MpcPrivateShare  = "MpcPrivateShare"  // skShare
-	RMpcPrivateShare = "RMpcPrivateShare" // rskShare
-	MpcPublicShare   = "MpcPublicShare"   // pkShare
-	RMpcPublicShare  = "RMpcPublicShare"  // rpkShare
+	MpcPrivateShare  = "MpcPrivateShare"  	// skShare
+	RMpcPrivateShare = "RMpcPrivateShare" 	// rskShare
+	MpcPublicShare   = "MpcPublicShare"   	// pkShare
+	RMpcPublicShare  = "RMpcPublicShare"  	// rpkShare
+											// rpkShare + "index" save rpkShare
 	MpcContextResult = "MpcContextResult"
 
 	PublicKeyResult  = "PublicKeyResult"  // gpk
@@ -65,6 +66,9 @@ const (
 
 	MPCRSkErrNum 		= "MPCRErrNum"
 	MPCRSkErrInfos 	= "MPCRErrInfos"
+
+	MPCSShareErrNum 		= "MPCSShareErrNum"
+	MPCSShareErrInfos 	= "MPCSShareErrInfos"
 )
 
 const (
