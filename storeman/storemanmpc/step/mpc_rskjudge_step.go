@@ -1,6 +1,7 @@
 package step
 
 import (
+	"crypto/sha256"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
 	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
@@ -43,7 +44,7 @@ func (rsj *MpcRSkJudgeStep) CreateMessage() []mpcprotocol.StepMessage {
 
 			data := make([]big.Int, 5)
 			for j:=0; j< 5; j++ {
-				data[0] = errInfo[0]
+				data[i] = errInfo[i]
 			}
 
 			// send multi judge message to leader,since there are more than one error.
@@ -81,7 +82,8 @@ func (rsj *MpcRSkJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	senderPk,_ := osmconf.GetOsmConf().GetPK(grpIdString,uint16(senderIndex))
 
 	// 1. check sig
-	bVerifySig := schnorrmpc.VerifyInternalData(senderPk,sij.Bytes(),&r,&s)
+	h := sha256.Sum256(sij.Bytes())
+	bVerifySig := schnorrmpc.VerifyInternalData(senderPk,h[:],&r,&s)
 	if !bVerifySig{
 		// sig error , todo sender error
 		// 1. write slash poof

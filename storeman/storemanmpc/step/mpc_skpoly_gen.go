@@ -1,6 +1,7 @@
 package step
 
 import (
+	"crypto/sha256"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
@@ -53,7 +54,8 @@ func (poly *RandomPolynomialGen) initialize(peers *[]mpcprotocol.PeerInfo,
 			xValue,
 			degree)
 		// todo handle error
-		poly.polyValueSigR[i], poly.polyValueSigS[i], _ = schnorrmpc.SignInternalData(poly.polyValue[i].Bytes())
+		h := sha256.Sum256(poly.polyValue[i].Bytes())
+		poly.polyValueSigR[i], poly.polyValueSigS[i], _ = schnorrmpc.SignInternalData(h[:])
 		log.Info("RandomPolynomialGen::initialize poly ",
 			"poly peerId", (*peers)[i].PeerID.String(),
 			"poly x seed", xValue,
