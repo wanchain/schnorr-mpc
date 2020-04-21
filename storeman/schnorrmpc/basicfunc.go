@@ -15,6 +15,9 @@ import (
 
 const PkLength = 65
 
+var BigOne = big.NewInt(1)
+var BigZero = big.NewInt(0)
+
 // Generate a random polynomial, its constant item is nominated
 func RandPoly(degree int, constant big.Int) Polynomial {
 

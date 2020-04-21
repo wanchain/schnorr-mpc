@@ -18,13 +18,18 @@ type MpcSStep struct {
 	resultKeys []string
 	signNum    int
 	SShareErrNum	int
+
+	sshareOKIndex  []uint16
+	sshareKOIndex  []uint16
+	sshareNOIndex  []uint16
 }
 
 func CreateMpcSStep(peers *[]mpcprotocol.PeerInfo, preValueKeys []string, resultKeys []string) *MpcSStep {
 
 	log.SyslogInfo("CreateMpcSStep begin")
 	signNum := len(preValueKeys)
-	mpc := &MpcSStep{*CreateBaseMpcStep(peers, signNum), resultKeys, signNum,0}
+	mpc := &MpcSStep{*CreateBaseMpcStep(peers, signNum), resultKeys, signNum,0,
+	make([]uint16,0),make([]uint16,0),make([]uint16,0)}
 	//mpc := &MpcSStep{*CreateBaseMpcStep(peers, signNum), resultKeys, signNum,make(map[uint64]discover.NodeID)}
 
 	for i := 0; i < signNum; i++ {
@@ -36,11 +41,18 @@ func CreateMpcSStep(peers *[]mpcprotocol.PeerInfo, preValueKeys []string, result
 
 func (msStep *MpcSStep) CreateMessage() []mpcprotocol.StepMessage {
 	log.SyslogInfo("MpcSStep.CreateMessage begin")
-	// sshare, sig or sshare
-
+	// sshare, sig of sshare
+	// only send to leader??
+	/*
+	grpId,_ := msStep.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
+	grpIdString := string(grpId)
+	leaderIndex,_ := osmconf.GetOsmConf().GetLeaderIndex(grpIdString)
+	leaderNodeId,_ := osmconf.GetOsmConf().GetNodeIdByIndex(grpIdString,uint16(leaderIndex))
+	*/
 	message := make([]mpcprotocol.StepMessage, 1)
 	message[0].MsgCode = mpcprotocol.MPCMessage
 	message[0].PeerID = nil
+	//message[0].PeerID = leaderNodeId
 
 	for i := 0; i < msStep.signNum; i++ {
 		pointer := msStep.messages[i].(*mpcSGenerator)
@@ -100,14 +112,14 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		m,_:= msStep.getm()
 		bContentCheck,_ := msStep.checkContent(&sshare,m,rpkShare,gpkShare)
 
-		if !bContentCheck || !bVerifySig{
-			msStep.SShareErrNum += 1
-		}
-
 		// 3. write error sshare
 		// 3.1 write error count
 		// 3.2 write error info
-		if msStep.SShareErrNum > 1 {
+		if !bContentCheck || !bVerifySig {
+			msStep.SShareErrNum += 1
+
+			msStep.sshareKOIndex = append(msStep.sshareKOIndex,senderIndex)
+
 			sshareErrInfo := make([]big.Int,5)
 			// sendIndex, rvcIndex, sshare, r, s
 			sshareErrInfo[0] = *big.NewInt(0).SetInt64(int64(senderIndex))
@@ -125,15 +137,49 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 			rskErrInfoNum := make([]big.Int,1)
 			rskErrInfoNum[0] = *big.NewInt(0).SetInt64(int64(msStep.SShareErrNum))
 			msStep.mpcResult.SetValue(keyErrNum,rskErrInfoNum)
-		}
+		}else{
 
-		pointer.message[*msg.PeerID] = sshare
+			msStep.sshareOKIndex = append(msStep.sshareOKIndex,senderIndex)
+
+			pointer.message[*msg.PeerID] = sshare
+		}
 	}
+
 	return true
 }
 
 func (msStep *MpcSStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mpcprotocol.StoremanManager) error {
 	log.SyslogInfo("MpcSStep.FinishStep begin")
+
+	// save index for incentive and slash
+
+	grpId,_ := msStep.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
+	grpIdString := string(grpId)
+	allIndex,_ := osmconf.GetOsmConf().GetGrpInxes(grpIdString)
+	tempIndex := osmconf.Difference(*allIndex,msStep.sshareOKIndex)
+	msStep.sshareNOIndex = osmconf.Difference(tempIndex,msStep.sshareKOIndex)
+
+	okIndex := make([]big.Int,len(msStep.sshareOKIndex))
+	koIndex := make([]big.Int,len(msStep.sshareKOIndex))
+	noIndex := make([]big.Int,len(msStep.sshareKOIndex))
+
+	for i,value := range msStep.sshareOKIndex{
+		okIndex[i].SetInt64(int64(value))
+	}
+
+	for i,value := range msStep.sshareKOIndex{
+		koIndex[i].SetInt64(int64(value))
+	}
+
+	for i,value := range msStep.sshareNOIndex{
+		koIndex[i].SetInt64(int64(value))
+	}
+
+	msStep.mpcResult.SetValue(mpcprotocol.MPCSOKIndex,okIndex)
+	msStep.mpcResult.SetValue(mpcprotocol.MPCSKOIndex,koIndex)
+	msStep.mpcResult.SetValue(mpcprotocol.MPCSNOIndex,noIndex)
+
+
 	err := msStep.BaseMpcStep.FinishStep()
 	if err != nil {
 		_,retHash := msStep.BaseMpcStep.GetSignedDataHash(result)

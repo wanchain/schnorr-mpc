@@ -16,11 +16,12 @@ import (
 
 type MpcSSahreJudgeStep struct {
 	BaseStep
+	SSlshCount uint16
 }
 
 func CreateMpcSSahreJudgeStep(peers *[]mpcprotocol.PeerInfo) *MpcSSahreJudgeStep {
 	return &MpcSSahreJudgeStep{
-		*CreateBaseStep(peers, 0)}
+		*CreateBaseStep(peers, 0),0}
 }
 
 func (ssj *MpcSSahreJudgeStep) InitStep(result mpcprotocol.MpcResultInterface) error {
@@ -89,6 +90,8 @@ func (ssj *MpcSSahreJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool 
 	// 1. check sig
 	h := sha256.Sum256(sshare.Bytes())
 	bVerifySig := schnorrmpc.VerifyInternalData(senderPk,h[:],&r,&s)
+
+	bSnderWrong := true
 	if !bVerifySig{
 		log.SyslogErr("MpcSSahreJudgeStep", "senderIndex",senderIndex,
 			"rcvIndex",rcvIndex,
@@ -96,8 +99,10 @@ func (ssj *MpcSSahreJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool 
 			"r",hex.EncodeToString(r.Bytes()),
 			"s",hex.EncodeToString(s.Bytes()))
 		// sig error , todo sender error
-		// 1. write slash poof
-		// 2. save slash num
+		// todo 1. write slash poof
+		// todo 2. save slash num
+
+		bSnderWrong = true
 	}
 
 	// 2. check s content
@@ -108,8 +113,16 @@ func (ssj *MpcSSahreJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool 
 
 	if !bContentCheck{
 		// content error, todo sender error
+		bSnderWrong = true
 	}else{
 		// todo receiver error
+		bSnderWrong = false
+	}
+
+	if !bContentCheck || !bVerifySig {
+		ssj.SSlshCount += 1
+
+		ssj.saveSlshProof(bSnderWrong,m,&sshare,&r,&s,senderIndex,rcvIndex,int(ssj.SSlshCount),rpkShare,gpkShare,grpId)
 	}
 
 	return true
@@ -170,4 +183,36 @@ func (ssj *MpcSSahreJudgeStep) getGPKShare() (*ecdsa.PublicKey,error) {
 	gpkBytes, _ := result.GetByteValue(mpcprotocol.PublicKeyResult)
 
 	return crypto.ToECDSAPub(gpkBytes[:]),nil
+}
+
+func (ssj *MpcSSahreJudgeStep) saveSlshProof(isSnder bool,
+	m, sshare, r, s *big.Int,
+	sndrIndex, rcvrIndex, slshCount int,
+	rpkShare, gpkShare *ecdsa.PublicKey, grp []byte) (error) {
+
+		sslshValue := make([]big.Int,7)
+		if isSnder{
+			sslshValue[0] = *schnorrmpc.BigOne
+		}else{
+			sslshValue[0] = *schnorrmpc.BigZero
+		}
+
+	sslshValue[1] = *m
+	sslshValue[2] = *sshare
+	sslshValue[3] = *r
+	sslshValue[4] = *s
+	sslshValue[5] = *big.NewInt(0).SetInt64(int64(sndrIndex))
+	sslshValue[6] = *big.NewInt(0).SetInt64(int64(rcvrIndex))
+
+	var sslshByte bytes.Buffer
+	sslshByte.Write(crypto.FromECDSAPub(rpkShare))
+	sslshByte.Write(crypto.FromECDSAPub(gpkShare))
+	sslshByte.Write(grp[:])
+
+	key1 := mpcprotocol.MPCSSlshProof + strconv.Itoa(int(slshCount))
+	// todo error handle
+	ssj.mpcResult.SetValue(key1,sslshValue)
+	ssj.mpcResult.SetByteValue(key1,sslshByte.Bytes())
+
+	return nil
 }

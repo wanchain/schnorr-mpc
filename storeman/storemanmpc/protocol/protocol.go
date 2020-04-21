@@ -69,6 +69,20 @@ const (
 
 	MPCSShareErrNum 		= "MPCSShareErrNum"
 	MPCSShareErrInfos 	= "MPCSShareErrInfos"
+
+	MPCROKIndex	= "MPCROKIndex"
+	MPCRKOIndex = "MPCRKOIndex"
+	MPCRNOIndex = "MPCRNOIndex"
+
+	MPCSOKIndex = "MPCSOKIndex"
+	MPCSKOIndex = "MPCSKOIndex"
+	MPCSNOIndex = "MPCSNOIndex"
+
+	MPCSSlshProof = "MPCSSlshProof"
+	MPCRSlshProof = "MPCRSlshProof"
+
+	MPCRSlshProofNum = "MPCRSlshProofNum"
+	MPCSSlshProofNum = "MPCSSlshProofNum"
 )
 
 const (

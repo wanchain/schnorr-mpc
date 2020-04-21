@@ -132,6 +132,11 @@ func (cnf *OsmConf) GetGrpElems(grpId string)(*ArrayGrpElem, error){
 	return nil, nil
 }
 
+func (cnf *OsmConf) GetGrpInxes(grpId string)(*ArrayGrpElemsInx, error){
+	defer cnf.wrLock.Unlock()
+	return nil, nil
+}
+
 // todo rw lock
 func (cnf *OsmConf) GetGrpItem(grpId string, smInx uint16)(*GrpElem, error){
 	defer cnf.wrLock.Unlock()
@@ -204,6 +209,27 @@ func (cnf *OsmConf) GetPeers(grpId string)([]mpcprotocol.PeerInfo, error){
 		peers = append(peers, mpcprotocol.PeerInfo{PeerID: *grpElem.NodeId, Seed: 0})
 	}
 	return peers, nil
+}
+// s1-s2
+// s2 must be the sub of s1
+func Difference(s1, s2 []uint16) []uint16 {
+	tempMap := make(map[uint16]int,len(s1)+len(s2))
+	for _, value := range s1{
+		tempMap[value]++
+	}
+
+	for _, value := range s2{
+		tempMap[value]++
+	}
+
+	ret := make([]uint16,0)
+	for key,value := range tempMap{
+		if value == 1{
+			ret = append(ret, key)
+		}
+	}
+
+	return ret
 }
 
 
