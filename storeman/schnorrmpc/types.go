@@ -15,7 +15,9 @@ type Polynomial []big.Int
 
 // polynomial commit
 type PolynomialG []ecdsa.PublicKey
+type PolynomialGSig []big.Int
 
 // key: 	smIndex
 // value: 	polyCommitG
-type PolyGMap  map[uint16]PolynomialG
+type PolyGMap  		map[uint16]PolynomialG
+type PolyGSigMap  	map[uint16]PolynomialGSig

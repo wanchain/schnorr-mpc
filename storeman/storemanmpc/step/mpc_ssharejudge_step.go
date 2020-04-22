@@ -67,6 +67,9 @@ func (ssj *MpcSSahreJudgeStep) CreateMessage() []mpcprotocol.StepMessage {
 }
 
 func (ssj *MpcSSahreJudgeStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mpcprotocol.StoremanManager) error {
+	// todo error handle
+	ssj.saveSlshCount(int(ssj.SSlshCount))
+
 	err := ssj.BaseStep.FinishStep()
 	if err != nil {
 		return err
@@ -185,17 +188,29 @@ func (ssj *MpcSSahreJudgeStep) getGPKShare() (*ecdsa.PublicKey,error) {
 	return crypto.ToECDSAPub(gpkBytes[:]),nil
 }
 
+func (ssj *MpcSSahreJudgeStep) saveSlshCount(slshCount int) (error) {
+
+		sslshValue := make([]big.Int,1)
+		sslshValue[0] = *big.NewInt(0).SetInt64(int64(ssj.SSlshCount))
+
+		// todo error handle
+		key := mpcprotocol.MPCSSlshProofNum + strconv.Itoa(int(ssj.SSlshCount))
+		ssj.mpcResult.SetValue(key,sslshValue)
+
+	return nil
+}
+
 func (ssj *MpcSSahreJudgeStep) saveSlshProof(isSnder bool,
 	m, sshare, r, s *big.Int,
 	sndrIndex, rcvrIndex, slshCount int,
 	rpkShare, gpkShare *ecdsa.PublicKey, grp []byte) (error) {
 
-		sslshValue := make([]big.Int,7)
-		if isSnder{
-			sslshValue[0] = *schnorrmpc.BigOne
-		}else{
-			sslshValue[0] = *schnorrmpc.BigZero
-		}
+	sslshValue := make([]big.Int,7)
+	if isSnder{
+		sslshValue[0] = *schnorrmpc.BigOne
+	}else{
+		sslshValue[0] = *schnorrmpc.BigZero
+	}
 
 	sslshValue[1] = *m
 	sslshValue[2] = *sshare
@@ -204,6 +219,7 @@ func (ssj *MpcSSahreJudgeStep) saveSlshProof(isSnder bool,
 	sslshValue[5] = *big.NewInt(0).SetInt64(int64(sndrIndex))
 	sslshValue[6] = *big.NewInt(0).SetInt64(int64(rcvrIndex))
 
+	// rpkShare, gpkShare, grpId
 	var sslshByte bytes.Buffer
 	sslshByte.Write(crypto.FromECDSAPub(rpkShare))
 	sslshByte.Write(crypto.FromECDSAPub(gpkShare))

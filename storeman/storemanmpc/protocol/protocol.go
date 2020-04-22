@@ -61,7 +61,8 @@ const (
 	MpcAddress = "MpcAddress"
 	MPCAction  = "MPCAction"
 
-	MPCRPolyCMG = "MPCRPolyCommitG"	 // node0's comment : MPCRPolyCMG + "0"
+	MPCRPolyCMG = "MPCRPolyCommitG"	 	// node0's comment : MPCRPolyCMG + "0"
+										// bytsvalue: polyValue values: sig of the polyValue
 	MPCRPolyCoff = "MPCRPolyCoff"
 
 	MPCRSkErrNum 		= "MPCRErrNum"
