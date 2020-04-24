@@ -24,7 +24,6 @@ func TestLoadCnf(t *testing.T) {
 	GetOsmConf().LoadCnf("/home/jacob/storeman.json")
 }
 
-
 func TestIntersect(t *testing.T) {
 	s1 := []uint16{1,2,3,4}
 	s2 := []uint16{2,3,4,5,6,7}

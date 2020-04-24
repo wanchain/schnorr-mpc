@@ -155,7 +155,7 @@ func (msStep *MpcSStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mp
 
 	grpId,_ := msStep.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
 	grpIdString := string(grpId)
-	allIndex,_ := osmconf.GetOsmConf().GetGrpInxes(grpIdString)
+	allIndex,_ := osmconf.GetOsmConf().GetGrpElemsInxes(grpIdString)
 	tempIndex := osmconf.Difference(*allIndex,msStep.sshareOKIndex)
 	msStep.sshareNOIndex = osmconf.Difference(tempIndex,msStep.sshareKOIndex)
 

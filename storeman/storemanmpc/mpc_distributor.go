@@ -314,7 +314,7 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 	}*/
 
 	// todo error
-	peers, _ = osmconf.GetOsmConf().GetPeers(grpId)
+	peers, _ = osmconf.GetOsmConf().GetPeersByGrpId(grpId)
 	mpc, err := mpcServer.mpcCreater.CreateContext(ctxType,
 		mpcID,
 		peers,
@@ -503,7 +503,7 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 				mpcMsg := &mpcprotocol.MpcMessage{ContextID: mpcMessage.ContextID,
 					StepID: 0,
 					Peers:  []byte(mpcprotocol.ErrFailedAddApproving.Error())}
-				peerInfo,_:= osmconf.GetOsmConf().GetPeers(grpId)
+				peerInfo,_:= osmconf.GetOsmConf().GetPeersByGrpId(grpId)
 				peerIDs := make([]discover.NodeID, 0)
 				for _, item := range peerInfo {
 					peerIDs = append(peerIDs, item.PeerID)
@@ -526,7 +526,7 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 				StepID: 0,
 				//Peers:  []byte(mpcprotocol.ErrFailedDataVerify.Error())}
 				Peers: []byte(err.Error())}
-			peerInfo,_:= osmconf.GetOsmConf().GetPeers(grpId)
+			peerInfo,_:= osmconf.GetOsmConf().GetPeersByGrpId(grpId)
 			peerIDs := make([]discover.NodeID, 0)
 			for _, item := range peerInfo {
 				peerIDs = append(peerIDs, item.PeerID)
@@ -545,7 +545,7 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 		//ToDo change reqMPC message sent
 	}
 
-	msgPeers, _ := osmconf.GetOsmConf().GetPeers(grpId)
+	msgPeers, _ := osmconf.GetOsmConf().GetPeersByGrpId(grpId)
 	mpc, err := mpcServer.mpcCreater.CreateContext(ctxType,
 		mpcMessage.ContextID,
 		msgPeers,

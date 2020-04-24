@@ -43,7 +43,7 @@ func (poly *RandomPolynomialGen) initialize(peers *[]mpcprotocol.PeerInfo,
 	poly.randCoefficient,_ = result.GetValue(key)
 
 	// todo check threshold and len(poly.randCoefficient)
-	threshold, _ := osmconf.GetOsmConf().GetThresholdNum()
+	threshold, _ := osmconf.GetOsmConf().GetThresholdNum(grpIdString)
 	degree := int(threshold) - 1
 
 	// get x = hash(pk)

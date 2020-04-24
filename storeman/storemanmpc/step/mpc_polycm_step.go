@@ -40,7 +40,11 @@ func (req *MpcPolycmStep) InitStep(result mpcprotocol.MpcResultInterface) error 
 	log.SyslogInfo("MpcPolycm Step.InitStep begin")
 	req.BaseStep.InitStep(result)
 	// build self polynomial
-	threshold, _ := osmconf.GetOsmConf().GetThresholdNum()
+
+	grpId,_ := req.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
+	grpIdString := string(grpId)
+
+	threshold, _ := osmconf.GetOsmConf().GetThresholdNum(grpIdString)
 	degree := threshold -1
 	s, err := rand.Int(rand.Reader, crypto.S256().Params().N)
 	if err != nil {
@@ -58,8 +62,6 @@ func (req *MpcPolycmStep) InitStep(result mpcprotocol.MpcResultInterface) error 
 		pg[index] = *skG
 	}
 	// todo error
-	grpId,_ := result.GetByteValue(mpcprotocol.MpcGrpId)
-	grpIdString := string(grpId)
 	req.grpId = grpIdString
 	selfIndex, _ := osmconf.GetOsmConf().GetSelfInx(grpIdString)
 	req.selfIndex = selfIndex
@@ -78,7 +80,11 @@ func (req *MpcPolycmStep) CreateMessage() []mpcprotocol.StepMessage {
 		Peers:     req.peers,
 		Data:      nil,
 		BytesData: nil}
-	threshold, _ := osmconf.GetOsmConf().GetThresholdNum()
+
+	grpId,_ := req.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
+	grpIdString := string(grpId)
+
+	threshold, _ := osmconf.GetOsmConf().GetThresholdNum(grpIdString)
 	// Data[0]: R
 	// Data[1]: S
 	msg.Data = make([]big.Int, 2)
@@ -148,7 +154,10 @@ func (req *MpcPolycmStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 
 	req.message[*msg.PeerID] = true
 
-	threshold, _ := osmconf.GetOsmConf().GetThresholdNum()
+	grpId,_ := req.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
+	grpIdString := string(grpId)
+
+	threshold, _ := osmconf.GetOsmConf().GetThresholdNum(grpIdString)
 	if len(msg.BytesData) != int(threshold) {
 		// todo data has error
 		return false
@@ -174,8 +183,9 @@ func (req *MpcPolycmStep) fillCmIntoMap(msg *mpcprotocol.StepMessage) bool {
 	nodeId := msg.PeerID
 	inx, _ := osmconf.GetOsmConf().GetInxByNodeId(req.grpId,nodeId)
 
-
-	threshold, _ := osmconf.GetOsmConf().GetThresholdNum()
+	grpId,_ := req.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
+	grpIdString := string(grpId)
+	threshold, _ := osmconf.GetOsmConf().GetThresholdNum(grpIdString)
 	// build polycmG
 	pg := make(schnorrmpc.PolynomialG,threshold)
 
