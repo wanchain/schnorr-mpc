@@ -28,6 +28,7 @@ import (
 type Config struct {
 	StoremanNodes     []*discover.Node
 	Password          string
+	// todo add working password.
 	DataPath          string
 	SchnorrThreshold  int
 	SchnorrTotalNodes int

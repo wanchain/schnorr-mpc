@@ -36,6 +36,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/p2p/netutil"
 	"github.com/wanchain/schnorr-mpc/params"
 	"github.com/wanchain/schnorr-mpc/storeman"
+	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
 	whisper "github.com/wanchain/schnorr-mpc/whisper/whisperv5"
 	"gopkg.in/urfave/cli.v1"
 	"io/ioutil"
@@ -654,6 +655,8 @@ func RegisterShhService(stack *node.Node, cfg *whisper.Config) {
 // RegisterSmService configure Storeman and adds it to the given node
 func RegisterSmService(stack *node.Node, cfg *storeman.Config, aKID, secretKey, region string) {
 	if err := stack.Register(func(n *node.ServiceContext) (node.Service, error) {
+
+		osmconf.GetOsmConf().SetAccountManger(stack.AccountManager())
 
 		return storeman.New(cfg, stack.AccountManager(), aKID, secretKey, region), nil
 	}); err != nil {

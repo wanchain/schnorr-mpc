@@ -99,7 +99,8 @@ func (req *MpcPolycmStep) CreateMessage() []mpcprotocol.StepMessage {
 
 	//prv,_ := osmconf.GetOsmConf().GetSelfPrvKey()
 	//h := sha256.Sum256(buf.Bytes())
-	r,s,_ := schnorrmpc.SignInternalData(buf.Bytes())
+	prv,_ := osmconf.GetOsmConf().GetSelfPrvKey()
+	r,s,_ := schnorrmpc.SignInternalData(prv,buf.Bytes())
 	msg.Data[0] = *r
 	msg.Data[1] = *s
 

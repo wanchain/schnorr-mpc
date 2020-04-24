@@ -58,7 +58,8 @@ func (msStep *MpcSStep) CreateMessage() []mpcprotocol.StepMessage {
 		pointer := msStep.messages[i].(*mpcSGenerator)
 
 		h := sha256.Sum256(pointer.seed.Bytes())
-		r,s,_ := schnorrmpc.SignInternalData(h[:])
+		prv,_ := osmconf.GetOsmConf().GetSelfPrvKey()
+		r,s,_ := schnorrmpc.SignInternalData(prv,h[:])
 
 		message[0].Data = append(message[0].Data, pointer.seed)
 		message[0].Data = append(message[0].Data, *r)

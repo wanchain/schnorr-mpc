@@ -45,7 +45,9 @@ func (ptStep *MpcPointStep) CreateMessage() []mpcprotocol.StepMessage {
 		var buf bytes.Buffer
 		buf.Write(crypto.FromECDSAPub(&pointer.seed))
 		h:=sha256.Sum256(buf.Bytes())
-		r,s,_ := schnorrmpc.SignInternalData(h[:])
+
+		prv,_ := osmconf.GetOsmConf().GetSelfPrvKey()
+		r,s,_ := schnorrmpc.SignInternalData(prv,h[:])
 		message[0].Data = make([]big.Int,2)
 		message[0].BytesData = append(message[0].BytesData,crypto.FromECDSAPub(&pointer.seed))
 		message[0].Data[0] = *r

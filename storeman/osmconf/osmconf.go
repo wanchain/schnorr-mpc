@@ -5,7 +5,10 @@ import (
 	"crypto/ecdsa"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/wanchain/schnorr-mpc/accounts"
+	"github.com/wanchain/schnorr-mpc/accounts/keystore"
 	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/crypto"
@@ -42,6 +45,9 @@ type GrpInfoItem struct {
 type OsmConf struct {
 	GrpInfoMap map[string]GrpInfoItem
 	SelfNodeId *discover.NodeID
+	GpkPassword string
+	WorkingPassword string
+	AccMng	*accounts.Manager
 	wrLock	sync.RWMutex
 }
 
@@ -233,10 +239,18 @@ func (cnf *OsmConf) GetSelfPrvKey() (*ecdsa.PrivateKey, error){
 }
 
 // todo ///////////////////////////////////////////////////self////////////////
-func (cnf *OsmConf) GetSelfPubKey(grpId string) (*ecdsa.PublicKey, error){
+func (cnf *OsmConf) GetSelfPubKey() (*ecdsa.PublicKey, error){
 	defer cnf.wrLock.RUnlock()
 	cnf.wrLock.RLock()
-	return cnf.GetPKByNodeId(grpId,cnf.SelfNodeId)
+
+	for _, grpInfo := range cnf.GrpInfoMap{
+		for _, grpElem := range grpInfo.ArrGrpElems{
+			if *grpElem.NodeId == *cnf.SelfNodeId{
+				return grpElem.WorkingPk, nil
+			}
+		}
+	}
+	return nil, nil
 }
 
 // todo rw lock
@@ -252,10 +266,56 @@ func (cnf *OsmConf) GetSelfNodeId()(*discover.NodeID, error){
 	return cnf.SelfNodeId,nil
 }
 
+func (cnf *OsmConf) GetWorkingPrv(password string) (*ecdsa.PrivateKey,error) {
+	pk, _ := cnf.GetSelfPubKey()
+	address, err := pkToAddr(crypto.FromECDSAPub(pk))
+	if err != nil {
+		panic("Error in pk to address")
+		return nil, err
+	}
+
+	ks := cnf.AccMng.Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
+	account := accounts.Account{Address: address}
+	account, err = ks.Find(account)
+	if err != nil {
+		//find account from keystore fail
+		panic("find account from keystore fail")
+		return nil, err
+	}
+
+	var keyjson []byte
+	keyjson, err = ioutil.ReadFile(account.URL.Path)
+
+	if err != nil {
+		// get account keyjson fail
+		panic("find account from keystore fail")
+		return nil, err
+	}
+
+	key, err := keystore.DecryptKey(keyjson, cnf.WorkingPassword)
+	if err != nil {
+		// decrypt account keyjson fail
+		panic("find account from keystore fail")
+		return nil, err
+	}
+	return key.PrivateKey,nil
+}
+
 func (cnf *OsmConf) SetSelfNodeId(id *discover.NodeID)(error){
 	defer cnf.wrLock.Unlock()
 	cnf.wrLock.Lock()
 	cnf.SelfNodeId = id
+	return nil
+}
+
+func (cnf *OsmConf) SetPassword(pwd string)(error){
+	cnf.WorkingPassword = pwd
+	cnf.GpkPassword = pwd
+	return nil
+}
+
+func (cnf *OsmConf) SetAccountManger(accMng *accounts.Manager)(error){
+	cnf.AccMng = accMng
 	return nil
 }
 
@@ -445,4 +505,12 @@ func Difference(slice1, slice2 []uint16) []uint16 {
 	return ret
 }
 
+func pkToAddr(PkBytes []byte) (common.Address, error) {
+	if len(PkBytes) != 65 {
+		return common.Address{}, errors.New("invalid pk address")
+	}
+	pk := crypto.ToECDSAPub(PkBytes[:])
+	address := crypto.PubkeyToAddress(*pk)
+	return address, nil
+}
 

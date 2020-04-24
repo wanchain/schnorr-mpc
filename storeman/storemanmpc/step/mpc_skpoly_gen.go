@@ -55,7 +55,9 @@ func (poly *RandomPolynomialGen) initialize(peers *[]mpcprotocol.PeerInfo,
 			degree)
 		// todo handle error
 		h := sha256.Sum256(poly.polyValue[i].Bytes())
-		poly.polyValueSigR[i], poly.polyValueSigS[i], _ = schnorrmpc.SignInternalData(h[:])
+		prv,_ := osmconf.GetOsmConf().GetSelfPrvKey()
+
+		poly.polyValueSigR[i], poly.polyValueSigS[i], _ = schnorrmpc.SignInternalData(prv,h[:])
 		log.Info("RandomPolynomialGen::initialize poly ",
 			"poly peerId", (*peers)[i].PeerID.String(),
 			"poly x seed", xValue,

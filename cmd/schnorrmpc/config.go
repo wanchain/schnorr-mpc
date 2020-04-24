@@ -26,6 +26,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/storeman"
+	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
 	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	"github.com/wanchain/schnorr-mpc/storeman/storemanmpc"
 	"golang.org/x/crypto/ssh/terminal"
@@ -233,6 +234,9 @@ func makeFullNode(ctx *cli.Context) *node.Node {
 		}
 
 		cfg.Sm.Password = password
+		// todo add working password
+		osmconf.GetOsmConf().SetPassword(password)
+
 		utils.RegisterSmService(stack, &cfg.Sm, kmsInfo.AKID, kmsInfo.SecretKey, kmsInfo.Region)
 	}
 

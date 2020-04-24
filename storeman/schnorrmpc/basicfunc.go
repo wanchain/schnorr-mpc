@@ -1,6 +1,5 @@
 package schnorrmpc
 
-
 import (
 	"crypto/ecdsa"
 	Rand "crypto/rand"
@@ -9,7 +8,6 @@ import (
 	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/crypto"
-	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
 	"math/big"
 )
 
@@ -242,8 +240,8 @@ func PkEqual(pk1,pk2 *ecdsa.PublicKey,) (bool, error) {
 	return pk1.X.Cmp(pk2.X)==0 && pk1.Y.Cmp(pk2.Y) == 0 , nil
 }
 
-func SignInternalData(plainData []byte) (r, s *big.Int, err error) {
-	prv,_ := osmconf.GetOsmConf().GetSelfPrvKey()
+func SignInternalData(prv *ecdsa.PrivateKey,plainData []byte) (r, s *big.Int, err error) {
+	//prv,_ := osmconf.GetOsmConf().GetSelfPrvKey()
 	h := sha256.Sum256(plainData[:])
 	return ecdsa.Sign(Rand.Reader,prv,h[:])
 }
