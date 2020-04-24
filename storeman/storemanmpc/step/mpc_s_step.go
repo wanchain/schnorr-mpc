@@ -108,7 +108,7 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		// 2. check content
 		selfIndex, _ := osmconf.GetOsmConf().GetSelfInx(grpIdString)
 		rpkShare,_ := msStep.getRPkShare(senderIndex)
-		gpkShare,_ := msStep.getGPKShare()
+		gpkShare,_ := msStep.getGPKShare(senderIndex)
 		m,_:= msStep.getm()
 		bContentCheck,_ := msStep.checkContent(&sshare,m,rpkShare,gpkShare)
 
@@ -251,10 +251,12 @@ func (msStep *MpcSStep) getm() (*big.Int,error) {
 	return m,nil
 }
 
-func (msStep *MpcSStep) getGPKShare() (*ecdsa.PublicKey,error) {
+func (msStep *MpcSStep) getGPKShare(index uint16) (*ecdsa.PublicKey,error) {
 	//
-	result := msStep.mpcResult
-	gpkBytes, _ := result.GetByteValue(mpcprotocol.PublicKeyResult)
+	grpId,_ := msStep.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
+	grpIdString := string(grpId)
 
-	return crypto.ToECDSAPub(gpkBytes[:]),nil
+	gpkShare, _ := osmconf.GetOsmConf().GetPKShare(grpIdString,index)
+
+	return gpkShare,nil
 }

@@ -41,6 +41,7 @@ type GrpInfoItem struct {
 
 type OsmConf struct {
 	GrpInfoMap map[string]GrpInfoItem
+	SelfNodeId *discover.NodeID
 	wrLock	sync.RWMutex
 }
 
@@ -232,23 +233,30 @@ func (cnf *OsmConf) GetSelfPrvKey() (*ecdsa.PrivateKey, error){
 }
 
 // todo ///////////////////////////////////////////////////self////////////////
-func (cnf *OsmConf) GetSelfPubKey() (*ecdsa.PublicKey, error){
+func (cnf *OsmConf) GetSelfPubKey(grpId string) (*ecdsa.PublicKey, error){
 	defer cnf.wrLock.RUnlock()
 	cnf.wrLock.RLock()
-	return nil, nil
+	return cnf.GetPKByNodeId(grpId,cnf.SelfNodeId)
 }
 
 // todo rw lock
 func (cnf *OsmConf) GetSelfInx(grpId string)(uint16, error){
 	defer cnf.wrLock.RUnlock()
 	cnf.wrLock.RLock()
-	return 0, nil
+	return cnf.GetInxByNodeId(grpId,cnf.SelfNodeId)
 }
 
 func (cnf *OsmConf) GetSelfNodeId()(*discover.NodeID, error){
 	defer cnf.wrLock.RUnlock()
 	cnf.wrLock.RLock()
-	return &discover.NodeID{}, nil
+	return cnf.SelfNodeId,nil
+}
+
+func (cnf *OsmConf) SetSelfNodeId(id *discover.NodeID)(error){
+	defer cnf.wrLock.Unlock()
+	cnf.wrLock.Lock()
+	cnf.SelfNodeId = id
+	return nil
 }
 
 // todo ///////////////////////////////////////////////////self////////////////

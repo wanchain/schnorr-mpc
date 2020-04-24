@@ -110,7 +110,7 @@ func (ssj *MpcSSahreJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool 
 
 	// 2. check s content
 	rpkShare,_ := ssj.getRPkShare(uint16(senderIndex))
-	gpkShare,_ := ssj.getGPKShare()
+	gpkShare,_ := ssj.getGPKShare(uint16(senderIndex))
 	m,_:= ssj.getm()
 	bContentCheck,_ := ssj.checkContent(&sshare,m,rpkShare,gpkShare)
 
@@ -180,12 +180,13 @@ func (ssj *MpcSSahreJudgeStep) getm() (*big.Int,error) {
 	return m,nil
 }
 
-func (ssj *MpcSSahreJudgeStep) getGPKShare() (*ecdsa.PublicKey,error) {
+func (ssj *MpcSSahreJudgeStep) getGPKShare(index uint16) (*ecdsa.PublicKey,error) {
 	//
-	result := ssj.mpcResult
-	gpkBytes, _ := result.GetByteValue(mpcprotocol.PublicKeyResult)
+	grpId,_ := ssj.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
+	grpIdString := string(grpId)
+	gpkShare, _ := osmconf.GetOsmConf().GetPKShare(grpIdString,index)
 
-	return crypto.ToECDSAPub(gpkBytes[:]),nil
+	return gpkShare,nil
 }
 
 func (ssj *MpcSSahreJudgeStep) saveSlshCount(slshCount int) (error) {

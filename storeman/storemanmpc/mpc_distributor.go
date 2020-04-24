@@ -370,6 +370,9 @@ func (mpcServer *MpcDistributor) loadStoremanAddress(address *common.Address) (*
 		mpcServer.mpcAccountMap[*address] = value
 	}
 
+	// todo Not get gpk from keystore and get gpk from the sign message.
+	// sigmessage : gpk + dataNeedToBeSigned.
+
 	gpkByte, err := hex.DecodeString(value.externString)
 	gpk := crypto.ToECDSAPub(gpkByte)
 

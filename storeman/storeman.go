@@ -5,6 +5,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/rlp"
+	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
 	"net"
 	"path/filepath"
 	"strings"
@@ -283,6 +284,10 @@ func (sm *Storeman) Protocols() []p2p.Protocol {
 func (sm *Storeman) Start(server *p2p.Server) error {
 
 	sm.mpcDistributor.Self = server.Self()
+
+	// set self node id into the osm config
+	osmconf.GetOsmConf().SetSelfNodeId(&sm.mpcDistributor.Self.ID)
+
 	sm.mpcDistributor.StoreManGroup = make([]discover.NodeID, len(server.StoremanNodes))
 	sm.storemanPeers = make(map[discover.NodeID]bool)
 	sm.server = server
