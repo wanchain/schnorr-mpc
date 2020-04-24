@@ -2,8 +2,6 @@ package storemanmpc
 
 import (
 	"crypto/ecdsa"
-	"encoding/binary"
-	"encoding/hex"
 	"errors"
 	"github.com/wanchain/schnorr-mpc/accounts"
 	"github.com/wanchain/schnorr-mpc/accounts/keystore"
@@ -250,9 +248,12 @@ func (mpcServer *MpcDistributor) CreateReqMpcSign(data []byte, extern []byte, pk
 
 	log.SyslogInfo("CreateReqMpcSign begin")
 	grpId, _ := osmconf.GetOsmConf().GetGrpInxByGpk(pkBytes)
+
+	// MpcAddress stores the gpk bytes.
 	value, err := mpcServer.createRequestMpcContext(mpcprotocol.MpcSignLeader,
 		MpcValue{mpcprotocol.MpcGrpId, nil, []byte(grpId)},
 		MpcValue{mpcprotocol.MpcAddress, nil, pkBytes[:]},
+		MpcValue{mpcprotocol.PublicKeyResult, nil, pkBytes[:]},
 		MpcValue{mpcprotocol.MpcM, nil, data},
 		MpcValue{mpcprotocol.MpcExt, nil, extern},
 		MpcValue{mpcprotocol.MpcByApprove, []big.Int{*(big.NewInt(byApprove))}, nil})
@@ -290,7 +291,7 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 			}
 		}
 		// peers1: the peers which are used to create the group public key, used to build the sign data.
-		value, value1, _, err := mpcServer.loadStoremanAddress(&address)
+		value, err := mpcServer.loadStoremanAddress(&address)
 		if err != nil {
 
 			log.SyslogErr("MpcDistributor createRequestMpcContext, loadStoremanAddress fail",
@@ -303,8 +304,6 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 		// mpc private share
 		preSetValue = append(preSetValue, *value)
 
-		// mpc gpk for sign
-		preSetValue = append(preSetValue, *value1)
 		// todo
 		//peers = peers1
 	} /*else {
@@ -340,7 +339,7 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 	return result, nil
 }
 
-func (mpcServer *MpcDistributor) loadStoremanAddress(address *common.Address) (*MpcValue, *MpcValue, []mpcprotocol.PeerInfo, error) {
+func (mpcServer *MpcDistributor) loadStoremanAddress(address *common.Address) (*MpcValue, error) {
 	log.SyslogInfo("MpcDistributor.loadStoremanAddress begin", "address", address.String())
 
 	mpcServer.accMu.Lock()
@@ -353,19 +352,19 @@ func (mpcServer *MpcDistributor) loadStoremanAddress(address *common.Address) (*
 		ks := mpcServer.AccountManager.Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 		key, _, err = GetPrivateShare(ks, *address, mpcServer.enableAwsKms, &mpcServer.kmsInfo, mpcServer.password)
 		if err != nil {
-			return nil, nil, nil, err
+			return nil, err
 		}
 
-		b := make([]byte, 8)
-		peers := make([]mpcprotocol.PeerInfo, len(mpcServer.StoreManGroup))
-		for i := 0; i < len(mpcServer.StoreManGroup); i++ {
-			copy(b[5:], key.WAddress[i*3:])
-			seed := binary.BigEndian.Uint64(b)
-			peers[i].PeerID = mpcServer.StoreManGroup[i]
-			peers[i].Seed = seed
-		}
+		//b := make([]byte, 8)
+		//peers := make([]mpcprotocol.PeerInfo, len(mpcServer.StoreManGroup))
+		//for i := 0; i < len(mpcServer.StoreManGroup); i++ {
+		//	copy(b[5:], key.WAddress[i*3:])
+		//	seed := binary.BigEndian.Uint64(b)
+		//	peers[i].PeerID = mpcServer.StoreManGroup[i]
+		//	peers[i].Seed = seed
+		//}
 
-		value = &mpcAccount{*address, *key.PrivateKey.D, peers, key.Exten}
+		value = &mpcAccount{*address, *key.PrivateKey.D, nil, key.Exten}
 
 		mpcServer.mpcAccountMap[*address] = value
 	}
@@ -373,13 +372,7 @@ func (mpcServer *MpcDistributor) loadStoremanAddress(address *common.Address) (*
 	// todo Not get gpk from keystore and get gpk from the sign message.
 	// sigmessage : gpk + dataNeedToBeSigned.
 
-	gpkByte, err := hex.DecodeString(value.externString)
-	gpk := crypto.ToECDSAPub(gpkByte)
-
-	return &MpcValue{mpcprotocol.MpcPrivateShare, []big.Int{value.privateShare}, nil},
-		&MpcValue{mpcprotocol.PublicKeyResult, []big.Int{*gpk.X, *gpk.Y}, nil},
-		value.peers,
-		nil
+	return &MpcValue{mpcprotocol.MpcPrivateShare, []big.Int{value.privateShare}, nil},nil
 }
 
 
@@ -484,7 +477,7 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 
 		log.SyslogInfo("createMpcCtx", "address", address, "mpcM", mpcM)
 		// load account
-		MpcPrivateShare, MpcPubKey, _, err := mpcServer.loadStoremanAddress(&add)
+		MpcPrivateShare, err := mpcServer.loadStoremanAddress(&add)
 		if err != nil {
 			return err
 		}
@@ -496,7 +489,6 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 		preSetValue = append(preSetValue, MpcValue{mpcprotocol.MpcM, nil, mpcM})
 		preSetValue = append(preSetValue, MpcValue{mpcprotocol.MpcExt, nil, mpcExt})
 		preSetValue = append(preSetValue, *MpcPrivateShare)
-		preSetValue = append(preSetValue, *MpcPubKey)
 
 		receivedData := &mpcprotocol.SendData{PKBytes: address, Data: mpcM[:], Extern: string(mpcExt[:])}
 
