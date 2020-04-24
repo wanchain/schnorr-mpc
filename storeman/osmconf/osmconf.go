@@ -231,12 +231,7 @@ func (cnf *OsmConf) GetPKShareByNodeId(grpId string, nodeId *discover.NodeID) (*
 
 //-----------------------get self---------------------------------
 // todo rw lock
-// todo
-func (cnf *OsmConf) GetSelfPrvKey() (*ecdsa.PrivateKey, error){
-	defer cnf.wrLock.RUnlock()
-	cnf.wrLock.RLock()
-	return nil, nil
-}
+
 
 // todo ///////////////////////////////////////////////////self////////////////
 func (cnf *OsmConf) GetSelfPubKey() (*ecdsa.PublicKey, error){
@@ -266,7 +261,7 @@ func (cnf *OsmConf) GetSelfNodeId()(*discover.NodeID, error){
 	return cnf.SelfNodeId,nil
 }
 
-func (cnf *OsmConf) GetWorkingPrv(password string) (*ecdsa.PrivateKey,error) {
+func (cnf *OsmConf) GetSelfPrvKey() (*ecdsa.PrivateKey,error) {
 	pk, _ := cnf.GetSelfPubKey()
 	address, err := pkToAddr(crypto.FromECDSAPub(pk))
 	if err != nil {
@@ -465,6 +460,27 @@ func (cnf *OsmConf) GetPeersByGrpId(grpId string)([]mpcprotocol.PeerInfo, error)
 		peers = append(peers, mpcprotocol.PeerInfo{PeerID: *grpElem.NodeId, Seed: 0})
 	}
 	return peers, nil
+}
+
+func (cnf *OsmConf) GetAllPeersNodeIds(grpId string)([]discover.NodeID, error){
+	defer cnf.wrLock.RUnlock()
+
+	cnf.wrLock.RLock()
+	nodeIdsMap := make(map[discover.NodeID]interface{})
+	nodeIds := []discover.NodeID{}
+
+	for _,grpInfo := range cnf.GrpInfoMap{
+
+		grpElems, _ := cnf.GetGrpElems(grpInfo.GrpId)
+		for _, grpElem := range *grpElems {
+			nodeIdsMap[*grpElem.NodeId] = nil
+		}
+	}
+
+	for key, _ := range nodeIdsMap {
+		nodeIds = append(nodeIds,key)
+	}
+	return nodeIds, nil
 }
 
 //////////////////////////////////util/////////////////////////////
