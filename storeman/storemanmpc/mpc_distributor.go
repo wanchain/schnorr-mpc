@@ -19,7 +19,6 @@ import (
 	"github.com/wanchain/schnorr-mpc/storeman/validator"
 	"io/ioutil"
 	"math/big"
-	"sort"
 	"sync"
 )
 
@@ -220,14 +219,14 @@ func (mpcServer *MpcDistributor) GetMessage(PeerID discover.NodeID, rw p2p.MsgRe
 }
 
 func (mpcServer *MpcDistributor) InitStoreManGroup() {
-	log.SyslogInfo("Entering MpcDistributor InitStoreManGroup......")
-	sort.Sort(mpcprotocol.SliceStoremanGroup(mpcServer.StoreManGroup))
-	mpcServer.storeManIndex = make(map[discover.NodeID]byte)
-	for i := 0; i < len(mpcServer.StoreManGroup); i++ {
-		mpcServer.storeManIndex[mpcServer.StoreManGroup[i]] = byte(i)
-	}
-	log.SyslogInfo("InitStoreManGroup......","mpcServer.StoreManGroup",mpcServer.StoreManGroup)
-	log.SyslogInfo("InitStoreManGroup......","storeManIndex",mpcServer.storeManIndex)
+	//log.SyslogInfo("Entering MpcDistributor InitStoreManGroup......")
+	//sort.Sort(mpcprotocol.SliceStoremanGroup(mpcServer.StoreManGroup))
+	//mpcServer.storeManIndex = make(map[discover.NodeID]byte)
+	//for i := 0; i < len(mpcServer.StoreManGroup); i++ {
+	//	mpcServer.storeManIndex[mpcServer.StoreManGroup[i]] = byte(i)
+	//}
+	//log.SyslogInfo("InitStoreManGroup......","mpcServer.StoreManGroup",mpcServer.StoreManGroup)
+	//log.SyslogInfo("InitStoreManGroup......","storeManIndex",mpcServer.storeManIndex)
 }
 
 func (mpcServer *MpcDistributor) CreateRequestGPK() ([]byte, error) {

@@ -19,7 +19,6 @@ package utils
 
 import (
 	"crypto/ecdsa"
-	"encoding/json"
 	"fmt"
 	"github.com/wanchain/schnorr-mpc/accounts"
 	"github.com/wanchain/schnorr-mpc/accounts/keystore"
@@ -561,11 +560,17 @@ func SetP2PConfig(ctx *cli.Context, cfg *p2p.Config) {
 	if ctx.GlobalBool(StoremanFlag.Name) {
 		cfg.StoremanEnabled = true
 		smDataPath := GetActualDataDir(ctx)
-		smspath := filepath.Join(smDataPath, "storemans.json")
-		b, err := ioutil.ReadFile(smspath)
+		//smspath := filepath.Join(smDataPath, "storemans.json")
+		smspath := filepath.Join(smDataPath, "groupInfo.json")
+		_, err := ioutil.ReadFile(smspath)
 		if err != nil {
 			panic(err)
 		}
+		// todo error handle
+		osmconf.GetOsmConf().SetFilePath(smspath)
+		osmconf.GetOsmConf().LoadCnf(smspath)
+
+		/*
 		var SIDs []string
 		errUnmarshal := json.Unmarshal(b, &SIDs)
 		if errUnmarshal != nil {
@@ -585,6 +590,8 @@ func SetP2PConfig(ctx *cli.Context, cfg *p2p.Config) {
 			}
 			log.Debug("target is ", "storemanNodes", cfg.StoremanNodes)
 		}
+
+		*/
 	}
 
 	if netrestrict := ctx.GlobalString(NetrestrictFlag.Name); netrestrict != "" {

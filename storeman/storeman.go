@@ -4,9 +4,7 @@ import (
 	"context"
 	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
-	"github.com/wanchain/schnorr-mpc/rlp"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
-	"net"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -160,90 +158,90 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 
 		switch packet.Code {
 
-			case mpcprotocol.GetPeersInfo:
-				var peerGeting StrmanGetPeers
-				err := rlp.Decode(packet.Payload, &peerGeting)
-				if err != nil {
-					log.SyslogErr("failed decode peers getting info", "err", err.Error())
-					return err
-				}
-
-				sm.peerMu.Lock()
-
-				sm.peersPort[p.ID()] = peerGeting.LocalPort
-				if err != nil {
-					log.SyslogErr("failed decode port info", "err", err.Error())
-					return err
-				}
-
-				log.Debug("adding peer","",peerGeting.LocalPort)
-
-				allp := &StrmanAllPeers{make([]string, 0),make([]string,0),make([]string,0)}
-
-
-				for _, smpr := range sm.peers {
-
-					if sm.peersPort[smpr.Peer.ID()] == "" ||
-						smpr.Peer.ID().String() == sm.cfg.StoremanNodes[0].ID.String(){
-						continue
-					}
-
-					n :=  smpr.Peer.Info()
-
-					addr,err := net.ResolveTCPAddr("tcp",n.Network.RemoteAddress)
-					if err != nil {
-						log.SyslogErr("failed get address for peer", "err", err.Error())
-						return err
-					}
-
-					splits := strings.Split(addr.String(),":")
-
-					allp.Ip = append(allp.Ip,splits[0])
-
-
-					allp.Port = append(allp.Port, sm.peersPort[smpr.Peer.ID()])
-					allp.Nodeid = append(allp.Nodeid,smpr.ID().String())
-
-					log.Debug("append peer addrs,port",splits[0],sm.peersPort[smpr.ID()])
-				}
-				sm.peerMu.Unlock()
-
-				if len(allp.Port)>0 {
-					log.Debug("send all peers from leader, count","",len(allp.Port))
-					p.sendAllpeers(allp)
-				}
-
-
-			case mpcprotocol.AllPeersInfo:
-
-				var allp StrmanAllPeers
-				err := rlp.Decode(packet.Payload, &allp)
-				if err != nil {
-					log.SyslogErr("failed decode all peers info", "err", err.Error())
-					return err
-				}
-
-
-				for i:= 0;i<len(allp.Port);i++ {
-
-					if allp.Nodeid[i] == sm.server.Self().ID.String() ||
-					   allp.Nodeid[i] == sm.cfg.StoremanNodes[0].ID.String() 	{
-						continue
-					}
-
-					//if allready exist,check next
-					url := "enode://" + allp.Nodeid[i] + "@" + allp.Ip[i] + ":" + allp.Port[i]
-
-					log.Debug("got peer, url=","",url)
-
-					nd, err := discover.ParseNode(url)
-					if err != nil {
-						log.SyslogErr("failed parse peer url", "err", err.Error())
-						return err
-					}
-
-					sm.server.AddPeer(nd)
-				}
+			//case mpcprotocol.GetPeersInfo:
+			//	var peerGeting StrmanGetPeers
+			//	err := rlp.Decode(packet.Payload, &peerGeting)
+			//	if err != nil {
+			//		log.SyslogErr("failed decode peers getting info", "err", err.Error())
+			//		return err
+			//	}
+			//
+			//	sm.peerMu.Lock()
+			//
+			//	sm.peersPort[p.ID()] = peerGeting.LocalPort
+			//	if err != nil {
+			//		log.SyslogErr("failed decode port info", "err", err.Error())
+			//		return err
+			//	}
+			//
+			//	log.Debug("adding peer","",peerGeting.LocalPort)
+			//
+			//	allp := &StrmanAllPeers{make([]string, 0),make([]string,0),make([]string,0)}
+			//
+			//
+			//	for _, smpr := range sm.peers {
+			//
+			//		if sm.peersPort[smpr.Peer.ID()] == "" ||
+			//			smpr.Peer.ID().String() == sm.cfg.StoremanNodes[0].ID.String(){
+			//			continue
+			//		}
+			//
+			//		n :=  smpr.Peer.Info()
+			//
+			//		addr,err := net.ResolveTCPAddr("tcp",n.Network.RemoteAddress)
+			//		if err != nil {
+			//			log.SyslogErr("failed get address for peer", "err", err.Error())
+			//			return err
+			//		}
+			//
+			//		splits := strings.Split(addr.String(),":")
+			//
+			//		allp.Ip = append(allp.Ip,splits[0])
+			//
+			//
+			//		allp.Port = append(allp.Port, sm.peersPort[smpr.Peer.ID()])
+			//		allp.Nodeid = append(allp.Nodeid,smpr.ID().String())
+			//
+			//		log.Debug("append peer addrs,port",splits[0],sm.peersPort[smpr.ID()])
+			//	}
+			//	sm.peerMu.Unlock()
+			//
+			//	if len(allp.Port)>0 {
+			//		log.Debug("send all peers from leader, count","",len(allp.Port))
+			//		p.sendAllpeers(allp)
+			//	}
+			//
+			//
+			//case mpcprotocol.AllPeersInfo:
+			//
+			//	var allp StrmanAllPeers
+			//	err := rlp.Decode(packet.Payload, &allp)
+			//	if err != nil {
+			//		log.SyslogErr("failed decode all peers info", "err", err.Error())
+			//		return err
+			//	}
+			//
+			//
+			//	for i:= 0;i<len(allp.Port);i++ {
+			//
+			//		if allp.Nodeid[i] == sm.server.Self().ID.String() ||
+			//		   allp.Nodeid[i] == sm.cfg.StoremanNodes[0].ID.String() 	{
+			//			continue
+			//		}
+			//
+			//		//if allready exist,check next
+			//		url := "enode://" + allp.Nodeid[i] + "@" + allp.Ip[i] + ":" + allp.Port[i]
+			//
+			//		log.Debug("got peer, url=","",url)
+			//
+			//		nd, err := discover.ParseNode(url)
+			//		if err != nil {
+			//			log.SyslogErr("failed parse peer url", "err", err.Error())
+			//			return err
+			//		}
+			//
+			//		sm.server.AddPeer(nd)
+			//	}
 
 
 			default:
@@ -288,18 +286,20 @@ func (sm *Storeman) Start(server *p2p.Server) error {
 
 	// set self node id into the osm config
 	osmconf.GetOsmConf().SetSelfNodeId(&sm.mpcDistributor.Self.ID)
+	storemanNodes,_ := osmconf.GetOsmConf().GetAllPeersNodeIds()
 
-	sm.mpcDistributor.StoreManGroup = make([]discover.NodeID, len(server.StoremanNodes))
+	sm.mpcDistributor.StoreManGroup = make([]discover.NodeID, len(storemanNodes))
 	sm.storemanPeers = make(map[discover.NodeID]bool)
 	sm.server = server
-	for i, item := range server.StoremanNodes {
-		sm.mpcDistributor.StoreManGroup[i] = item.ID
-		sm.storemanPeers[item.ID] = true
+
+	for i, item := range storemanNodes {
+		sm.mpcDistributor.StoreManGroup[i] = item
+		sm.storemanPeers[item] = true
 	}
 
-	sm.mpcDistributor.InitStoreManGroup()
+	//sm.mpcDistributor.InitStoreManGroup()
 
-	go sm.checkPeerInfo()
+	//go sm.checkPeerInfo()
 
 	return nil
 

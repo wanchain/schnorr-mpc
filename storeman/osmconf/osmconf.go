@@ -48,6 +48,7 @@ type OsmConf struct {
 	GpkPassword string
 	WorkingPassword string
 	AccMng	*accounts.Manager
+	confPath	string
 	wrLock	sync.RWMutex
 }
 
@@ -76,17 +77,24 @@ type OsmFileContent struct {
 
 //-----------------------configure content end ---------------------------------
 
-func NewOsmConf() (ret *OsmConf, err error){
+//func NewOsmConf() (ret *OsmConf, err error){
+//	if osmConf == nil {
+//		// todo initialization
+//		osmConf = new(OsmConf)
+//		return osmConf, nil
+//	}
+//	return osmConf, nil
+//}
+
+func GetOsmConf() (*OsmConf){
+
 	if osmConf == nil {
 		// todo initialization
 		osmConf = new(OsmConf)
-		return osmConf, nil
+		return osmConf
 	}
-	return osmConf, nil
-}
-
-func GetOsmConf() (*OsmConf){
 	return osmConf
+
 }
 
 
@@ -98,7 +106,10 @@ func (cnf *OsmConf) LoadCnf(confPath string) error {
 
 	ofcContent := OsmFileContent{}
 
-	filePath := "/home/jacob/storemans.json"
+	filePath := confPath
+
+	cnf.wrLock.Lock()
+
 	b, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		fmt.Printf("LoadCnf error:%v",err.Error())
@@ -112,7 +123,7 @@ func (cnf *OsmConf) LoadCnf(confPath string) error {
 	fmt.Printf("===========%v\n",ofcContent)
 
 	// save configure file content to the OsmConf struct.
-	cnf.wrLock.Lock()
+
 	cnf.GrpInfoMap = make(map[string]GrpInfoItem, len(ofcContent.GrpInfo))
 	for _, grpInfo := range ofcContent.GrpInfo{
 		gii := GrpInfoItem{}
@@ -314,6 +325,13 @@ func (cnf *OsmConf) SetAccountManger(accMng *accounts.Manager)(error){
 	return nil
 }
 
+
+func (cnf *OsmConf) SetFilePath(path string)(error){
+	cnf.confPath = path
+	return nil
+}
+
+
 // todo ///////////////////////////////////////////////////self////////////////
 
 //-----------------------get group---------------------------------
@@ -462,7 +480,7 @@ func (cnf *OsmConf) GetPeersByGrpId(grpId string)([]mpcprotocol.PeerInfo, error)
 	return peers, nil
 }
 
-func (cnf *OsmConf) GetAllPeersNodeIds(grpId string)([]discover.NodeID, error){
+func (cnf *OsmConf) GetAllPeersNodeIds()([]discover.NodeID, error){
 	defer cnf.wrLock.RUnlock()
 
 	cnf.wrLock.RLock()

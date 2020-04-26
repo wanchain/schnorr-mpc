@@ -52,7 +52,7 @@ type Node struct {
 	// with ID.
 	sha common.Hash
 
-	// Time when the node was added to the table.
+	// Time when the node was added to the tabale.
 	addedAt time.Time
 }
 

@@ -234,7 +234,9 @@ func makeFullNode(ctx *cli.Context) *node.Node {
 		}
 
 		cfg.Sm.Password = password
+
 		// todo add working password
+		// todo need seperate working password and gpk password
 		osmconf.GetOsmConf().SetPassword(password)
 
 		utils.RegisterSmService(stack, &cfg.Sm, kmsInfo.AKID, kmsInfo.SecretKey, kmsInfo.Region)
