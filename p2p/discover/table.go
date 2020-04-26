@@ -448,11 +448,11 @@ func (tab *Table) doRefresh(done chan struct{}) {
 	}
 }
 
-func (tab *Table) loadSeedNodes(bond bool) {
+func (tab *Table) loadSeedNodes_jqg(bond bool) {
 	log.Debug("removed this step for Found seed node in database")
 }
 
-func (tab *Table) loadSeedNodes_Old(bond bool) {
+func (tab *Table) loadSeedNodes(bond bool) {
 	seeds := tab.db.querySeeds(seedCount, seedMaxAge)
 	seeds = append(seeds, tab.nursery...)
 	if bond {
