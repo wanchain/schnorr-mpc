@@ -1,5 +1,5 @@
 package storemanmpc
-
+/*
 import (
 	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
@@ -46,3 +46,4 @@ func TestMpcSelectPeers(t *testing.T) {
 	//common.HexToHash("48078cfed56339ea54962e72c37c7f588fc4f8e5bc173827ba75cb10a63a96a5"),
 	//common.HexToHash("5723d2c3a83af9b735e3b7f21531e5623d183a9095a56604ead41f3582fdfb75"),
 }
+*/

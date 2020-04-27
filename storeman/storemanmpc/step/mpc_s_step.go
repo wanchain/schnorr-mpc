@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"crypto/sha256"
+	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
@@ -30,8 +31,9 @@ func CreateMpcSStep(peers *[]mpcprotocol.PeerInfo, preValueKeys []string, result
 	signNum := len(preValueKeys)
 	mpc := &MpcSStep{*CreateBaseMpcStep(peers, signNum), resultKeys, signNum,0,
 	make([]uint16,0),make([]uint16,0),make([]uint16,0)}
-	//mpc := &MpcSStep{*CreateBaseMpcStep(peers, signNum), resultKeys, signNum,make(map[uint64]discover.NodeID)}
 
+	//	MpcPrivateShare
+	//  MpcS
 	for i := 0; i < signNum; i++ {
 		mpc.messages[i] = createSGenerator(preValueKeys[i])
 	}
@@ -43,12 +45,7 @@ func (msStep *MpcSStep) CreateMessage() []mpcprotocol.StepMessage {
 	log.SyslogInfo("MpcSStep.CreateMessage begin")
 	// sshare, sig of sshare
 	// only send to leader??
-	/*
-	grpId,_ := msStep.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
-	grpIdString := string(grpId)
-	leaderIndex,_ := osmconf.GetOsmConf().GetLeaderIndex(grpIdString)
-	leaderNodeId,_ := osmconf.GetOsmConf().GetNodeIdByIndex(grpIdString,uint16(leaderIndex))
-	*/
+
 	message := make([]mpcprotocol.StepMessage, 1)
 	message[0].MsgCode = mpcprotocol.MPCMessage
 	message[0].PeerID = nil
@@ -101,13 +98,16 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 			// save error and send judge info to leader
 			log.SyslogErr("MpcPointStep::HandleMessage"," check sig fail")
 			// save error for check data of s
-			key := mpcprotocol.RMpcPublicShare + strconv.Itoa(int(senderIndex))
+			key := mpcprotocol.RPkShare + strconv.Itoa(int(senderIndex))
 			msStep.mpcResult.SetByteValue(key,msg.BytesData[i])
 
 		}
 
 		// 2. check content
 		selfIndex, _ := osmconf.GetOsmConf().GetSelfInx(grpIdString)
+
+		log.SyslogInfo("===================================MpcSStep","senderIndex",senderIndex,"selfIndex",selfIndex)
+
 		rpkShare,_ := msStep.getRPkShare(senderIndex)
 		gpkShare,_ := msStep.getGPKShare(senderIndex)
 		m,_:= msStep.getm()
@@ -130,20 +130,21 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 			sshareErrInfo[4] =	s
 
 			// save error info
-			keyErrInfo := mpcprotocol.MPCSShareErrInfos + strconv.Itoa(int(msStep.SShareErrNum) -1)
+			keyErrInfo := mpcprotocol.SShareErrInfos + strconv.Itoa(int(msStep.SShareErrNum) -1)
 			msStep.mpcResult.SetValue(keyErrInfo,sshareErrInfo)
 
-			// save error number
-			keyErrNum := mpcprotocol.MPCSShareErrNum
-			rskErrInfoNum := make([]big.Int,1)
-			rskErrInfoNum[0] = *big.NewInt(0).SetInt64(int64(msStep.SShareErrNum))
-			msStep.mpcResult.SetValue(keyErrNum,rskErrInfoNum)
 		}else{
 
 			msStep.sshareOKIndex = append(msStep.sshareOKIndex,senderIndex)
 
 			pointer.message[*msg.PeerID] = sshare
 		}
+
+		// save error number errNum=0:no error.
+		keyErrNum := mpcprotocol.SShareErrNum
+		rskErrInfoNum := make([]big.Int,1)
+		rskErrInfoNum[0] = *big.NewInt(0).SetInt64(int64(msStep.SShareErrNum))
+		msStep.mpcResult.SetValue(keyErrNum,rskErrInfoNum)
 	}
 
 	return true
@@ -162,7 +163,7 @@ func (msStep *MpcSStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mp
 
 	okIndex := make([]big.Int,len(msStep.sshareOKIndex))
 	koIndex := make([]big.Int,len(msStep.sshareKOIndex))
-	noIndex := make([]big.Int,len(msStep.sshareKOIndex))
+	noIndex := make([]big.Int,len(msStep.sshareNOIndex))
 
 	for i,value := range msStep.sshareOKIndex{
 		okIndex[i].SetInt64(int64(value))
@@ -173,12 +174,12 @@ func (msStep *MpcSStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mp
 	}
 
 	for i,value := range msStep.sshareNOIndex{
-		koIndex[i].SetInt64(int64(value))
+		noIndex[i].SetInt64(int64(value))
 	}
 
-	msStep.mpcResult.SetValue(mpcprotocol.MPCSOKIndex,okIndex)
-	msStep.mpcResult.SetValue(mpcprotocol.MPCSKOIndex,koIndex)
-	msStep.mpcResult.SetValue(mpcprotocol.MPCSNOIndex,noIndex)
+	msStep.mpcResult.SetValue(mpcprotocol.SOKIndex,okIndex)
+	msStep.mpcResult.SetValue(mpcprotocol.SKOIndex,koIndex)
+	msStep.mpcResult.SetValue(mpcprotocol.SNOIndex,noIndex)
 
 
 	err := msStep.BaseMpcStep.FinishStep()
@@ -192,6 +193,9 @@ func (msStep *MpcSStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mp
 	for i := 0; i < msStep.signNum; i++ {
 		pointer := msStep.messages[i].(*mpcSGenerator)
 		// MpcS
+
+		log.SyslogInfo("%%%%%%%%%%%%%%%%%%%%MPCSStep","s", hexutil.Encode(pointer.result.Bytes()))
+
 		err = result.SetValue(msStep.resultKeys[i], []big.Int{pointer.result})
 		if err != nil {
 			log.SyslogErr("MpcSStep::FinishStep","MpcSStep.FinishStep, SetValue fail. err", err.Error())
@@ -206,6 +210,7 @@ func (msStep *MpcSStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mp
 
 
 func (msStep *MpcSStep) checkContent(sshare, m *big.Int, rpkShare,gpkShare *ecdsa.PublicKey) (bool,error) {
+	// todo check input parameters
 	sshareG,_ := schnorrmpc.SkG(sshare)
 	mPkShare, _ := schnorrmpc.SkMul(gpkShare,m)
 
@@ -221,8 +226,13 @@ func (msStep *MpcSStep) checkContent(sshare, m *big.Int, rpkShare,gpkShare *ecds
 
 func (msStep *MpcSStep) getRPkShare(index uint16) (*ecdsa.PublicKey,error) {
 
-	key := mpcprotocol.RMpcPublicShare + strconv.Itoa(int(index))
-	pkBytes,_ := msStep.mpcResult.GetByteValue(key)
+	key := mpcprotocol.RPkShare + strconv.Itoa(int(index))
+
+	log.SyslogInfo("getRPkShare","index",index,"key",key)
+	pkBytes,err := msStep.mpcResult.GetByteValue(key)
+	if err != nil {
+		log.SyslogErr("getRPkShare","err",err.Error())
+	}
 
 	return crypto.ToECDSAPub(pkBytes),nil
 }
@@ -239,7 +249,7 @@ func (msStep *MpcSStep) getm() (*big.Int,error) {
 	hashMBytes := sha256.Sum256(M)
 
 	// rpk : R
-	rpkBytes,_ := result.GetByteValue(mpcprotocol.RPublicKeyResult)
+	rpkBytes,_ := result.GetByteValue(mpcprotocol.RPk)
 
 	// Forming the m: hash(message||rpk)
 	var buffer bytes.Buffer

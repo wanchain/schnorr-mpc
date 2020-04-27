@@ -26,7 +26,7 @@ func (rsj *MpcRSkJudgeStep) InitStep(result mpcprotocol.MpcResultInterface) erro
 }
 
 func (rsj *MpcRSkJudgeStep) CreateMessage() []mpcprotocol.StepMessage {
-	keyErrNum := mpcprotocol.MPCRSkErrNum
+	keyErrNum := mpcprotocol.RSkErrNum
 	errNum,_ := rsj.mpcResult.GetValue(keyErrNum)
 	errNumInt64 := errNum[0].Int64()
 	grpId,_ := rsj.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
@@ -41,7 +41,7 @@ func (rsj *MpcRSkJudgeStep) CreateMessage() []mpcprotocol.StepMessage {
 
 		for i:=0; i< int(errNumInt64); i++{
 			ret = make([]mpcprotocol.StepMessage, int(errNumInt64))
-			keyErrInfo := mpcprotocol.MPCRSkErrInfos + strconv.Itoa(int(i))
+			keyErrInfo := mpcprotocol.RSkErrInfos + strconv.Itoa(int(i))
 			errInfo,_:= rsj.mpcResult.GetValue(keyErrInfo)
 
 			data := make([]big.Int, 5)
@@ -102,7 +102,7 @@ func (rsj *MpcRSkJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	// 2. check sij*G=si+a[i][0]*X+a[i][1]*X^2+...+a[i][n]*x^(n-1)
 
 	// get send poly commit
-	keyPolyCMG := mpcprotocol.MPCRPolyCMG + strconv.Itoa(int(senderIndex))
+	keyPolyCMG := mpcprotocol.RPolyCMG + strconv.Itoa(int(senderIndex))
 	pgBytes,_:= rsj.mpcResult.GetByteValue(keyPolyCMG)
 	sigs,_ := rsj.mpcResult.GetValue(keyPolyCMG)
 
@@ -137,7 +137,7 @@ func (ssj *MpcRSkJudgeStep) saveSlshCount(slshCount int) (error) {
 	sslshValue[0] = *big.NewInt(0).SetInt64(int64(ssj.RSlshCount))
 
 	// todo error handle
-	key := mpcprotocol.MPCRSlshProofNum + strconv.Itoa(int(ssj.RSlshCount))
+	key := mpcprotocol.RSlshProofNum + strconv.Itoa(int(ssj.RSlshCount))
 	ssj.mpcResult.SetValue(key,sslshValue)
 
 	return nil
@@ -168,7 +168,7 @@ func (ssj *MpcRSkJudgeStep) saveSlshProof(isSnder bool,
 	sslshByte.Write(polyCM[:])
 	sslshByte.Write(grp[:])
 
-	key1 := mpcprotocol.MPCRSlshProof + strconv.Itoa(int(slshCount))
+	key1 := mpcprotocol.RSlshProof + strconv.Itoa(int(slshCount))
 	// todo error handle
 	ssj.mpcResult.SetValue(key1,sslshValue)
 	ssj.mpcResult.SetByteValue(key1,sslshByte.Bytes())

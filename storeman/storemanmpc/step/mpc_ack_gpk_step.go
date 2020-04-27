@@ -1,4 +1,5 @@
 package step
+/*
 
 import (
 	"bytes"
@@ -95,3 +96,4 @@ func (ack *AckMpcGPKStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	ack.message[*msg.PeerID] = true
 	return true
 }
+*/

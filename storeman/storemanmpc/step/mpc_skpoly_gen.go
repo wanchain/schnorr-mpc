@@ -2,6 +2,7 @@ package step
 
 import (
 	"crypto/sha256"
+	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
@@ -39,7 +40,7 @@ func (poly *RandomPolynomialGen) initialize(peers *[]mpcprotocol.PeerInfo,
 	grpId,_ := result.GetByteValue(mpcprotocol.MpcGrpId)
 	grpIdString := string(grpId)
 	selfIndex, _ := osmconf.GetOsmConf().GetSelfInx(grpIdString)
-	key := mpcprotocol.MPCRPolyCoff + strconv.Itoa(int(selfIndex))
+	key := mpcprotocol.RPolyCoff + strconv.Itoa(int(selfIndex))
 	poly.randCoefficient,_ = result.GetValue(key)
 
 	// todo check threshold and len(poly.randCoefficient)
@@ -50,6 +51,13 @@ func (poly *RandomPolynomialGen) initialize(peers *[]mpcprotocol.PeerInfo,
 	for i := 0; i < len(poly.polyValue); i++ {
 		nodeId := &(*peers)[i].PeerID
 		xValue,_ := osmconf.GetOsmConf().GetXValueByNodeId(grpIdString,nodeId)
+		rcvIndex,_ := osmconf.GetOsmConf().GetInxByNodeId(grpIdString,nodeId)
+
+		log.Info("============RandomPolynomialGen::initialize poly ",
+			"len(poly.randCoefficient)", len(poly.randCoefficient),
+			"poly x seed", xValue,
+			"degree", degree)
+
 		poly.polyValue[i] = schnorrmpc.EvaluatePoly(poly.randCoefficient,
 			xValue,
 			degree)
@@ -59,10 +67,15 @@ func (poly *RandomPolynomialGen) initialize(peers *[]mpcprotocol.PeerInfo,
 
 		poly.polyValueSigR[i], poly.polyValueSigS[i], _ = schnorrmpc.SignInternalData(prv,h[:])
 		log.Info("RandomPolynomialGen::initialize poly ",
+			"group id", grpIdString,
+			"senderPk",hexutil.Encode(crypto.FromECDSAPub(&prv.PublicKey)),
+			"senderIndex",selfIndex,
+			"rcvIndex", rcvIndex,
 			"poly peerId", (*peers)[i].PeerID.String(),
 			"poly x seed", xValue,
-			"sigR", poly.polyValueSigR[i],
-			"sigS", poly.polyValueSigS[i])
+			"sigR", hexutil.Encode(poly.polyValueSigR[i].Bytes()),
+			"sigS", hexutil.Encode(poly.polyValueSigS[i].Bytes()),
+			"h",hexutil.Encode(h[:]))
 	}
 
 	return nil

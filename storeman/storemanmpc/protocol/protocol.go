@@ -34,22 +34,26 @@ const (
 	GetPeersInfo
 	NumberOfMessageCodes
 	//MPCTimeOut = time.Second * 100
-	//MPCTimeOut = time.Second * 10
-	MPCTimeOut = time.Second * 20
+	MPCTimeOut = time.Second * 15
+	//MPCTimeOut = time.Second * 20
 	PName      = "storeman"
 	PVer       = uint64(10)
 	PVerStr    = "1.1"
 )
 const (
-	MpcPrivateShare  = "MpcPrivateShare"  	// skShare
-	RMpcPrivateShare = "RMpcPrivateShare" 	// rskShare
-	MpcPublicShare   = "MpcPublicShare"   	// pkShare
-	RMpcPublicShare  = "RMpcPublicShare"  	// rpkShare
-											// rpkShare + "index" save rpkShare
-	MpcContextResult = "MpcContextResult"
+	MpcPrivateShare = "MpcPrivateShare" // skShare
+
+	// R stage
+	RSkShare = "RSkShare"         	// rskShare   only self RSkShare
+	RPkShare = "RPkShare"         	// rpkShare   rpkShare + "index" save rpkShare
+	RPk      = "RPk" 				// RPk
+
+	MpcPublicShare  = "MpcPublicShare"  // pkShare
+
+	MpcContextResult = "MpcContextResult"	// The final result of the context.
 
 	PublicKeyResult  = "PublicKeyResult"  // gpk
-	RPublicKeyResult = "RPublicKeyResult" // R: rpk
+
 	MpcM             = "MpcM"             // M
 	MpcS             = "MpcS"             // S: s
 
@@ -57,32 +61,32 @@ const (
 	MpcByApprove = "MpcByApprove" // by approve
 	MpcGrpId	= "MpcGrpId"	 	// group ID
 
-	MpcTxHash  = "MpcTxHash"
-	MpcAddress = "MpcAddress"
-	MPCAction  = "MPCAction"
+	MpcTxHash   = "MpcTxHash"
+	MpcGpkBytes = "MpcGpkBytes"
+	MPCAction   = "MPCAction"
 
-	MPCRPolyCMG = "MPCRPolyCommitG"	 	// node0's comment : MPCRPolyCMG + "0"
+	RPolyCMG = "MPCRPolyCommitG" // node0's comment : RPolyCMG + "0"
 										// bytsvalue: polyValue values: sig of the polyValue
-	MPCRPolyCoff = "MPCRPolyCoff"
+	RPolyCoff = "RPolyCoff"
 
-	MPCRSkErrNum 		= "MPCRErrNum"
-	MPCRSkErrInfos 	= "MPCRErrInfos"
+	RSkErrNum   = "RSkErrNum"
+	RSkErrInfos = "RSkErrInfos"
 
-	MPCSShareErrNum 		= "MPCSShareErrNum"
-	MPCSShareErrInfos 	= "MPCSShareErrInfos"
+	SShareErrNum   = "SShareErrNum"
+	SShareErrInfos = "SShareErrInfos"
 
-	MPCROKIndex	= "MPCROKIndex"
-	MPCRKOIndex = "MPCRKOIndex"
-	MPCRNOIndex = "MPCRNOIndex"
+	ROKIndex    = "ROKIndex"
+	RKOIndex = "RKOIndex"
+	RNOIndex = "RNOIndex"
 
-	MPCSOKIndex = "MPCSOKIndex"
-	MPCSKOIndex = "MPCSKOIndex"
-	MPCSNOIndex = "MPCSNOIndex"
+	SOKIndex = "SOKIndex"
+	SKOIndex = "SKOIndex"
+	SNOIndex = "SNOIndex"
 
-	MPCSSlshProof = "MPCSSlshProof"
-	MPCRSlshProof = "MPCRSlshProof"
+	SSlshProof = "SSlshProof"
+	RSlshProof = "RSlshProof"
 
-	MPCRSlshProofNum = "MPCRSlshProofNum"
+	RSlshProofNum    = "RSlshProofNum"
 	MPCSSlshProofNum = "MPCSSlshProofNum"
 )
 

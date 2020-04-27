@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"crypto/sha256"
-	"encoding/hex"
+	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
@@ -29,17 +29,18 @@ func createSGenerator(preValueKey string) *mpcSGenerator {
 func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcprotocol.MpcResultInterface) error {
 	log.SyslogInfo("mpcSGenerator.initialize begin")
 
+	//	MpcPrivateShare
+	//  MpcS
+
 	// rgpk R
-	rgpkValue, err := result.GetValue(mpcprotocol.RPublicKeyResult)
+	//rgpkValue, err := result.GetValue(mpcprotocol.RPk)
+	rgpkBytes, err := result.GetByteValue(mpcprotocol.RPk)
 
 	if err != nil {
-		log.SyslogErr("mpcSGenerator.initialize get RPublicKeyResult fail")
+		log.SyslogErr("mpcSGenerator.initialize get RPk fail")
 		return err
 	}
-
-	var rgpk ecdsa.PublicKey
-	rgpk.Curve = crypto.S256()
-	rgpk.X, rgpk.Y = &rgpkValue[0], &rgpkValue[1]
+	rgpk := *crypto.ToECDSAPub(rgpkBytes)
 
 	// M
 	MBytes, err := result.GetByteValue(mpcprotocol.MpcM)
@@ -58,9 +59,9 @@ func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcpr
 	mBytes := sha256.Sum256(buffer.Bytes())
 	m := new(big.Int).SetBytes(mBytes[:])
 
-	rskShare, err := result.GetValue(mpcprotocol.RMpcPrivateShare)
+	rskShare, err := result.GetValue(mpcprotocol.RSkShare)
 	if err != nil {
-		log.SyslogErr("mpcSGenerator.initialize get RMpcPrivateShare fail")
+		log.SyslogErr("mpcSGenerator.initialize get RSkShare fail")
 		return err
 	}
 
@@ -72,9 +73,23 @@ func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcpr
 	sigShare := schnorrmpc.SchnorrSign(gskShare[0], rskShare[0], *m)
 	msg.seed = sigShare
 
+	rpkShare := new(ecdsa.PublicKey)
+	rpkShare.Curve = crypto.S256()
+	rpkShare.X, rpkShare.Y = crypto.S256().ScalarBaseMult(rskShare[0].Bytes())
+
+
+	gpkShare := new(ecdsa.PublicKey)
+	gpkShare.Curve = crypto.S256()
+	gpkShare.X, rpkShare.Y = crypto.S256().ScalarBaseMult(gskShare[0].Bytes())
+
+	// todo should remove gskShare, rskShare
 	log.Info("@@@@@@@@@@@@@@ SchnorrSign @@@@@@@@@@@@@@",
-		"M", hex.EncodeToString(MBytes),
-		"m", hex.EncodeToString(m.Bytes()))
+		"M", hexutil.Encode(MBytes),
+		"m", hexutil.Encode(m.Bytes()),
+		"gskShare",hexutil.Encode(gskShare[0].Bytes()),
+		"rskShare",hexutil.Encode(rskShare[0].Bytes()),
+		"gpkShare",hexutil.Encode(crypto.FromECDSAPub(gpkShare)),
+		"rpkShare",hexutil.Encode(crypto.FromECDSAPub(rpkShare)))
 
 	grpId,_ := result.GetByteValue(mpcprotocol.MpcGrpId)
 	msg.grpIdString = string(grpId)

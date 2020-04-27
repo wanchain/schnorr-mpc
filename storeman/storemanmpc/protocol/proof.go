@@ -18,14 +18,14 @@ type  PolyDataPln struct {
 	PolyDataS		hexutil.Bytes	`json:"polyDataS"`
 }
 
-type RSlshProof struct {
+type RSlshPrf struct {
 	PolyCMInfo
 	PolyDataPln
 	Sndr			hexutil.Bytes
 	Rcvr			hexutil.Bytes
 }
 
-type SSlshProof struct {
+type SSlshPrf struct {
 	PolyDataPln
 	M			hexutil.Bytes    //m
 	RPKShare	hexutil.Bytes    //sender's rpkshare

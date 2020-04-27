@@ -1,5 +1,5 @@
 package step
-
+/*
 import (
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
@@ -199,3 +199,4 @@ func testLagrange(seed []int, peerInfo []mpcprotocol.PeerInfo, jrssResult []big.
 
 	return schnorrmpc.Lagrange(fx, x)
 }
+*/

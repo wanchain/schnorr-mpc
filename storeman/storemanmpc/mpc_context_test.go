@@ -1,5 +1,5 @@
 package storemanmpc
-
+/*
 import (
 	"github.com/wanchain/schnorr-mpc/common"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
@@ -39,3 +39,4 @@ func TestContextQuit(t *testing.T) {
 		mpc.quit(nil)
 	}
 }
+*/

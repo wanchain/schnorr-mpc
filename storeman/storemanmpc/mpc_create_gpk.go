@@ -1,5 +1,6 @@
-package storemanmpc
 
+package storemanmpc
+/*
 import (
 	"github.com/wanchain/schnorr-mpc/log"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
@@ -65,3 +66,4 @@ func genCreateGPKMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStepFu
 	return mpc, nil
 
 }
+*/

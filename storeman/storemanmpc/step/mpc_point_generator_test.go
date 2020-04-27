@@ -1,5 +1,6 @@
 package step
 
+/*
 import (
 	"testing"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
@@ -7,6 +8,7 @@ import (
 	"math/big"
 	"github.com/wanchain/schnorr-mpc/crypto"
 )
+
 
 
 type mpcPointGeneratorTestContext struct {
@@ -69,6 +71,4 @@ func TestPotGeneratorCalculateResult(t *testing.T)  {
 	}
 
 }
-
-
-
+*/

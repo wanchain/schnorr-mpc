@@ -31,10 +31,10 @@ func (*MpcCtxFactory) CreateContext(ctxType int,
 	log.SyslogInfo("============================ CreateContext=====================")
 
 	switch ctxType {
-	case mpcprotocol.MpcGPKLeader:
-		return reqGPKMpc(mpcID, peers, preSetValue...)
-	case mpcprotocol.MpcGPKPeer:
-		return ackGPKMpc(mpcID, peers, preSetValue...)
+	//case mpcprotocol.MpcGPKLeader:
+	//	return reqGPKMpc(mpcID, peers, preSetValue...)
+	//case mpcprotocol.MpcGPKPeer:
+	//	return ackGPKMpc(mpcID, peers, preSetValue...)
 
 	case mpcprotocol.MpcSignLeader:
 		return reqSignMpc(mpcID, peers, preSetValue...)

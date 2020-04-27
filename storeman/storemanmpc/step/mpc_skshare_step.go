@@ -1,5 +1,5 @@
 package step
-
+/*
 import (
 	"crypto/ecdsa"
 	"github.com/wanchain/schnorr-mpc/crypto"
@@ -74,3 +74,4 @@ func (jrss *MpcSKShareStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	JRSSvalue.message[seed] = msg.Data[0] //message.Value
 	return true
 }
+*/

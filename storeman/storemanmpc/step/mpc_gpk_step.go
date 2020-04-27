@@ -1,5 +1,5 @@
 package step
-
+/*
 import mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 
 type MpcGPKStep struct {
@@ -25,3 +25,4 @@ func (addStep *MpcGPKStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc
 
 	return mpc.CreateKeystore(result, addStep.peers, addStep.accType)
 }
+*/

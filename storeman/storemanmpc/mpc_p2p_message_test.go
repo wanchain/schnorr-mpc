@@ -1,5 +1,5 @@
 package storemanmpc
-
+/*
 import (
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"github.com/wanchain/schnorr-mpc/storeman/storemanmpc/step"
@@ -49,3 +49,4 @@ func generateCreateTestMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep Mpc
 	mpc.setMpcStep(mpcTest...)
 	return mpc, nil
 }
+*/

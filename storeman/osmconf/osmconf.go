@@ -12,6 +12,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/crypto"
+	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"io/ioutil"
@@ -275,6 +276,7 @@ func (cnf *OsmConf) GetSelfNodeId()(*discover.NodeID, error){
 func (cnf *OsmConf) GetSelfPrvKey() (*ecdsa.PrivateKey,error) {
 	pk, _ := cnf.GetSelfPubKey()
 	address, err := pkToAddr(crypto.FromECDSAPub(pk))
+	log.Info("GetSelfPrvKey","pk",hexutil.Encode(crypto.FromECDSAPub(pk)),"address",address.String())
 	if err != nil {
 		panic("Error in pk to address")
 		return nil, err

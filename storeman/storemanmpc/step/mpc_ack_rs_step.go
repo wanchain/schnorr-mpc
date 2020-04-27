@@ -37,12 +37,16 @@ func CreateAckMpcRSStep(peers *[]mpcprotocol.PeerInfo, accType string) *MpcAckRS
 func (mars *MpcAckRSStep) InitStep(result mpcprotocol.MpcResultInterface) error {
 	log.SyslogInfo("MpcAckRSStep.InitStep begin")
 	mars.BaseStep.InitStep(result)
-	value, err := result.GetValue(mpcprotocol.RPublicKeyResult)
+	//value, err := result.GetValue(mpcprotocol.RPk)
+	rpkBytes, err := result.GetByteValue(mpcprotocol.RPk)
+	rpk := crypto.ToECDSAPub(rpkBytes[:])
+
 	if err != nil {
 		log.SyslogErr("MpcAckRSStep::InitStep","ack mpc account step, init fail. err", err.Error())
 		return err
 	}
-	mars.mpcR[0], mars.mpcR[1] = value[0], value[1]
+	//mars.mpcR[0], mars.mpcR[1] = value[0], value[1]
+	mars.mpcR[0], mars.mpcR[1] = *rpk.X, *rpk.Y
 
 	sValue, err := result.GetValue(mpcprotocol.MpcS)
 	if err != nil {
@@ -135,14 +139,15 @@ func (mars *MpcAckRSStep) verifyRS(result mpcprotocol.MpcResultInterface) error 
 	hashMBytes := sha256.Sum256(M)
 
 	// gpk
-	gpkItem, err := result.GetValue(mpcprotocol.PublicKeyResult)
+	gpkItem, err := result.GetByteValue(mpcprotocol.MpcGpkBytes)
 	if err != nil {
 		log.SyslogErr("MpcAckRSStep::verifyRS","ack MpcAckRSStep get PublicKeyResult . err", err.Error())
 		return err
 	}
-	gpk := new(ecdsa.PublicKey)
-	gpk.Curve = crypto.S256()
-	gpk.X, gpk.Y = &gpkItem[0], &gpkItem[1]
+	//gpk := new(ecdsa.PublicKey)
+	//gpk.Curve = crypto.S256()
+	//gpk.X, gpk.Y = &gpkItem[0], &gpkItem[1]
+	gpk := crypto.ToECDSAPub(gpkItem[:])
 
 	// rpk : R
 	rpk := new(ecdsa.PublicKey)

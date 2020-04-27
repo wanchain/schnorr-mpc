@@ -1,5 +1,5 @@
 package storemanmpc
-
+/*
 import "github.com/wanchain/schnorr-mpc/p2p/discover"
 
 type testP2pMessager struct {
@@ -12,3 +12,4 @@ func (ts *testP2pMessager) SendToPeer(*discover.NodeID, uint64, interface{}) err
 func (ts *testP2pMessager) IsActivePeer(*discover.NodeID) bool {
 	return true
 }
+*/

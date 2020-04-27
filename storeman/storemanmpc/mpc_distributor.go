@@ -248,10 +248,10 @@ func (mpcServer *MpcDistributor) CreateReqMpcSign(data []byte, extern []byte, pk
 	log.SyslogInfo("CreateReqMpcSign begin")
 	grpId, _ := osmconf.GetOsmConf().GetGrpInxByGpk(pkBytes)
 
-	// MpcAddress stores the gpk bytes.
+	// MpcGpkBytes stores the gpk bytes.
 	value, err := mpcServer.createRequestMpcContext(mpcprotocol.MpcSignLeader,
 		MpcValue{mpcprotocol.MpcGrpId, nil, []byte(grpId)},
-		MpcValue{mpcprotocol.MpcAddress, nil, pkBytes[:]},
+		MpcValue{mpcprotocol.MpcGpkBytes, nil, pkBytes[:]},
 		MpcValue{mpcprotocol.PublicKeyResult, nil, pkBytes[:]},
 		MpcValue{mpcprotocol.MpcM, nil, data},
 		MpcValue{mpcprotocol.MpcExt, nil, extern},
@@ -281,7 +281,7 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 	var address common.Address
 	if ctxType == mpcprotocol.MpcSignLeader {
 		for _, item := range preSetValue {
-			if item.Key == mpcprotocol.MpcAddress {
+			if item.Key == mpcprotocol.MpcGpkBytes {
 				address, err = schnorrmpc.PkToAddress(item.ByteValue)
 				if err != nil {
 					return []byte{}, err
@@ -371,6 +371,8 @@ func (mpcServer *MpcDistributor) loadStoremanAddress(address *common.Address) (*
 	// todo Not get gpk from keystore and get gpk from the sign message.
 	// sigmessage : gpk + dataNeedToBeSigned.
 
+	gpkShare,_ := schnorrmpc.SkG(&value.privateShare)
+	log.SyslogInfo("^^^^^^^^^^^^^^^^^^^^loadStoremanAddress","gpkShare",hexutil.Encode(crypto.FromECDSAPub(gpkShare)))
 	return &MpcValue{mpcprotocol.MpcPrivateShare, []big.Int{value.privateShare}, nil},nil
 }
 
@@ -484,7 +486,7 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 		grpId, _ = osmconf.GetOsmConf().GetGrpInxByGpk(address[:])
 
 		preSetValue = append(preSetValue, MpcValue{mpcprotocol.MpcGrpId, nil, []byte(grpId)})
-		preSetValue = append(preSetValue, MpcValue{mpcprotocol.MpcAddress, nil, address})
+		preSetValue = append(preSetValue, MpcValue{mpcprotocol.MpcGpkBytes, nil, address})
 		preSetValue = append(preSetValue, MpcValue{mpcprotocol.MpcM, nil, mpcM})
 		preSetValue = append(preSetValue, MpcValue{mpcprotocol.MpcExt, nil, mpcExt})
 		preSetValue = append(preSetValue, *MpcPrivateShare)
@@ -622,6 +624,8 @@ func (mpcServer *MpcDistributor) P2pMessage(peerID *discover.NodeID, code uint64
 }
 
 func (mpcServer *MpcDistributor) BroadcastMessage(peers []discover.NodeID, code uint64, msg interface{}) error {
+	// todo should broadcase message in the same group
+	// peers get from mpc context, and mpc context has build peersInfo by groupID.
 	if peers == nil {
 		log.Info("Entering BroadcastMessage using mpcServer.StoreManGroup")
 		for _, peer := range mpcServer.StoreManGroup {

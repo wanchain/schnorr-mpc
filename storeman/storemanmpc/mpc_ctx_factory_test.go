@@ -1,5 +1,6 @@
 package storemanmpc
 
+/*
 import (
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 )
@@ -28,3 +29,4 @@ func (*MpcTestCtxFactory) CreateContext(ctxType int,
 
 	return nil, mpcprotocol.ErrContextType
 }
+*/

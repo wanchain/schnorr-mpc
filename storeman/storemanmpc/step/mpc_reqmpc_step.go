@@ -56,7 +56,7 @@ func (req *RequestMpcStep) InitStep(result mpcprotocol.MpcResultInterface) error
 	} else if req.messageType == mpcprotocol.MpcSignLeader {
 
 		var err error
-		req.address, err = result.GetByteValue(mpcprotocol.MpcAddress)
+		req.address, err = result.GetByteValue(mpcprotocol.MpcGpkBytes)
 		if err != nil {
 			return err
 		}

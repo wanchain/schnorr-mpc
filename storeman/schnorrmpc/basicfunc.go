@@ -3,7 +3,6 @@ package schnorrmpc
 import (
 	"crypto/ecdsa"
 	Rand "crypto/rand"
-	"crypto/sha256"
 	"errors"
 	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
@@ -119,6 +118,7 @@ func LagrangeECC(sig []ecdsa.PublicKey, x []big.Int, degree int) *ecdsa.PublicKe
 }
 
 func SchnorrSign(psk big.Int, r big.Int, m big.Int) big.Int {
+	// sshare = rskshare + m*gskSahre
 	sum := big.NewInt(1)
 	sum.Mul(&psk, &m)
 	sum.Mod(sum, crypto.S256().Params().N)
@@ -240,10 +240,8 @@ func PkEqual(pk1,pk2 *ecdsa.PublicKey,) (bool, error) {
 	return pk1.X.Cmp(pk2.X)==0 && pk1.Y.Cmp(pk2.Y) == 0 , nil
 }
 
-func SignInternalData(prv *ecdsa.PrivateKey,plainData []byte) (r, s *big.Int, err error) {
-	//prv,_ := osmconf.GetOsmConf().GetSelfPrvKey()
-	h := sha256.Sum256(plainData[:])
-	return ecdsa.Sign(Rand.Reader,prv,h[:])
+func SignInternalData(prv *ecdsa.PrivateKey,hash []byte) (r, s *big.Int, err error) {
+	return ecdsa.Sign(Rand.Reader,prv,hash[:])
 }
 
 func VerifyInternalData(pub *ecdsa.PublicKey, hash []byte, r, s *big.Int) bool {

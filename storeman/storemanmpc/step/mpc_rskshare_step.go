@@ -3,6 +3,8 @@ package step
 
 import (
 	"crypto/ecdsa"
+	"crypto/sha256"
+	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
@@ -36,6 +38,7 @@ func (rss *MpcRSKShare_Step) CreateMessage() []mpcprotocol.StepMessage {
 		// add sig for s[i][j]
 		message[i].Data[1] = *skpv.polyValueSigR[i]
 		message[i].Data[2] = *skpv.polyValueSigS[i]
+
 	}
 
 	return message
@@ -47,16 +50,25 @@ func (rss *MpcRSKShare_Step) FinishStep(result mpcprotocol.MpcResultInterface, m
 		return err
 	}
 
-	// gskshare
-	skpv := rss.messages[0].(*RandomPolynomialValue)
-	err = result.SetValue(mpcprotocol.RMpcPrivateShare, []big.Int{*skpv.result})
+	// rskShare
+	skpv := rss.messages[0].(*RandomPolynomialGen)
+	err = result.SetValue(mpcprotocol.RSkShare, []big.Int{*skpv.result})
 	if err != nil {
 		return err
 	}
-	// gpkshare
-	var gpkShare ecdsa.PublicKey
-	gpkShare.X, gpkShare.Y = crypto.S256().ScalarBaseMult((*skpv.result).Bytes())
-	err = result.SetByteValue(mpcprotocol.RMpcPublicShare, crypto.FromECDSAPub(&gpkShare))
+	// rpkShare
+	rpkShare := new(ecdsa.PublicKey)
+	rpkShare.Curve = crypto.S256()
+	rpkShare.X, rpkShare.Y = crypto.S256().ScalarBaseMult((*skpv.result).Bytes())
+
+	// RPkShare + selfIndex
+	grpId,_ := rss.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
+	grpIdString := string(grpId)
+	selfIndex,_ := osmconf.GetOsmConf().GetSelfInx(grpIdString)
+	key := mpcprotocol.RPkShare + strconv.Itoa(int(selfIndex))
+
+	//err = result.SetByteValue(mpcprotocol.RPkShare, crypto.FromECDSAPub(rpkShare))
+	err = result.SetByteValue(key, crypto.FromECDSAPub(rpkShare))
 	if err != nil {
 		return err
 	}
@@ -74,6 +86,7 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	grpIdString := string(grpId)
 	senderPk, _ := osmconf.GetOsmConf().GetPKByNodeId(grpIdString,msg.PeerID)
 	senderIndex,_ := osmconf.GetOsmConf().GetInxByNodeId(grpIdString,msg.PeerID)
+	selfIndex,_ := osmconf.GetOsmConf().GetSelfInx(grpIdString)
 
 	// get data, r, s
 	sij := msg.Data[0]
@@ -81,28 +94,53 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	s := msg.Data[2]
 
 	// 1. check sig
-	bVerifySig := schnorrmpc.VerifyInternalData(senderPk,sij.Bytes(),&r,&s)
+	h := sha256.Sum256(sij.Bytes())
+	bVerifySig := schnorrmpc.VerifyInternalData(senderPk,h[:],&r,&s)
+
+	bContent := true
+
 	if !bVerifySig{
-		log.SyslogErr("MpcRSKShare_Step::HandleMessage",
+		log.SyslogErr("MpcRSKShare_Step::HandleMessage:VerifyInternalData",
 			" verify sk sig fail", msg.PeerID.String(),
-			"groupId",grpIdString)
+			"groupId",grpIdString,
+			"senderPK",hexutil.Encode(crypto.FromECDSAPub(senderPk)),
+			"senderIndex",senderIndex,
+			"recieverIndex",selfIndex,
+			"R",hexutil.Encode(r.Bytes()),
+			"S",hexutil.Encode(s.Bytes()),
+			"h[:]", hexutil.Encode(h[:]))
 	}
 
 	// 2. check sij*G=si+a[i][0]*X+a[i][1]*X^2+...+a[i][n]*x^(n-1)
 	selfNodeId , _ := osmconf.GetOsmConf().GetSelfNodeId()
-	selfIndex, _ := osmconf.GetOsmConf().GetSelfInx(grpIdString)
 	xValue, _ := osmconf.GetOsmConf().GetXValueByNodeId(grpIdString,selfNodeId)
 
 	// get send poly commit
-	keyPolyCMG := mpcprotocol.MPCRPolyCMG + strconv.Itoa(int(senderIndex))
+	keyPolyCMG := mpcprotocol.RPolyCMG + strconv.Itoa(int(senderIndex))
 	pgBytes,_:= rss.mpcResult.GetByteValue(keyPolyCMG)
 
 	//split the pk list
-	pks, _ := schnorrmpc.SplitPksFromBytes(pgBytes[:])
+	pks, err := schnorrmpc.SplitPksFromBytes(pgBytes[:])
+	if err != nil {
+
+		// todo error handle
+		log.SyslogErr("MpcRSKShare_Step::HandleMessage",
+			" polyCMG GetBytevalue error", err.Error())
+
+		bContent = false
+	}
+
+	log.SyslogInfo("before evalByPolyG","len(pks)",len(pks),"degree",
+		len(pks)-1,"xValue",hexutil.Encode(xValue.Bytes()))
+
 	sijgEval, _ := schnorrmpc.EvalByPolyG(pks,uint16(len(pks)-1),xValue)
 	sijg,_ := schnorrmpc.SkG(&sij)
+	if ok,_ := schnorrmpc.PkEqual(sijg, sijgEval); !ok{
+		bContent = false
+	}
 
-	if ok,_ := schnorrmpc.PkEqual(sijg, sijgEval); !ok || !bVerifySig{
+
+	if !bContent || !bVerifySig{
 		// check Not success
 		log.SyslogErr("MpcRSKShare_Step::HandleMessage",
 			" verify sk data fail", msg.PeerID.String(),
@@ -110,7 +148,28 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 
 		rss.RSkErrNum += 1
 
+		// 3. write error s[i][j]
+		// 3.1 write error count
+		// 3.2 write error info
+		log.SyslogInfo("RSkErr Info","ErrNum",rss.RSkErrNum)
+		if rss.RSkErrNum > 1 {
+			rskErrInfo := make([]big.Int, 5)
+			// sendIndex, rvcIndex, s[i][j], r, s
+			rskErrInfo[0] = *big.NewInt(0).SetInt64(int64(senderIndex))
+			rskErrInfo[1] = *big.NewInt(0).SetInt64(int64(selfIndex))
+			rskErrInfo[2] = sij
+			rskErrInfo[3] = r
+			rskErrInfo[4] = s
+
+			keyErrInfo := mpcprotocol.RSkErrInfos + strconv.Itoa(int(rss.RSkErrNum)-1)
+			rss.mpcResult.SetValue(keyErrInfo, rskErrInfo)
+		}
 	}
+
+	keyErrNum := mpcprotocol.RSkErrNum
+	rskErrInfoNum := make([]big.Int,1)
+	rskErrInfoNum[0] = *big.NewInt(0).SetInt64(int64(rss.RSkErrNum))
+	rss.mpcResult.SetValue(keyErrNum,rskErrInfoNum)
 
 	skpv := rss.messages[0].(*RandomPolynomialGen)
 	_, exist := skpv.message[*msg.PeerID]
@@ -120,27 +179,8 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		return false
 	}
 
-	// 3. write error s[i][j]
-	// 3.1 write error count
-	// 3.2 write error info
-	if rss.RSkErrNum > 1 {
-		rskErrInfo := make([]big.Int,5)
-		// sendIndex, rvcIndex, s[i][j], r, s
-		rskErrInfo[0] = *big.NewInt(0).SetInt64(int64(senderIndex))
-		rskErrInfo[1] = *big.NewInt(0).SetInt64(int64(selfIndex))
-		rskErrInfo[2] = sij
-		rskErrInfo[3] =	r
-		rskErrInfo[4] =	s
-
-		keyErrInfo := mpcprotocol.MPCRSkErrInfos + strconv.Itoa(int(rss.RSkErrNum) -1)
-		rss.mpcResult.SetValue(keyErrInfo,rskErrInfo)
 
 
-		keyErrNum := mpcprotocol.MPCRSkErrNum
-		rskErrInfoNum := make([]big.Int,1)
-		rskErrInfoNum[0] = *big.NewInt(0).SetInt64(int64(rss.RSkErrNum))
-		rss.mpcResult.SetValue(keyErrNum,rskErrInfoNum)
-	}
 	skpv.message[*msg.PeerID] = msg.Data[0] //message.Value
 	return true
 }

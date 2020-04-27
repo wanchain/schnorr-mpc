@@ -10,6 +10,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
+	"strconv"
 )
 
 type mpcPointGenerator struct {
@@ -26,9 +27,16 @@ func createPointGenerator(preValueKey string) *mpcPointGenerator {
 
 func (point *mpcPointGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcprotocol.MpcResultInterface) error {
 	log.SyslogInfo("mpcPointGenerator.initialize begin ")
-	// RPKShare
-	//value, err := result.GetValue(point.preValueKey)
-	value, err := result.GetByteValue(point.preValueKey)
+
+	// get self rpkshare
+	grpId,_ := result.GetByteValue(mpcprotocol.MpcGrpId)
+	grpIdString := string(grpId)
+	point.grpIdString = string(grpId)
+
+	selfIndex,_ := osmconf.GetOsmConf().GetSelfInx(grpIdString)
+	key := mpcprotocol.RPkShare + strconv.Itoa(int(selfIndex))
+	value, err := result.GetByteValue(key)
+
 	log.SyslogInfo("public share mpcPointGenerator.initialize GetValue ",
 		"key", point.preValueKey,
 		"pk share ", hex.EncodeToString(value))
@@ -39,9 +47,6 @@ func (point *mpcPointGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result
 	}
 
 	point.seed = *crypto.ToECDSAPub(value)
-
-	grpId,_ := result.GetByteValue(mpcprotocol.MpcGrpId)
-	point.grpIdString = string(grpId)
 
 	log.SyslogInfo("mpcPointGenerator.initialize succeed")
 	return nil

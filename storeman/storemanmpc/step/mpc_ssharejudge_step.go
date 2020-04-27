@@ -30,7 +30,7 @@ func (ssj *MpcSSahreJudgeStep) InitStep(result mpcprotocol.MpcResultInterface) e
 }
 
 func (ssj *MpcSSahreJudgeStep) CreateMessage() []mpcprotocol.StepMessage {
-	keyErrNum := mpcprotocol.MPCSShareErrNum
+	keyErrNum := mpcprotocol.SShareErrNum
 	errNum,_ := ssj.mpcResult.GetValue(keyErrNum)
 	errNumInt64 := errNum[0].Int64()
 	grpId,_ := ssj.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
@@ -45,7 +45,7 @@ func (ssj *MpcSSahreJudgeStep) CreateMessage() []mpcprotocol.StepMessage {
 
 		for i:=0; i< int(errNumInt64); i++{
 			ret = make([]mpcprotocol.StepMessage, int(errNumInt64))
-			keyErrInfo := mpcprotocol.MPCSShareErrInfos + strconv.Itoa(int(i))
+			keyErrInfo := mpcprotocol.SShareErrInfos + strconv.Itoa(int(i))
 			errInfo,_:= ssj.mpcResult.GetValue(keyErrInfo)
 
 			data := make([]big.Int, 5)
@@ -149,7 +149,7 @@ func (ssj *MpcSSahreJudgeStep) checkContent(sshare, m *big.Int, rpkShare,gpkShar
 
 func (ssj *MpcSSahreJudgeStep) getRPkShare(index uint16) (*ecdsa.PublicKey,error) {
 
-	key := mpcprotocol.RMpcPublicShare + strconv.Itoa(int(index))
+	key := mpcprotocol.RPkShare + strconv.Itoa(int(index))
 	pkBytes,_ := ssj.mpcResult.GetByteValue(key)
 
 	return crypto.ToECDSAPub(pkBytes),nil
@@ -167,7 +167,7 @@ func (ssj *MpcSSahreJudgeStep) getm() (*big.Int,error) {
 	hashMBytes := sha256.Sum256(M)
 
 	// rpk : R
-	rpkBytes,_ := result.GetByteValue(mpcprotocol.RPublicKeyResult)
+	rpkBytes,_ := result.GetByteValue(mpcprotocol.RPk)
 
 	// Forming the m: hash(message||rpk)
 	var buffer bytes.Buffer
@@ -226,7 +226,7 @@ func (ssj *MpcSSahreJudgeStep) saveSlshProof(isSnder bool,
 	sslshByte.Write(crypto.FromECDSAPub(gpkShare))
 	sslshByte.Write(grp[:])
 
-	key1 := mpcprotocol.MPCSSlshProof + strconv.Itoa(int(slshCount))
+	key1 := mpcprotocol.SSlshProof + strconv.Itoa(int(slshCount))
 	// todo error handle
 	ssj.mpcResult.SetValue(key1,sslshValue)
 	ssj.mpcResult.SetByteValue(key1,sslshByte.Bytes())
