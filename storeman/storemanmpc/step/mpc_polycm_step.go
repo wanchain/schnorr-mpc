@@ -91,7 +91,7 @@ func (req *MpcPolycmStep) CreateMessage() []mpcprotocol.StepMessage {
 	msg := mpcprotocol.StepMessage{
 		MsgCode:   mpcprotocol.MPCMessage,
 		PeerID:    nil,
-		Peers:     req.peers,
+		Peers:     nil,
 		Data:      nil,
 		BytesData: nil}
 
@@ -101,14 +101,18 @@ func (req *MpcPolycmStep) CreateMessage() []mpcprotocol.StepMessage {
 	threshold, _ := osmconf.GetOsmConf().GetThresholdNum(grpIdString)
 	// Data[0]: R
 	// Data[1]: S
-	msg.Data = make([]big.Int, 2)
+
 	// BytesData[i]: the ith poly commit G
 	msg.BytesData = make([][]byte,threshold)
+
+	for i:=0;i<int(threshold);i++{
+		msg.BytesData[i] = make([]byte,65)  // len of pk is :65.
+	}
 	// build msg.data & msg.bytedata
 	var buf bytes.Buffer
-	for index, cmItem := range req.polycmGMap[req.selfIndex] {
-		buf.Write(crypto.FromECDSAPub(&cmItem))
-		msg.BytesData[index] = crypto.FromECDSAPub(&cmItem)
+	for index, pk := range req.polycmGMap[req.selfIndex] {
+		buf.Write(crypto.FromECDSAPub(&pk))
+		msg.BytesData[index] = crypto.FromECDSAPub(&pk)
 		//copy(msg.BytesData[index],crypto.FromECDSAPub(&cmItem))
 	}
 
@@ -116,6 +120,8 @@ func (req *MpcPolycmStep) CreateMessage() []mpcprotocol.StepMessage {
 	h := sha256.Sum256(buf.Bytes())
 	prv,_ := osmconf.GetOsmConf().GetSelfPrvKey()
 	r,s,_ := schnorrmpc.SignInternalData(prv,h[:])
+
+	msg.Data = make([]big.Int, 2)
 	msg.Data[0] = *r
 	msg.Data[1] = *s
 
@@ -223,7 +229,7 @@ func (req *MpcPolycmStep) fillCmIntoMap(msg *mpcprotocol.StepMessage) bool {
 	log.SyslogInfo("fillCmIntoMap","map key",inx,"group",grpIdString,"threshold",threshold,"len(msg.BytesData)",len(msg.BytesData))
 	for i := 0; i< len(msg.BytesData);i++ {
 		pk := crypto.ToECDSAPub(msg.BytesData[i][:])
-		log.SyslogInfo("fillCmIntoMap","item index",i,"one poly commit item G",hexutil.Encode(msg.BytesData[i][:]))
+		log.SyslogInfo("		fillCmIntoMap","item index",i,"one poly commit item G",hexutil.Encode(msg.BytesData[i][:]))
 		pg[i] = *pk
 	}
 	req.polycmGMap[inx] = pg

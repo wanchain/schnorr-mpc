@@ -102,13 +102,13 @@ func (mpcCtx *MpcContext) quit(err error) {
 func (mpcCtx *MpcContext) mainMPCProcess(StoremanManager mpcprotocol.StoremanManager) error {
 	log.SyslogInfo("mainMPCProcess begin", "ctxid", mpcCtx.ContextID)
 	mpcErr := error(nil)
-	for _, mpcCt := range mpcCtx.MpcSteps {
-		err := mpcCt.InitMessageLoop(mpcCt)
-		if err != nil {
-			mpcErr = err
-			break
-		}
-	}
+	//for _, mpcCt := range mpcCtx.MpcSteps {
+	//	err := mpcCt.InitMessageLoop(mpcCt)
+	//	if err != nil {
+	//		mpcErr = err
+	//		break
+	//	}
+	//}
 
 	peerIDs := make([]discover.NodeID, 0)
 	for _, item := range mpcCtx.peers {
@@ -116,13 +116,21 @@ func (mpcCtx *MpcContext) mainMPCProcess(StoremanManager mpcprotocol.StoremanMan
 	}
 
 	if mpcErr == nil {
-		mpcCtx.mpcResult.Initialize()
+		// todo need think over
+		//mpcCtx.mpcResult.Initialize()
 		for i := 0; i < len(mpcCtx.MpcSteps); i++ {
 			err := mpcCtx.MpcSteps[i].InitStep(mpcCtx.mpcResult)
 			if err != nil {
 				mpcErr = err
 				break
 			}
+
+			// todo need think over
+			err = mpcCtx.MpcSteps[i].InitMessageLoop(mpcCtx.MpcSteps[i])
+				if err != nil {
+					mpcErr = err
+					break
+				}
 
 			log.SyslogInfo("--------step init finished--------", "ctxid", mpcCtx.ContextID, "stepId", i)
 			msg := mpcCtx.MpcSteps[i].CreateMessage()

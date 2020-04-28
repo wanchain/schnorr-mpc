@@ -76,5 +76,7 @@ func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStep
 		stepItem.SetWaitAll(false)
 		stepItem.SetStepId(stepId)
 	}
+
+	cmStep.SetWaitAll(true)
 	return mpc, nil
 }

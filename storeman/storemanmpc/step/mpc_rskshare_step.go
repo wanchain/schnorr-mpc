@@ -133,12 +133,12 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	log.SyslogInfo("before evalByPolyG","len(pks)",len(pks),"degree",
 		len(pks)-1,"xValue",hexutil.Encode(xValue.Bytes()))
 
+	// todo error handle before EvalByPolyG
 	sijgEval, _ := schnorrmpc.EvalByPolyG(pks,uint16(len(pks)-1),xValue)
 	sijg,_ := schnorrmpc.SkG(&sij)
 	if ok,_ := schnorrmpc.PkEqual(sijg, sijgEval); !ok{
 		bContent = false
 	}
-
 
 	if !bContent || !bVerifySig{
 		// check Not success
