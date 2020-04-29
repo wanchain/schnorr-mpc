@@ -23,6 +23,7 @@ type MpcStepFunc interface {
 	FinishStep(mpcprotocol.MpcResultInterface, mpcprotocol.StoremanManager) error
 	GetMessageChan() chan *mpcprotocol.StepMessage
 	SetWaitAll(bool)
+	SetWaiting(int)
 	SetStepId(int)
 }
 
@@ -125,12 +126,15 @@ func (mpcCtx *MpcContext) mainMPCProcess(StoremanManager mpcprotocol.StoremanMan
 				break
 			}
 
-			// todo need think over
+			// todo need think over. should initmessageLoop here or above??
 			err = mpcCtx.MpcSteps[i].InitMessageLoop(mpcCtx.MpcSteps[i])
 				if err != nil {
 					mpcErr = err
 					break
 				}
+			log.SyslogInfo("\n")
+			log.SyslogInfo("===============================Start============================================")
+			log.SyslogInfo("\n")
 
 			log.SyslogInfo("--------step init finished--------", "ctxid", mpcCtx.ContextID, "stepId", i)
 			msg := mpcCtx.MpcSteps[i].CreateMessage()
@@ -164,6 +168,10 @@ func (mpcCtx *MpcContext) mainMPCProcess(StoremanManager mpcprotocol.StoremanMan
 			}
 
 			log.SyslogInfo("--------step mssage finished--------", "ctxid", mpcCtx.ContextID, "stepId", i)
+
+			log.SyslogInfo("\n")
+			log.SyslogInfo("==============================End=============================================")
+			log.SyslogInfo("\n")
 		}
 	}
 

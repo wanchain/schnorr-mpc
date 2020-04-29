@@ -72,6 +72,7 @@ func (req *MpcPolycmStep) InitStep(result mpcprotocol.MpcResultInterface) error 
 	req.grpId = grpIdString
 	selfIndex, _ := osmconf.GetOsmConf().GetSelfInx(grpIdString)
 	req.selfIndex = selfIndex
+
 	req.polycmGMap[selfIndex] = pg
 
 	for key , value := range req.polycmGMap{
@@ -86,8 +87,8 @@ func (req *MpcPolycmStep) InitStep(result mpcprotocol.MpcResultInterface) error 
 func (req *MpcPolycmStep) CreateMessage() []mpcprotocol.StepMessage {
 	// broadcast self polynomialG
 	// grpId + threshold G + R + S
-	log.SyslogInfo("MpcPolycmStep.CreateMessage.....")
-	log.Info("MpcPolycmStep","CreateMessage peers",*req.peers)
+	log.SyslogInfo("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@MpcPolycmStep.CreateMessage.....")
+	log.Info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@MpcPolycmStep","CreateMessage peers",*req.peers)
 	msg := mpcprotocol.StepMessage{
 		MsgCode:   mpcprotocol.MPCMessage,
 		PeerID:    nil,
@@ -124,6 +125,10 @@ func (req *MpcPolycmStep) CreateMessage() []mpcprotocol.StepMessage {
 	msg.Data = make([]big.Int, 2)
 	msg.Data[0] = *r
 	msg.Data[1] = *s
+
+	req.polycmGMSigMap[req.selfIndex] = make([]big.Int,2)
+	req.polycmGMSigMap[req.selfIndex][0] = *r
+	req.polycmGMSigMap[req.selfIndex][0] = *s
 
 	return []mpcprotocol.StepMessage{msg}
 }

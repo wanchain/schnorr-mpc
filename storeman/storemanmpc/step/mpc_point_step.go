@@ -97,6 +97,7 @@ func (ptStep *MpcPointStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 			// save rpkshare for check data of s
 			key := mpcprotocol.RPkShare + strconv.Itoa(int(senderIndex))
 			ptStep.mpcResult.SetByteValue(key,msg.BytesData[0])
+			log.SyslogInfo("@@@@@@@@@@@@save rpkshare","key",key,"rpkshare",hexutil.Encode(msg.BytesData[0]))
 		}else{
 			log.SyslogErr("MpcPointStep::HandleMessage"," check sig fail")
 		}
@@ -125,7 +126,7 @@ func (ptStep *MpcPointStep) FinishStep(result mpcprotocol.MpcResultInterface, mp
 			return err
 		}
 
-
+	log.SyslogInfo("@@@@@@@@@@@@save RPK","key",mpcprotocol.RPk,"RPK",hexutil.Encode(crypto.FromECDSAPub(&pointer.result)))
 	log.SyslogInfo("MpcPointStep.FinishStep succeed")
 	return nil
 }

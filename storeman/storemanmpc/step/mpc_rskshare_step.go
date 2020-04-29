@@ -73,6 +73,9 @@ func (rss *MpcRSKShare_Step) FinishStep(result mpcprotocol.MpcResultInterface, m
 		return err
 	}
 
+	log.SyslogInfo("@@@@@@@@@@@@@@@@@@@MpcRSKShare_Step",
+		"rpkShare", hexutil.Encode(crypto.FromECDSAPub(rpkShare)),
+		"rskShare",hexutil.Encode((*skpv.result).Bytes()))
 	return nil
 }
 
@@ -133,6 +136,10 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	log.SyslogInfo("before evalByPolyG","len(pks)",len(pks),"degree",
 		len(pks)-1,"xValue",hexutil.Encode(xValue.Bytes()))
 
+	threshold,_ := osmconf.GetOsmConf().GetThresholdNum(grpIdString)
+	if len(pks) != int(threshold){
+		return true
+	}
 	// todo error handle before EvalByPolyG
 	sijgEval, _ := schnorrmpc.EvalByPolyG(pks,uint16(len(pks)-1),xValue)
 	sijg,_ := schnorrmpc.SkG(&sij)

@@ -3,6 +3,7 @@ package step
 import (
 	"bytes"
 	"crypto/sha256"
+	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
 	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
@@ -21,6 +22,7 @@ func CreateMpcRSkJudgeStep(peers *[]mpcprotocol.PeerInfo) *MpcRSkJudgeStep {
 }
 
 func (rsj *MpcRSkJudgeStep) InitStep(result mpcprotocol.MpcResultInterface) error {
+	log.SyslogInfo("Entering MpcRSkJudgeStep InitStep")
 	rsj.BaseStep.InitStep(result)
 	return nil
 }
@@ -57,6 +59,8 @@ func (rsj *MpcRSkJudgeStep) CreateMessage() []mpcprotocol.StepMessage {
 				Data:      data,
 				BytesData: nil}
 		}
+	}else{
+		log.SyslogInfo("MpcRSkJudgeStep there is on record need to be judged.")
 	}
 
 	return ret

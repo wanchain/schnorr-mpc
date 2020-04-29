@@ -61,6 +61,8 @@ func (ssj *MpcSSahreJudgeStep) CreateMessage() []mpcprotocol.StepMessage {
 				Data:      data,
 				BytesData: nil}
 		}
+	}else{
+		log.SyslogInfo("sshare judge there is NO error record to be judged.")
 	}
 
 	return ret

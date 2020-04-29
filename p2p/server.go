@@ -609,7 +609,7 @@ running:
 			// it will keep the node connected.
 			srv.log.Debug("Adding static node", "node", n)
 
-			addsm := false;
+			addsm := false
 			for _,smnode := range srv.StoremanNodes {
 				if smnode.ID == n.ID {
 					dialstate.addStoreman(n)
@@ -690,6 +690,7 @@ running:
 					inboundCount++
 				}
 			}
+
 			// The dialer logic relies on the assumption that
 			// dial tasks complete after the peer has been added or
 			// discarded. Unblock the task last.
@@ -698,6 +699,7 @@ running:
 			case <-srv.quit:
 				break running
 			}
+
 		case pd := <-srv.delpeer:
 			// A peer disconnected.
 			d := common.PrettyDuration(mclock.Now() - pd.created)
@@ -888,6 +890,8 @@ func (srv *Server) setupConn(c *conn, flags connFlag, dialDest *discover.Node) e
 		clog.Trace("Rejected peer", "err", err)
 		return err
 	}
+
+
 	// If the checks completed successfully, runPeer has now been
 	// launched by run.
 	clog.Trace("connection set up", "inbound", dialDest == nil)

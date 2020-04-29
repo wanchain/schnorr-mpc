@@ -101,6 +101,8 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 			key := mpcprotocol.RPkShare + strconv.Itoa(int(senderIndex))
 			msStep.mpcResult.SetByteValue(key,msg.BytesData[i])
 
+		}else{
+			log.SyslogInfo("check sig of sshare successfully","senderIndex",senderIndex)
 		}
 
 		// 2. check content
@@ -112,6 +114,10 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		gpkShare,_ := msStep.getGPKShare(senderIndex)
 		m,_:= msStep.getm()
 		bContentCheck,_ := msStep.checkContent(&sshare,m,rpkShare,gpkShare)
+
+		if bContentCheck {
+			log.SyslogInfo("check content of sshare successfully","senderIndex",senderIndex)
+		}
 
 		// 3. write error sshare
 		// 3.1 write error count
@@ -134,7 +140,7 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 			msStep.mpcResult.SetValue(keyErrInfo,sshareErrInfo)
 
 		}else{
-
+			log.SyslogInfo("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@check sshare successfully","senderIndex",senderIndex)
 			msStep.sshareOKIndex = append(msStep.sshareOKIndex,senderIndex)
 
 			pointer.message[*msg.PeerID] = sshare

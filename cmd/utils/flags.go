@@ -561,14 +561,14 @@ func SetP2PConfig(ctx *cli.Context, cfg *p2p.Config) {
 		cfg.StoremanEnabled = true
 		smDataPath := GetActualDataDir(ctx)
 		//smspath := filepath.Join(smDataPath, "storemans.json")
-		smspath := filepath.Join(smDataPath, "groupInfo.json")
-		_, err := ioutil.ReadFile(smspath)
+		grpInfoPath := filepath.Join(smDataPath, "groupInfo.json")
+		_, err := ioutil.ReadFile(grpInfoPath)
 		if err != nil {
 			panic(err)
 		}
 		// todo error handle
-		osmconf.GetOsmConf().SetFilePath(smspath)
-		osmconf.GetOsmConf().LoadCnf(smspath)
+		osmconf.GetOsmConf().SetFilePath(grpInfoPath)
+		osmconf.GetOsmConf().LoadCnf(grpInfoPath)
 
 		/*
 		var SIDs []string

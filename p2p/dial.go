@@ -147,7 +147,6 @@ func newDialState(static []*discover.Node, storeman []*discover.Node, bootnodes 
 		s.addStatic(n)
 	}
 
-
 	for _, m := range storeman {
 		strip := m.IP.String()
 		if m.TCP != 0 && strip != "0.0.0.0" {
@@ -417,7 +416,6 @@ func (t *dialTask) dial(srv *Server, dest *discover.Node) error {
 		return &dialError{err}
 	}
 	mfd := newMeteredConn(fd, false)
-
 	return srv.SetupConn(mfd, t.flags, dest)
 }
 
