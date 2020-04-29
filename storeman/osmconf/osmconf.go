@@ -550,3 +550,27 @@ func pkToAddr(PkBytes []byte) (common.Address, error) {
 	return address, nil
 }
 
+//////////////// test only///////////////
+
+func (cnf *OsmConf) GetPrivateShare()(big.Int, error){
+	defer cnf.wrLock.RUnlock()
+	cnf.wrLock.RLock()
+
+	nodeId,_ := cnf.GetSelfNodeId()
+	if hexutil.Encode((*nodeId)[:]) == "0x9c6d6f351a3ede10ed994f7f6b754b391745bba7677b74063ff1c58597ad52095df8e95f736d42033eee568dfa94c5a7689a9b83cc33bf919ff6763ae7f46f8d"{
+		return *big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x37b1af24c261773b711293c76564896ea3dacf5da54ba3a1d9f5f6d8feff3b"))), nil
+	}
+
+	if hexutil.Encode((*nodeId)[:]) == "0x78f760cd286c36c5db44c590f9e2409411e41f0bd10d17b6d4fb208cddf8df9b6957a027ee3b628fb685501cad256fefdc103916e2418e0ec9cee4883bbe4e4d"{
+		return *big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x4f60631f7273a4bc9b056f01b6414291c09ac3e3365e4804e697937edf79b303"))), nil
+	}
+
+	if hexutil.Encode((*nodeId)[:]) == "0xdc997644bc12df6da60fef4922e257dc74bd506a05be714fb1380d1031c3eac102085bcc676339aa95b38502a6788ae6e4db329903e92d1a70be7e207c38ad35"{
+		return *big.NewInt(0).SetBytes(hexutil.MustDecode(string("0xaeb934491f9706d38b2a74ccf4658041b1127d1c3dd344cbc9b30425f7fc45a8"))), nil
+	}
+
+	if hexutil.Encode((*nodeId)[:]) == "0x005d55b8634d6afa930b0a8c31a3cc2c8246d996ed06fb41d2520a4d8155eefa41258440ee2bfff2473191e62495729b9ef86d7be685ac21fd67d71b09cce1a5"{
+		return *big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x51607e6ae0111434e813c1ae72c70222d6e5216f375c75ca09a888ee77861380"))), nil
+	}
+	return big.Int{},nil
+}

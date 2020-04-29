@@ -290,18 +290,29 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 			}
 		}
 		// peers1: the peers which are used to create the group public key, used to build the sign data.
-		value, err := mpcServer.loadStoremanAddress(&address)
-		if err != nil {
 
-			log.SyslogErr("MpcDistributor createRequestMpcContext, loadStoremanAddress fail",
-				"address", address.String(),
-				"err", err.Error())
+		var POC bool
+		POC = true
+		if POC{
+			b, _ := osmconf.GetOsmConf().GetPrivateShare()
+			value := &MpcValue{mpcprotocol.MpcPrivateShare, []big.Int{b}, nil}
+			// mpc private share
+			preSetValue = append(preSetValue, *value)
+		}else{
+			value, err := mpcServer.loadStoremanAddress(&address)
+			if err != nil {
 
-			return []byte{}, err
+				log.SyslogErr("MpcDistributor createRequestMpcContext, loadStoremanAddress fail",
+					"address", address.String(),
+					"err", err.Error())
+
+				return []byte{}, err
+			}
+
+			// mpc private share
+			preSetValue = append(preSetValue, *value)
 		}
 
-		// mpc private share
-		preSetValue = append(preSetValue, *value)
 
 		// todo
 		//peers = peers1
@@ -477,10 +488,21 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 		}
 
 		log.SyslogInfo("createMpcCtx", "address", address, "mpcM", mpcM)
-		// load account
-		MpcPrivateShare, err := mpcServer.loadStoremanAddress(&add)
-		if err != nil {
-			return err
+
+		var MpcPrivateShare *MpcValue
+
+		var POC bool
+		POC = true
+		if POC{
+			b, _ := osmconf.GetOsmConf().GetPrivateShare()
+			MpcPrivateShare = &MpcValue{mpcprotocol.MpcPrivateShare, []big.Int{b}, nil}
+			// mpc private share
+		}else{
+			// load account
+			MpcPrivateShare, err = mpcServer.loadStoremanAddress(&add)
+			if err != nil {
+				return err
+			}
 		}
 
 		grpId, _ = osmconf.GetOsmConf().GetGrpInxByGpk(address[:])

@@ -102,13 +102,13 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 			msStep.mpcResult.SetByteValue(key,msg.BytesData[i])
 
 		}else{
-			log.SyslogInfo("check sig of sshare successfully","senderIndex",senderIndex)
+			log.SyslogInfo("check sig of sshare successfully"," senderIndex",senderIndex)
 		}
 
 		// 2. check content
 		selfIndex, _ := osmconf.GetOsmConf().GetSelfInx(grpIdString)
 
-		log.SyslogInfo("===================================MpcSStep","senderIndex",senderIndex,"selfIndex",selfIndex)
+		log.SyslogInfo("===================================MpcSStep"," senderIndex",senderIndex,"selfIndex",selfIndex)
 
 		rpkShare,_ := msStep.getRPkShare(senderIndex)
 		gpkShare,_ := msStep.getGPKShare(senderIndex)
@@ -116,7 +116,7 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		bContentCheck,_ := msStep.checkContent(&sshare,m,rpkShare,gpkShare)
 
 		if bContentCheck {
-			log.SyslogInfo("check content of sshare successfully","senderIndex",senderIndex)
+			log.SyslogInfo("check content of sshare successfully"," senderIndex",senderIndex)
 		}
 
 		// 3. write error sshare
@@ -140,7 +140,7 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 			msStep.mpcResult.SetValue(keyErrInfo,sshareErrInfo)
 
 		}else{
-			log.SyslogInfo("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@check sshare successfully","senderIndex",senderIndex)
+			log.SyslogInfo("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@check sshare successfully"," senderIndex",senderIndex)
 			msStep.sshareOKIndex = append(msStep.sshareOKIndex,senderIndex)
 
 			pointer.message[*msg.PeerID] = sshare
