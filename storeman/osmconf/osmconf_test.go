@@ -6,6 +6,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
+	"math/big"
 	"testing"
 )
 
@@ -61,4 +62,17 @@ func TestDifference(t *testing.T) {
 
 	s = Difference(s1,s1)
 	fmt.Printf("%v\n",s)
+}
+
+
+func TestBuildDataByIndexes(t *testing.T) {
+	big0 := big.Int{}
+	bg1 := big.NewInt(1)
+	bg2 := big.NewInt(2)
+	bg3 := big.NewInt(3)
+
+	bigs := []big.Int{big0,*bg1,*bg2,*bg3}
+	ret ,_ := BuildDataByIndexes(&bigs)
+
+	fmt.Printf("%v",ret)
 }

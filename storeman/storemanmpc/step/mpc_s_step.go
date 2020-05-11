@@ -158,6 +158,7 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 
 func (msStep *MpcSStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mpcprotocol.StoremanManager) error {
 	log.SyslogInfo("MpcSStep.FinishStep begin")
+	err := msStep.BaseMpcStep.FinishStep()
 
 	// save index for incentive and slash
 
@@ -187,8 +188,6 @@ func (msStep *MpcSStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mp
 	msStep.mpcResult.SetValue(mpcprotocol.SKOIndex,koIndex)
 	msStep.mpcResult.SetValue(mpcprotocol.SNOIndex,noIndex)
 
-
-	err := msStep.BaseMpcStep.FinishStep()
 	if err != nil {
 		_,retHash := msStep.BaseMpcStep.GetSignedDataHash(result)
 		msStep.BaseMpcStep.ShowNotArriveNodes(retHash,mpc.SelfNodeId())

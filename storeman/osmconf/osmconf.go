@@ -14,6 +14,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
+	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"io/ioutil"
 	"math/big"
@@ -573,4 +574,22 @@ func (cnf *OsmConf) GetPrivateShare()(big.Int, error){
 		return *big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x51607e6ae0111434e813c1ae72c70222d6e5216f375c75ca09a888ee77861380"))), nil
 	}
 	return big.Int{},nil
+}
+
+
+func BuildDataByIndexes(indexes *[]big.Int) (*big.Int,error){
+
+	ret := schnorrmpc.BigZero
+	bigTm := big.NewInt(0)
+	bigTm.Add(schnorrmpc.BigOne,schnorrmpc.BigOne)
+
+	for _,indexBig := range *indexes{
+		bigTm1 := big.NewInt(0)
+		bigTm1.Exp(bigTm,&indexBig,nil)
+
+		log.SyslogInfo(">>>>>>buildDataByIndexes","indexBig",indexBig,"*bigTm1",*bigTm1)
+		ret = big.NewInt(0).Add(ret,bigTm1)
+		log.SyslogInfo(">>>>>>buildDataByIndexes","ret",*ret)
+	}
+	return ret, nil
 }

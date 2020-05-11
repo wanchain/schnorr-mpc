@@ -34,7 +34,7 @@ const (
 	GetPeersInfo
 	NumberOfMessageCodes
 	//MPCTimeOut = time.Second * 100
-	MPCTimeOut = time.Second * 15
+	MPCTimeOut = time.Second * 5
 	//MPCTimeOut = time.Second * 20
 	PName      = "storeman"
 	PVer       = uint64(10)

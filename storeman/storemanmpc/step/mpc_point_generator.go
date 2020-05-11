@@ -85,7 +85,8 @@ func (point *mpcPointGenerator) calculateResult() error {
 		"Need nodes number:", mpcprotocol.MpcSchnrThr,
 		"Now nodes number:", len(gpkshares))
 	if len(gpkshares) < mpcprotocol.MpcSchnrThr {
-		return mpcprotocol.ErrTooLessDataCollected
+		//return mpcprotocol.ErrTooLessDataCollected
+		return mpcprotocol.ErrRNW
 	}
 
 	result := schnorrmpc.LagrangeECC(gpkshares, seeds[:], mpcprotocol.MPCDegree)

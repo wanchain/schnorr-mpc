@@ -76,6 +76,9 @@ func (rsj *MpcRSkJudgeStep) FinishStep(result mpcprotocol.MpcResultInterface, mp
 		return err
 	}
 
+	if rsj.RSlshCount > 0 {
+		return mpcprotocol.ErrRSlsh
+	}
 	return nil
 }
 
@@ -158,10 +161,10 @@ func (ssj *MpcRSkJudgeStep) saveSlshProof(isSnder bool,
 	}else{
 		sslshValue[0] = *schnorrmpc.BigZero
 	}
-	sslshValue[2] = *polyR
-	sslshValue[3] = *polyS
-	sslshValue[4] = *sij
-	sslshValue[5] = *r
+	sslshValue[1] = *polyR
+	sslshValue[2] = *polyS
+	sslshValue[3] = *sij
+	sslshValue[4] = *r
 	sslshValue[5] = *s
 	sslshValue[6] = *big.NewInt(0).SetInt64(int64(sndrIndex))
 	sslshValue[7] = *big.NewInt(0).SetInt64(int64(rcvrIndex))

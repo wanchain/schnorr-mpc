@@ -24,4 +24,11 @@ var (
 	ErrMarshal               = errors.New("marshal data failed")
 	ErrApprovedNotConsistent = errors.New("not equal,received  data and approved data in DB")
 	ErrTooLessDataCollected  = errors.New("not enough data collected")
+
+	ErrRNW           		= errors.New("R stage: no work")
+	ErrSNW           		= errors.New("S stage: no work")
+	ErrSSlsh           		= errors.New("S stage: malice")
+	ErrRSlsh           		= errors.New("R stage: malice")
+	ErrCheckSig           	= errors.New("fail to check sig")
+	ErrCheckContent         = errors.New("fail to check content")
 )

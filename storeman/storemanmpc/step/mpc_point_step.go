@@ -18,13 +18,19 @@ type MpcPointStep struct {
 	BaseMpcStep
 	resultKeys []string
 	signNum    int
+
+	RShareErrNum	int
+	rpkshareOKIndex  []uint16
+	rpkshareKOIndex  []uint16
+	rpkshareNOIndex  []uint16
 }
 
 func CreateMpcPointStep(peers *[]mpcprotocol.PeerInfo, preValueKeys []string, resultKeys []string) *MpcPointStep {
 	log.SyslogInfo("CreateMpcPointStep begin")
 
 	signNum := len(preValueKeys)
-	mpc := &MpcPointStep{*CreateBaseMpcStep(peers, signNum), resultKeys, signNum}
+	mpc := &MpcPointStep{*CreateBaseMpcStep(peers, signNum), resultKeys, signNum,0,
+		make([]uint16,0),make([]uint16,0),make([]uint16,0)}
 
 	for i := 0; i < signNum; i++ {
 		mpc.messages[i] = createPointGenerator(preValueKeys[i])
@@ -98,16 +104,53 @@ func (ptStep *MpcPointStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 			key := mpcprotocol.RPkShare + strconv.Itoa(int(senderIndex))
 			ptStep.mpcResult.SetByteValue(key,msg.BytesData[0])
 			log.SyslogInfo("@@@@@@@@@@@@save rpkshare","key",key,"rpkshare",hexutil.Encode(msg.BytesData[0]))
+
+			ptStep.rpkshareOKIndex = append(ptStep.rpkshareOKIndex, uint16(senderIndex))
 		}else{
 			log.SyslogErr("MpcPointStep::HandleMessage"," check sig fail")
+			ptStep.rpkshareKOIndex = append(ptStep.rpkshareKOIndex, uint16(senderIndex))
 		}
 
+		// update no work indexes.
 
 	return true
 }
 
 func (ptStep *MpcPointStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mpcprotocol.StoremanManager) error {
 	log.SyslogInfo("MpcPointStep.FinishStep begin")
+
+	//grpId,_ := ptStep.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
+	//grpIdString := string(grpId)
+	//allIndex,_ := osmconf.GetOsmConf().GetGrpElemsInxes(grpIdString)
+	//tempIndex := osmconf.Difference(*allIndex,ptStep.rpkshareOKIndex)
+	//ptStep.rpkshareNOIndex = osmconf.Difference(tempIndex,ptStep.rpkshareKOIndex)
+	//
+	//log.Info(">>>>>>MpcPointStep", "allIndex", allIndex)
+	//log.Info(">>>>>>MpcPointStep", "rpkshareOKIndex", ptStep.rpkshareOKIndex)
+	//log.Info(">>>>>>MpcPointStep", "rpkshareKOIndex", ptStep.rpkshareKOIndex)
+	//log.Info(">>>>>>MpcPointStep", "rpkshareNOIndex", ptStep.rpkshareNOIndex)
+	//
+	//okIndex := make([]big.Int,len(ptStep.rpkshareOKIndex))
+	//koIndex := make([]big.Int,len(ptStep.rpkshareKOIndex))
+	//noIndex := make([]big.Int,len(ptStep.rpkshareNOIndex))
+	//
+	//for i,value := range ptStep.rpkshareOKIndex{
+	//	okIndex[i].SetInt64(int64(value))
+	//}
+	//
+	//for i,value := range ptStep.rpkshareKOIndex{
+	//	koIndex[i].SetInt64(int64(value))
+	//}
+	//
+	//for i,value := range ptStep.rpkshareNOIndex{
+	//	noIndex[i].SetInt64(int64(value))
+	//}
+	//
+	//ptStep.mpcResult.SetValue(mpcprotocol.ROKIndex,okIndex)
+	//ptStep.mpcResult.SetValue(mpcprotocol.RKOIndex,koIndex)
+	//ptStep.mpcResult.SetValue(mpcprotocol.RNOIndex,noIndex)
+
+
 	err := ptStep.BaseMpcStep.FinishStep()
 	if err != nil {
 		return err

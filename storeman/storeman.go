@@ -2,8 +2,6 @@ package storeman
 
 import (
 	"context"
-	"github.com/wanchain/schnorr-mpc/common"
-	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
 	"path/filepath"
 	"strings"
@@ -432,26 +430,26 @@ func (sa *StoremanAPI) Peers(ctx context.Context) []*p2p.PeerInfo {
 	return ps
 }
 
-func (sa *StoremanAPI) CreateGPK(ctx context.Context) (pk hexutil.Bytes, err error) {
+//func (sa *StoremanAPI) CreateGPK(ctx context.Context) (pk hexutil.Bytes, err error) {
+//
+//	log.SyslogInfo("CreateGPK begin")
+//	log.SyslogInfo("CreateGPK begin", "peers", len(sa.sm.peers), "storeman peers", len(sa.sm.storemanPeers))
+//
+//	if len(sa.sm.storemanPeers)+1 < mpcprotocol.MpcSchnrThr {
+//		return []byte{}, mpcprotocol.ErrTooLessStoreman
+//	}
+//
+//	gpk, err := sa.sm.mpcDistributor.CreateRequestGPK()
+//	if err == nil {
+//		log.SyslogInfo("CreateGPK end", "gpk", hexutil.Encode(gpk))
+//	} else {
+//		log.SyslogErr("CreateGPK end", "err", err.Error())
+//	}
+//
+//	return gpk, err
+//}
 
-	log.SyslogInfo("CreateGPK begin")
-	log.SyslogInfo("CreateGPK begin", "peers", len(sa.sm.peers), "storeman peers", len(sa.sm.storemanPeers))
-
-	if len(sa.sm.storemanPeers)+1 < mpcprotocol.MpcSchnrThr {
-		return []byte{}, mpcprotocol.ErrTooLessStoreman
-	}
-
-	gpk, err := sa.sm.mpcDistributor.CreateRequestGPK()
-	if err == nil {
-		log.SyslogInfo("CreateGPK end", "gpk", hexutil.Encode(gpk))
-	} else {
-		log.SyslogErr("CreateGPK end", "err", err.Error())
-	}
-
-	return gpk, err
-}
-
-func (sa *StoremanAPI) SignDataByApprove(ctx context.Context, data mpcprotocol.SendData) (result mpcprotocol.SignedResult, err error) {
+func (sa *StoremanAPI) SignDataByApprove(ctx context.Context, data mpcprotocol.SendData) (result interface{}, err error) {
 	//Todo  check the input parameter
 
 	if len(sa.sm.storemanPeers)+1 < mpcprotocol.MpcSchnrThr {
@@ -465,16 +463,16 @@ func (sa *StoremanAPI) SignDataByApprove(ctx context.Context, data mpcprotocol.S
 
 	// signed   R // s
 	if err == nil {
-		log.SyslogInfo("SignMpcTransaction end", "signed", common.ToHex(signed))
+		log.SyslogInfo("SignMpcTransaction end")
 	} else {
 		log.SyslogErr("SignMpcTransaction end", "err", err.Error())
 		return mpcprotocol.SignedResult{R: []byte{}, S: []byte{}}, err
 	}
 
-	return mpcprotocol.SignedResult{R: signed[0:65], S: signed[65:]}, nil
+	return signed,nil
 }
 
-func (sa *StoremanAPI) SignData(ctx context.Context, data mpcprotocol.SendData) (result mpcprotocol.SignedResult, err error) {
+func (sa *StoremanAPI) SignData(ctx context.Context, data mpcprotocol.SendData) (result interface{}, err error) {
 	//Todo  check the input parameter
 
 	if len(sa.sm.storemanPeers)+1 < mpcprotocol.MpcSchnrThr {
@@ -488,13 +486,13 @@ func (sa *StoremanAPI) SignData(ctx context.Context, data mpcprotocol.SendData) 
 
 	// signed   R // s
 	if err == nil {
-		log.SyslogInfo("SignMpcTransaction end", "signed", common.ToHex(signed))
+		log.SyslogInfo("SignMpcTransaction end")
 	} else {
 		log.SyslogErr("SignMpcTransaction end", "err", err.Error())
 		return mpcprotocol.SignedResult{R: []byte{}, S: []byte{}}, err
 	}
 
-	return mpcprotocol.SignedResult{R: signed[0:65], S: signed[65:]}, nil
+	return signed,nil
 }
 
 func (sa *StoremanAPI) AddValidData(ctx context.Context, data mpcprotocol.SendData) error {

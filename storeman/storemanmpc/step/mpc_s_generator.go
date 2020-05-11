@@ -116,7 +116,8 @@ func (msg *mpcSGenerator) calculateResult() error {
 		"Need nodes number:", mpcprotocol.MpcSchnrThr,
 		"Now nodes number:", len(sigshares))
 	if len(sigshares) < mpcprotocol.MpcSchnrThr {
-		return mpcprotocol.ErrTooLessDataCollected
+		//return mpcprotocol.ErrTooLessDataCollected
+		return mpcprotocol.ErrSNW
 	}
 	result := schnorrmpc.Lagrange(sigshares, seeds[:], mpcprotocol.MPCDegree)
 	msg.result = result

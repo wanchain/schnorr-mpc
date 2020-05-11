@@ -48,7 +48,7 @@ func (v *MpcValue) String() string {
 type MpcInterface interface {
 	getMessage(*discover.NodeID, *mpcprotocol.MpcMessage, *[]mpcprotocol.PeerInfo) error
 	mainMPCProcess(manager mpcprotocol.StoremanManager) error
-	getMpcResult() []byte
+	getMpcResult(err error) (interface{},error)
 	quit(error)
 }
 
@@ -229,7 +229,7 @@ func (mpcServer *MpcDistributor) InitStoreManGroup() {
 	//log.SyslogInfo("InitStoreManGroup......","storeManIndex",mpcServer.storeManIndex)
 }
 
-func (mpcServer *MpcDistributor) CreateRequestGPK() ([]byte, error) {
+func (mpcServer *MpcDistributor) CreateRequestGPK() (interface{}, error) {
 	log.SyslogInfo("CreateRequestGPK begin")
 
 	preSetValue := make([]MpcValue, 0, 1)
@@ -243,7 +243,7 @@ func (mpcServer *MpcDistributor) CreateRequestGPK() ([]byte, error) {
 	}
 }
 
-func (mpcServer *MpcDistributor) CreateReqMpcSign(data []byte, extern []byte, pkBytes []byte, byApprove int64) ([]byte, error) {
+func (mpcServer *MpcDistributor) CreateReqMpcSign(data []byte, extern []byte, pkBytes []byte, byApprove int64) (interface{}, error) {
 
 	log.SyslogInfo("CreateReqMpcSign begin")
 	grpId, _ := osmconf.GetOsmConf().GetGrpInxByGpk(pkBytes)
@@ -260,7 +260,7 @@ func (mpcServer *MpcDistributor) CreateReqMpcSign(data []byte, extern []byte, pk
 	return value, err
 }
 
-func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValue ...MpcValue) (hexutil.Bytes, error) {
+func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValue ...MpcValue) (interface{}, error) {
 	log.SyslogInfo("MpcDistributor createRequestMpcContext begin")
 	mpcID, err := mpcServer.getMpcID()
 	if err != nil {
@@ -338,15 +338,14 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 	mpcServer.addMpcContext(mpcID, mpc)
 	defer mpcServer.removeMpcContext(mpcID)
 	err = mpc.mainMPCProcess(mpcServer)
-	if err != nil {
-		log.SyslogErr("MpcDistributor createRequestMpcContext, mainMPCProcess fail", "err", err.Error())
-		return []byte{}, err
-	}
+	//if err != nil {
+	//	log.SyslogErr("MpcDistributor createRequestMpcContext, mainMPCProcess fail", "err", err.Error())
+	//	return []byte{}, err
+	//}
 
-	result := mpc.getMpcResult()
+	return mpc.getMpcResult(err)
+	//log.SyslogInfo("MpcDistributor createRequestMpcContext, succeed", "result", common.ToHex(result))
 
-	log.SyslogInfo("MpcDistributor createRequestMpcContext, succeed", "result", common.ToHex(result))
-	return result, nil
 }
 
 func (mpcServer *MpcDistributor) loadStoremanAddress(address *common.Address) (*MpcValue, error) {

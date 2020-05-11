@@ -6,23 +6,24 @@ import (
 
 // cm
 type PolyCMInfo struct {
-	PolyCM 				[]hexutil.Bytes	`json:"PolyCM"`	// poly degree 17, contains 18 points
-	PolyCMR 			hexutil.Bytes `json:"PolyR"`
-	PolyCMS 			hexutil.Bytes `json:"PolyS"`
+	PolyCM 				hexutil.Bytes	`json:"PolyCM"`	// poly degree 17, contains 18 points
+	PolyCMR 			hexutil.Bytes 	`json:"PolyCMR"`
+	PolyCMS 			hexutil.Bytes 	`json:"PolyCMS"`
 }
 
 // s[i][j]
 type  PolyDataPln struct {
-	PolyData		hexutil.Bytes	`json:"PolyData"`
-	PolyDataR		hexutil.Bytes	`json:"PolyDataR"`
-	PolyDataS		hexutil.Bytes	`json:"polyDataS"`
+	PolyData		hexutil.Bytes		`json:"PolyData"`
+	PolyDataR		hexutil.Bytes		`json:"PolyDataR"`
+	PolyDataS		hexutil.Bytes		`json:"PolyDataS"`
 }
+
 
 type RSlshPrf struct {
 	PolyCMInfo
 	PolyDataPln
-	Sndr			hexutil.Bytes
-	Rcvr			hexutil.Bytes
+	SndrAndRcvrIndex [2]uint8
+	BecauseSndr			bool
 }
 
 type SSlshPrf struct {
@@ -30,6 +31,6 @@ type SSlshPrf struct {
 	M			hexutil.Bytes    //m
 	RPKShare	hexutil.Bytes    //sender's rpkshare
 	GPKShare	hexutil.Bytes    //sender's gpkshare
-	Sndr		hexutil.Bytes
-	Rcvr		hexutil.Bytes
+	SndrAndRcvrIndex [2]uint8
+	BecauseSndr			bool
 }

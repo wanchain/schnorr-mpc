@@ -77,6 +77,9 @@ func (ssj *MpcSSahreJudgeStep) FinishStep(result mpcprotocol.MpcResultInterface,
 		return err
 	}
 
+	if ssj.SSlshCount > 0 {
+		return mpcprotocol.ErrSSlsh
+	}
 	return nil
 }
 
