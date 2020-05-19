@@ -29,6 +29,7 @@ type GrpElem struct {
 	WorkingPk *ecdsa.PublicKey
 	NodeId	*discover.NodeID
 	PkShare	*ecdsa.PublicKey
+	XValue 	*big.Int
 }
 
 type ArrayGrpElem []GrpElem
@@ -156,6 +157,8 @@ func (cnf *OsmConf) LoadCnf(confPath string) error {
 			copy(nodeId[:],ge.NodeId[:])
 			gii.ArrGrpElems[i].NodeId = &nodeId
 
+			h:= sha256.Sum256(ge.WorkingPk)
+			gii.ArrGrpElems[i].XValue = big.NewInt(0).SetBytes(h[:])
 		}
 
 		cnf.GrpInfoMap[grpInfo.GrpId] = gii
@@ -460,7 +463,13 @@ func (cnf *OsmConf) GetXValueByIndex(grpId string,index uint16)(*big.Int, error)
 	// get x = hash(pk)
 	defer cnf.wrLock.RUnlock()
 	cnf.wrLock.RLock()
-	return cnf.GetPkToBigInt(grpId,index)
+	//return cnf.GetPkToBigInt(grpId,index)
+	ge,err := cnf.GetGrpItem(grpId,index)
+	if err!=nil  {
+		return big.NewInt(0),err
+	}else{
+		return ge.XValue, nil
+	}
 }
 
 func (cnf *OsmConf) GetLeaderIndex(grpId string)(uint16, error){
