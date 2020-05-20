@@ -292,7 +292,7 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 		// peers1: the peers which are used to create the group public key, used to build the sign data.
 
 		var POC bool
-		POC = true
+		POC = false
 		if POC{
 			b, _ := osmconf.GetOsmConf().GetPrivateShare()
 			value := &MpcValue{mpcprotocol.MpcPrivateShare, []big.Int{b}, nil}
@@ -491,7 +491,7 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 		var MpcPrivateShare *MpcValue
 
 		var POC bool
-		POC = true
+		POC = false
 		if POC{
 			b, _ := osmconf.GetOsmConf().GetPrivateShare()
 			MpcPrivateShare = &MpcValue{mpcprotocol.MpcPrivateShare, []big.Int{b}, nil}
