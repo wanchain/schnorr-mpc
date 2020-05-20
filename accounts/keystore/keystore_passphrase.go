@@ -274,7 +274,8 @@ func DecryptKey(keyjson []byte, auth string) (*Key, error) {
 	}
 	// Depending on the version try to parse one way or another
 	var (
-		keyBytes, keyBytes2, keyId []byte
+		//keyBytes, keyBytes2, keyId []byte
+		keyBytes, keyId []byte
 		err                        error
 		waddressStr                *string
 		exten                      *string
@@ -301,7 +302,8 @@ func DecryptKey(keyjson []byte, auth string) (*Key, error) {
 		if err := json.Unmarshal(keyjson, k); err != nil {
 			return nil, err
 		}
-		keyBytes, keyBytes2, keyId, err = decryptKeyV3(k, auth)
+		//keyBytes, keyBytes2, keyId, err = decryptKeyV3(k, auth)
+		keyBytes, _, keyId, err = decryptKeyV3(k, auth)
 		if err != nil {
 			return nil, err
 		}
@@ -315,10 +317,10 @@ func DecryptKey(keyjson []byte, auth string) (*Key, error) {
 		return nil, ErrInvalidPrivateKey
 	}
 
-	key2, err := crypto.ToECDSA(keyBytes2)
-	if err != nil || key2 == nil {
-		return nil, ErrInvalidPrivateKey
-	}
+	//key2, err := crypto.ToECDSA(keyBytes2)
+	//if err != nil || key2 == nil {
+	//	return nil, ErrInvalidPrivateKey
+	//}
 
 	waddressRaw, err := hex.DecodeString(*waddressStr)
 	if err != nil {
@@ -332,7 +334,8 @@ func DecryptKey(keyjson []byte, auth string) (*Key, error) {
 		Id:          uuid.UUID(keyId),
 		Address:     crypto.PubkeyToAddress(key.PublicKey),
 		PrivateKey:  key,
-		PrivateKey2: key2,
+		//PrivateKey2: key2,
+		PrivateKey2: nil,
 		WAddress:    waddress,
 		Exten:		 *exten,
 	}, nil
