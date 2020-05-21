@@ -521,6 +521,23 @@ func (cnf *OsmConf) GetAllPeersNodeIds()([]discover.NodeID, error){
 	return nodeIds, nil
 }
 
+
+func (cnf *OsmConf) IsLeader(grpId string)(bool, error){
+	defer cnf.wrLock.RUnlock()
+
+	cnf.wrLock.RLock()
+	selfIndex, err := cnf.GetSelfInx(grpId)
+	if err != nil {
+		return false, err
+	}
+	leaderInx, err := cnf.GetLeaderIndex(grpId)
+	if err != nil {
+		return false, err
+	}
+	return selfIndex == leaderInx, nil
+
+}
+
 //////////////////////////////////util/////////////////////////////
 
 // intersection
@@ -567,6 +584,7 @@ func pkToAddr(PkBytes []byte) (common.Address, error) {
 	address := crypto.PubkeyToAddress(*pk)
 	return address, nil
 }
+
 
 
 func GetGrpId(mpcResult mpcprotocol.MpcResultInterface)([]byte, string, error){
