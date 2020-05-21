@@ -368,7 +368,12 @@ func (mpcCtx *MpcContext) mainMPCProcess(StoremanManager mpcprotocol.StoremanMan
 		mpcMsg := &mpcprotocol.MpcMessage{ContextID: mpcCtx.ContextID,
 			StepID: 0,
 			Peers:  []byte(mpcErr.Error())}
-		StoremanManager.BroadcastMessage(peerIDs, mpcprotocol.MPCError, mpcMsg)
+
+		_,grpIdString,_ := osmconf.GetGrpId(mpcCtx.mpcResult)
+		isLeader,_ := osmconf.GetOsmConf().IsLeader(grpIdString)
+		if isLeader{
+			StoremanManager.BroadcastMessage(peerIDs, mpcprotocol.MPCError, mpcMsg)
+		}
 	}
 
 	mpcCtx.quit(nil)

@@ -85,14 +85,14 @@ func (point *mpcPointGenerator) calculateResult() error {
 		"Need nodes number:", mpcprotocol.MpcSchnrThr,
 		"Now nodes number:", len(gpkshares))
 	if len(gpkshares) < mpcprotocol.MpcSchnrThr {
-		//return mpcprotocol.ErrTooLessDataCollected
+		return mpcprotocol.ErrRNW
 
-		if ok,_ := osmconf.GetOsmConf().IsLeader(point.grpIdString);ok{
-			// only leader invoke the errRNW and response to client.
-			return mpcprotocol.ErrRNW
-		}else{
-			return nil
-		}
+		//if ok,_ := osmconf.GetOsmConf().IsLeader(point.grpIdString);ok{
+		//	// only leader invoke the errRNW and response to client.
+		//	return mpcprotocol.ErrRNW
+		//}else{
+		//	return nil
+		//}
 	}
 
 	result := schnorrmpc.LagrangeECC(gpkshares, seeds[:], mpcprotocol.MPCDegree)

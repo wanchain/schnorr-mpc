@@ -118,13 +118,13 @@ func (msg *mpcSGenerator) calculateResult() error {
 		"Need nodes number:", mpcprotocol.MpcSchnrThr,
 		"Now nodes number:", len(sigshares))
 	if len(sigshares) < mpcprotocol.MpcSchnrThr {
-		//return mpcprotocol.ErrTooLessDataCollected
-		if ok,_ := osmconf.GetOsmConf().IsLeader(msg.grpIdString);ok{
-			// only leader invoke the errRNW and response to client.
-			return mpcprotocol.ErrSNW
-		}else{
-			return nil
-		}
+		return mpcprotocol.ErrSNW
+		//if ok,_ := osmconf.GetOsmConf().IsLeader(msg.grpIdString);ok{
+		//	// only leader invoke the errRNW and response to client.
+		//	return mpcprotocol.ErrSNW
+		//}else{
+		//	return nil
+		//}
 
 	}
 
