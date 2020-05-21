@@ -249,8 +249,10 @@ func (mpcServer *MpcDistributor) CreateReqMpcSign(data []byte, extern []byte, pk
 	grpId, _ := osmconf.GetOsmConf().GetGrpInxByGpk(pkBytes)
 
 	// MpcGpkBytes stores the gpk bytes.
+	grpIdBytes,_ := hexutil.Decode(grpId)
 	value, err := mpcServer.createRequestMpcContext(mpcprotocol.MpcSignLeader,
-		MpcValue{mpcprotocol.MpcGrpId, nil, []byte(grpId)},
+		//MpcValue{mpcprotocol.MpcGrpId, nil, []byte(grpId)},
+		MpcValue{mpcprotocol.MpcGrpId, nil, grpIdBytes},
 		MpcValue{mpcprotocol.MpcGpkBytes, nil, pkBytes[:]},
 		MpcValue{mpcprotocol.PublicKeyResult, nil, pkBytes[:]},
 		MpcValue{mpcprotocol.MpcM, nil, data},
@@ -505,8 +507,8 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 		}
 
 		grpId, _ = osmconf.GetOsmConf().GetGrpInxByGpk(address[:])
-
-		preSetValue = append(preSetValue, MpcValue{mpcprotocol.MpcGrpId, nil, []byte(grpId)})
+		grpIdBytes,_ := hexutil.Decode(grpId)
+		preSetValue = append(preSetValue, MpcValue{mpcprotocol.MpcGrpId, nil, grpIdBytes})
 		preSetValue = append(preSetValue, MpcValue{mpcprotocol.MpcGpkBytes, nil, address})
 		preSetValue = append(preSetValue, MpcValue{mpcprotocol.MpcM, nil, mpcM})
 		preSetValue = append(preSetValue, MpcValue{mpcprotocol.MpcExt, nil, mpcExt})
