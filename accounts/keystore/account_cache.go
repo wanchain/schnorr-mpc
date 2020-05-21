@@ -201,21 +201,29 @@ func (ac *accountCache) find(a accounts.Account) (accounts.Account, error) {
 		}
 	}
 	fmt.Printf("len of matches = %v, %v \n", matches.Len(),len(matches))
-	//lenMatches := len(matches)
+	lenMatches := 1
 	////switch len(matches) {
-	//switch lenMatches {
-	//case 1:
-	//	return matches[0], nil
-	//case 0:
-	//	return accounts.Account{}, ErrNoMatch
-	//default:
-	//	err := &AmbiguousAddrError{Addr: a.Address, Matches: make([]accounts.Account, len(matches))}
-	//	copy(err.Matches, matches)
-	//	sort.Sort(accountsByURL(err.Matches))
-	//	return accounts.Account{}, err
-	//}
+	lenMatches = len(matches)
+	if lenMatches == 1{
+		fmt.Printf(".......Entering lenMatches == 1\n")
+	}else{
+		fmt.Printf(".......Entering lenMatches != 1\n")
+	}
+	switch lenMatches {
+	case 1:
+		fmt.Printf(".......Entering switch 1\n")
+		return matches[0], nil
+	case 0:
+		fmt.Printf(".......Entering switch 0\n")
+		return accounts.Account{}, ErrNoMatch
+	default:
+		err := &AmbiguousAddrError{Addr: a.Address, Matches: make([]accounts.Account, len(matches))}
+		copy(err.Matches, matches)
+		sort.Sort(accountsByURL(err.Matches))
+		return accounts.Account{}, err
+	}
 
-	return matches[0], nil
+	//return matches[0], nil
 	//if lenMatches == 1 {
 	//	return matches[0], nil
 	//}

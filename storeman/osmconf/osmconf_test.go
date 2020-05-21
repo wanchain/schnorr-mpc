@@ -76,3 +76,17 @@ func TestBuildDataByIndexes(t *testing.T) {
 
 	fmt.Printf("%v",ret)
 }
+
+func TestSwitch(t *testing.T){
+	match := []int{1,2}
+	lenMatches := len(match)
+
+	switch lenMatches {
+	case 1:
+		fmt.Printf("1")
+	case 0:
+		fmt.Printf("0")
+	default:
+		fmt.Printf("default")
+	}
+}
