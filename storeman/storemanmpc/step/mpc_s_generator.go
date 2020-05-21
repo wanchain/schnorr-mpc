@@ -119,8 +119,17 @@ func (msg *mpcSGenerator) calculateResult() error {
 		"Now nodes number:", len(sigshares))
 	if len(sigshares) < mpcprotocol.MpcSchnrThr {
 		//return mpcprotocol.ErrTooLessDataCollected
-		return mpcprotocol.ErrSNW
+		if ok,_ := osmconf.GetOsmConf().IsLeader(msg.grpIdString);ok{
+			// only leader invoke the errRNW and response to client.
+			return mpcprotocol.ErrSNW
+		}else{
+			return nil
+		}
+
 	}
+
+
+
 	result := schnorrmpc.Lagrange(sigshares, seeds[:], mpcprotocol.MPCDegree)
 	msg.result = result
 	log.SyslogInfo("mpcSGenerator.calculateResult succeed")
