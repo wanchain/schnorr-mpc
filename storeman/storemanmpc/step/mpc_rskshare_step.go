@@ -62,8 +62,9 @@ func (rss *MpcRSKShare_Step) FinishStep(result mpcprotocol.MpcResultInterface, m
 	rpkShare.X, rpkShare.Y = crypto.S256().ScalarBaseMult((*skpv.result).Bytes())
 
 	// RPkShare + selfIndex
-	grpId,_ := rss.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
-	grpIdString := string(grpId)
+
+	_,grpIdString,_ := osmconf.GetGrpId(rss.mpcResult)
+
 	selfIndex,_ := osmconf.GetOsmConf().GetSelfInx(grpIdString)
 	key := mpcprotocol.RPkShare + strconv.Itoa(int(selfIndex))
 
@@ -85,8 +86,9 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	// 1. check sig of s[i][j]
 	// 2. check value of s[i]]j] with the poly commit
 	// 3. if error , send to leader to judge
-	grpId,_ := rss.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
-	grpIdString := string(grpId)
+
+	_,grpIdString,_ := osmconf.GetGrpId(rss.mpcResult)
+
 	senderPk, _ := osmconf.GetOsmConf().GetPKByNodeId(grpIdString,msg.PeerID)
 	senderIndex,_ := osmconf.GetOsmConf().GetInxByNodeId(grpIdString,msg.PeerID)
 	selfIndex,_ := osmconf.GetOsmConf().GetSelfInx(grpIdString)

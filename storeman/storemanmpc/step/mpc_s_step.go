@@ -85,8 +85,9 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		r := msg.Data[3*i+1]
 		s := msg.Data[3*i+2]
 
-		grpId,_ := msStep.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
-		grpIdString := string(grpId)
+
+		_,grpIdString,_ := osmconf.GetGrpId(msStep.mpcResult)
+
 		senderPk,_ := osmconf.GetOsmConf().GetPKByNodeId(grpIdString,msg.PeerID)
 		senderIndex,_ := osmconf.GetOsmConf().GetInxByNodeId(grpIdString,msg.PeerID)
 
@@ -162,8 +163,8 @@ func (msStep *MpcSStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mp
 
 	// save index for incentive and slash
 
-	grpId,_ := msStep.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
-	grpIdString := string(grpId)
+	_,grpIdString,_ := osmconf.GetGrpId(msStep.mpcResult)
+
 	allIndex,_ := osmconf.GetOsmConf().GetGrpElemsInxes(grpIdString)
 	tempIndex := osmconf.Difference(*allIndex,msStep.sshareOKIndex)
 	msStep.sshareNOIndex = osmconf.Difference(tempIndex,msStep.sshareKOIndex)
@@ -269,8 +270,8 @@ func (msStep *MpcSStep) getm() (*big.Int,error) {
 
 func (msStep *MpcSStep) getGPKShare(index uint16) (*ecdsa.PublicKey,error) {
 	//
-	grpId,_ := msStep.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
-	grpIdString := string(grpId)
+
+	_,grpIdString,_ := osmconf.GetGrpId(msStep.mpcResult)
 
 	gpkShare, _ := osmconf.GetOsmConf().GetPKShare(grpIdString,index)
 

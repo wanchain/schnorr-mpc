@@ -37,8 +37,8 @@ func (poly *RandomPolynomialGen) initialize(peers *[]mpcprotocol.PeerInfo,
 	log.Info("RandomPolynomialGen::initialize ", "len of recieved message", len(poly.message))
 
 	// get randCoefficient
-	grpId,_ := result.GetByteValue(mpcprotocol.MpcGrpId)
-	grpIdString := string(grpId)
+	_,grpIdString,_ := osmconf.GetGrpId(result)
+
 	selfIndex, _ := osmconf.GetOsmConf().GetSelfInx(grpIdString)
 	key := mpcprotocol.RPolyCoff + strconv.Itoa(int(selfIndex))
 	poly.randCoefficient,_ = result.GetValue(key)

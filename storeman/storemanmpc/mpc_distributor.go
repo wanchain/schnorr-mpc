@@ -251,7 +251,6 @@ func (mpcServer *MpcDistributor) CreateReqMpcSign(data []byte, extern []byte, pk
 	// MpcGpkBytes stores the gpk bytes.
 	grpIdBytes,_ := hexutil.Decode(grpId)
 	value, err := mpcServer.createRequestMpcContext(mpcprotocol.MpcSignLeader,
-		//MpcValue{mpcprotocol.MpcGrpId, nil, []byte(grpId)},
 		MpcValue{mpcprotocol.MpcGrpId, nil, grpIdBytes},
 		MpcValue{mpcprotocol.MpcGpkBytes, nil, pkBytes[:]},
 		MpcValue{mpcprotocol.PublicKeyResult, nil, pkBytes[:]},
@@ -271,10 +270,10 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 
 	peers := []mpcprotocol.PeerInfo{}
 
-	var grpId string
+	var grpIdStr string
 	for _, item := range preSetValue {
 		if item.Key == mpcprotocol.MpcGrpId {
-			grpId = string(item.ByteValue)
+			grpIdStr = hexutil.Encode(item.ByteValue)
 			break
 		}
 	}
@@ -325,7 +324,7 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 	}*/
 
 	// todo error
-	peers, _ = osmconf.GetOsmConf().GetPeersByGrpId(grpId)
+	peers, _ = osmconf.GetOsmConf().GetPeersByGrpId(grpIdStr)
 	mpc, err := mpcServer.mpcCreater.CreateContext(ctxType,
 		mpcID,
 		peers,

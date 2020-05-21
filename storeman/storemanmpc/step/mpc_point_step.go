@@ -86,8 +86,9 @@ func (ptStep *MpcPointStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		r := msg.Data[0]
 		s := msg.Data[1]
 
-		grpId,_ := ptStep.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
-		grpIdString := string(grpId)
+
+		_,grpIdString,_ := osmconf.GetGrpId(ptStep.mpcResult)
+
 		senderPk,_ := osmconf.GetOsmConf().GetPKByNodeId(grpIdString,msg.PeerID)
 		senderIndex,_ := osmconf.GetOsmConf().GetInxByNodeId(grpIdString,msg.PeerID)
 

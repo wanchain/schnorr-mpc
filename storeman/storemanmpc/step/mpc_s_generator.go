@@ -91,8 +91,10 @@ func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcpr
 		"gpkShare",hexutil.Encode(crypto.FromECDSAPub(gpkShare)),
 		"rpkShare",hexutil.Encode(crypto.FromECDSAPub(rpkShare)))
 
-	grpId,_ := result.GetByteValue(mpcprotocol.MpcGrpId)
-	msg.grpIdString = string(grpId)
+
+	_,grpIdString,_ := osmconf.GetGrpId(result)
+
+	msg.grpIdString = grpIdString
 
 	log.SyslogInfo("mpcSGenerator.initialize succeed")
 	return nil

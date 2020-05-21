@@ -568,6 +568,17 @@ func pkToAddr(PkBytes []byte) (common.Address, error) {
 	return address, nil
 }
 
+
+func GetGrpId(mpcResult mpcprotocol.MpcResultInterface)([]byte, string, error){
+	grpId,err := mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
+	if err != nil {
+		return []byte{},"",err
+	}
+
+	grpIdString := hexutil.Encode(grpId)
+	return grpId, grpIdString, nil
+}
+
 //////////////// test only///////////////
 
 func (cnf *OsmConf) GetPrivateShare()(big.Int, error){

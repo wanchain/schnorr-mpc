@@ -29,9 +29,9 @@ func (point *mpcPointGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result
 	log.SyslogInfo("mpcPointGenerator.initialize begin ")
 
 	// get self rpkshare
-	grpId,_ := result.GetByteValue(mpcprotocol.MpcGrpId)
-	grpIdString := string(grpId)
-	point.grpIdString = string(grpId)
+	_, grpIdString, _ := osmconf.GetGrpId(result)
+
+	point.grpIdString = grpIdString
 
 	selfIndex,_ := osmconf.GetOsmConf().GetSelfInx(grpIdString)
 	key := mpcprotocol.RPkShare + strconv.Itoa(int(selfIndex))

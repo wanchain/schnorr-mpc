@@ -62,8 +62,9 @@ func (mpcCtx *MpcContext) getMpcResult(err error) (interface{}, error){
 	if err == nil {
 		sr.ResultType = 0
 		value, err := mpcCtx.mpcResult.GetByteValue(mpcprotocol.MpcContextResult)
-		grpId,_ := mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
-		grpIdString := string(grpId)
+
+		grpId,grpIdString,_ := osmconf.GetGrpId(mpcResult)
+
 		log.SyslogInfo("getMpcResult","grpIdString",grpIdString)
 
 		okIndexes,_ := mpcResult.GetValue(mpcprotocol.SOKIndex)
@@ -193,8 +194,7 @@ func (mpcCtx *MpcContext) getMpcResult(err error) (interface{}, error){
 	if err == mpcprotocol.ErrRNW {
 		// build S slash proof
 		sr.ResultType = 1
-		grpId,_ := mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
-		grpIdString := string(grpId)
+		grpId,grpIdString,_ := osmconf.GetGrpId(mpcResult)
 		log.SyslogInfo("getMpcResult","grpIdString",grpIdString)
 
 		RNOIndex,_ := mpcResult.GetValue(mpcprotocol.RNOIndex)
@@ -215,8 +215,7 @@ func (mpcCtx *MpcContext) getMpcResult(err error) (interface{}, error){
 
 		sr.ResultType = 2
 
-		grpId,_ := mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
-		grpIdString := string(grpId)
+		grpId,grpIdString,_ := osmconf.GetGrpId(mpcResult)
 		log.SyslogInfo("getMpcResult","grpIdString",grpIdString)
 
 		SNOIndex,_ := mpcResult.GetValue(mpcprotocol.SNOIndex)

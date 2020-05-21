@@ -23,8 +23,8 @@ func CreateMpcRStep(peers *[]mpcprotocol.PeerInfo, accType string) *MpcRStep {
 func (addStep *MpcRStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mpcprotocol.StoremanManager) error {
 	err := addStep.MpcPointStep.FinishStep(result, mpc)
 
-	grpId,_ := addStep.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
-	grpIdString := string(grpId)
+	_,grpIdString,_ := osmconf.GetGrpId(addStep.mpcResult)
+
 	allIndex,_ := osmconf.GetOsmConf().GetGrpElemsInxes(grpIdString)
 	tempIndex := osmconf.Difference(*allIndex,addStep.rpkshareOKIndex)
 	addStep.rpkshareNOIndex = osmconf.Difference(tempIndex,addStep.rpkshareKOIndex)

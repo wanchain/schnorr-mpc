@@ -31,8 +31,9 @@ func (rsj *MpcRSkJudgeStep) CreateMessage() []mpcprotocol.StepMessage {
 	keyErrNum := mpcprotocol.RSkErrNum
 	errNum,_ := rsj.mpcResult.GetValue(keyErrNum)
 	errNumInt64 := errNum[0].Int64()
-	grpId,_ := rsj.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
-	grpIdString := string(grpId)
+
+
+	_,grpIdString,_ := osmconf.GetGrpId(rsj.mpcResult)
 
 	var ret []mpcprotocol.StepMessage
 
@@ -90,8 +91,7 @@ func (rsj *MpcRSkJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	r := msg.Data[3]
 	s := msg.Data[4]
 
-	grpId,_ := rsj.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
-	grpIdString := string(grpId)
+	grpId,grpIdString,_ := osmconf.GetGrpId(rsj.mpcResult)
 	senderPk,_ := osmconf.GetOsmConf().GetPK(grpIdString,uint16(senderIndex))
 
 	// 1. check sig

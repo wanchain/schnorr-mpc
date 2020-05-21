@@ -44,8 +44,7 @@ func (req *MpcPolycmStep) InitStep(result mpcprotocol.MpcResultInterface) error 
 	req.BaseStep.InitStep(result)
 	// build self polynomial
 
-	grpId,_ := req.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
-	grpIdString := string(grpId)
+	_,grpIdString,_ := osmconf.GetGrpId(req.mpcResult)
 
 	threshold, _ := osmconf.GetOsmConf().GetThresholdNum(grpIdString)
 	degree := threshold -1
@@ -96,8 +95,7 @@ func (req *MpcPolycmStep) CreateMessage() []mpcprotocol.StepMessage {
 		Data:      nil,
 		BytesData: nil}
 
-	grpId,_ := req.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
-	grpIdString := string(grpId)
+	_,grpIdString,_ := osmconf.GetGrpId(req.mpcResult)
 
 	threshold, _ := osmconf.GetOsmConf().GetThresholdNum(grpIdString)
 	// Data[0]: R
@@ -222,10 +220,11 @@ func (req *MpcPolycmStep) checkSig(msg *mpcprotocol.StepMessage) bool {
 
 func (req *MpcPolycmStep) fillCmIntoMap(msg *mpcprotocol.StepMessage) bool {
 	nodeId := msg.PeerID
+
 	inx, _ := osmconf.GetOsmConf().GetInxByNodeId(req.grpId,nodeId)
 
-	grpId,_ := req.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
-	grpIdString := string(grpId)
+	_,grpIdString,_ := osmconf.GetGrpId(req.mpcResult)
+
 	threshold, _ := osmconf.GetOsmConf().GetThresholdNum(grpIdString)
 	// build polycmG
 	pg := make(schnorrmpc.PolynomialG,threshold)

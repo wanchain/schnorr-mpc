@@ -33,8 +33,8 @@ func (ssj *MpcSSahreJudgeStep) CreateMessage() []mpcprotocol.StepMessage {
 	keyErrNum := mpcprotocol.SShareErrNum
 	errNum,_ := ssj.mpcResult.GetValue(keyErrNum)
 	errNumInt64 := errNum[0].Int64()
-	grpId,_ := ssj.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
-	grpIdString := string(grpId)
+
+	_,grpIdString,_ := osmconf.GetGrpId(ssj.mpcResult)
 
 	var ret []mpcprotocol.StepMessage
 
@@ -91,8 +91,7 @@ func (ssj *MpcSSahreJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool 
 	r := msg.Data[3]
 	s := msg.Data[4]
 
-	grpId,_ := ssj.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
-	grpIdString := string(grpId)
+	grpId,grpIdString,_ := osmconf.GetGrpId(ssj.mpcResult)
 	senderPk,_ := osmconf.GetOsmConf().GetPK(grpIdString,uint16(senderIndex))
 
 	// 1. check sig
@@ -187,8 +186,8 @@ func (ssj *MpcSSahreJudgeStep) getm() (*big.Int,error) {
 
 func (ssj *MpcSSahreJudgeStep) getGPKShare(index uint16) (*ecdsa.PublicKey,error) {
 	//
-	grpId,_ := ssj.mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
-	grpIdString := string(grpId)
+
+	_,grpIdString,_ := osmconf.GetGrpId(ssj.mpcResult)
 	gpkShare, _ := osmconf.GetOsmConf().GetPKShare(grpIdString,index)
 
 	return gpkShare,nil
