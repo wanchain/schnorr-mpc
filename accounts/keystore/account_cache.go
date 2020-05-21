@@ -175,12 +175,12 @@ func removeAccount(slice []accounts.Account, elem accounts.Account) []accounts.A
 func (ac *accountCache) find(a accounts.Account) (accounts.Account, error) {
 	// Limit search to address candidates if possible.
 	matches := ac.all
-	//fmt.Printf("a.Address.String() = %v\n",a.Address.String())
+	fmt.Printf("a.Address.String() = %v\n",a.Address.String())
 
-	//for i := range matches {
-	//	fmt.Printf("matches[i].URL = %v\n",matches[i].URL)
-	//	fmt.Printf("matches[i].Address = %v\n",matches[i].Address.String())
-	//}
+	for i := range matches {
+		fmt.Printf("matches[i].URL = %v\n",matches[i].URL)
+		fmt.Printf("matches[i].Address = %v\n",matches[i].Address.String())
+	}
 
 	if (a.Address != common.Address{}) {
 		matches = ac.byAddr[a.Address]
@@ -200,17 +200,33 @@ func (ac *accountCache) find(a accounts.Account) (accounts.Account, error) {
 			return accounts.Account{}, ErrNoMatch
 		}
 	}
-	switch len(matches) {
-	case 1:
-		return matches[0], nil
-	case 0:
-		return accounts.Account{}, ErrNoMatch
-	default:
-		err := &AmbiguousAddrError{Addr: a.Address, Matches: make([]accounts.Account, len(matches))}
-		copy(err.Matches, matches)
-		sort.Sort(accountsByURL(err.Matches))
-		return accounts.Account{}, err
-	}
+	fmt.Printf("len of matches = %v, %v \n", matches.Len(),len(matches))
+	//lenMatches := len(matches)
+	////switch len(matches) {
+	//switch lenMatches {
+	//case 1:
+	//	return matches[0], nil
+	//case 0:
+	//	return accounts.Account{}, ErrNoMatch
+	//default:
+	//	err := &AmbiguousAddrError{Addr: a.Address, Matches: make([]accounts.Account, len(matches))}
+	//	copy(err.Matches, matches)
+	//	sort.Sort(accountsByURL(err.Matches))
+	//	return accounts.Account{}, err
+	//}
+
+	return matches[0], nil
+	//if lenMatches == 1 {
+	//	return matches[0], nil
+	//}
+	//if lenMatches == 0 {
+	//	return accounts.Account{}, ErrNoMatch
+	//}else {
+	//	err := &AmbiguousAddrError{Addr: a.Address, Matches: make([]accounts.Account, len(matches))}
+	//	copy(err.Matches, matches)
+	//	sort.Sort(accountsByURL(err.Matches))
+	//	return accounts.Account{}, err
+	//}
 }
 
 func (ac *accountCache) maybeReload() {

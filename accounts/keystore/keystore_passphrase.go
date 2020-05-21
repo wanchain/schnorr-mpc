@@ -277,7 +277,7 @@ func DecryptKey(keyjson []byte, auth string) (*Key, error) {
 		//keyBytes, keyBytes2, keyId []byte
 		keyBytes, keyId []byte
 		err                        error
-		waddressStr                *string
+		//waddressStr                *string
 		exten                      *string
 	)
 	if version, ok := m["version"].(string); ok && version == "1" {
@@ -308,7 +308,7 @@ func DecryptKey(keyjson []byte, auth string) (*Key, error) {
 			return nil, err
 		}
 
-		waddressStr = &k.WAddress
+		//waddressStr = &k.WAddress
 		exten = &k.Exten
 	}
 
@@ -322,13 +322,13 @@ func DecryptKey(keyjson []byte, auth string) (*Key, error) {
 	//	return nil, ErrInvalidPrivateKey
 	//}
 
-	waddressRaw, err := hex.DecodeString(*waddressStr)
-	if err != nil {
-		return nil, err
-	}
-
-	var waddress common.WAddress
-	copy(waddress[:], waddressRaw)
+	//waddressRaw, err := hex.DecodeString(*waddressStr)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//var waddress common.WAddress
+	//copy(waddress[:], waddressRaw)
 
 	return &Key{
 		Id:          uuid.UUID(keyId),
@@ -336,7 +336,8 @@ func DecryptKey(keyjson []byte, auth string) (*Key, error) {
 		PrivateKey:  key,
 		//PrivateKey2: key2,
 		PrivateKey2: nil,
-		WAddress:    waddress,
+		//WAddress:    waddress,
+		WAddress:    common.WAddress{},
 		Exten:		 *exten,
 	}, nil
 }

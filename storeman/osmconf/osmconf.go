@@ -151,11 +151,14 @@ func (cnf *OsmConf) LoadCnf(confPath string) error {
 			Inx,_ := strconv.Atoi(ge.Inx)
 			gii.ArrGrpElems[i].Inx = uint16(Inx)
 			gii.ArrGrpElems[i].PkShare = crypto.ToECDSAPub(ge.PkShare)
+			fmt.Printf(">>>>>>>>>>>>>ge.WorkingPk %v\n",ge.WorkingPk)
+			fmt.Printf(">>>>>>>>>>>>>ge.PkShare %v\n",ge.PkShare)
 			gii.ArrGrpElems[i].WorkingPk = crypto.ToECDSAPub(ge.WorkingPk)
 
 			nodeId := discover.NodeID{}
 			copy(nodeId[:],ge.NodeId[:])
 			gii.ArrGrpElems[i].NodeId = &nodeId
+
 
 			h:= sha256.Sum256(ge.WorkingPk)
 			gii.ArrGrpElems[i].XValue = big.NewInt(0).SetBytes(h[:])
@@ -256,6 +259,8 @@ func (cnf *OsmConf) GetSelfPubKey() (*ecdsa.PublicKey, error){
 
 	for _, grpInfo := range cnf.GrpInfoMap{
 		for _, grpElem := range grpInfo.ArrGrpElems{
+			fmt.Printf(">>>>>>>*grpElem.NodeId %v\n",*grpElem.NodeId)
+			fmt.Printf(">>>>>>>*cnf.SelfNodeId %v\n",*cnf.SelfNodeId)
 			if *grpElem.NodeId == *cnf.SelfNodeId{
 				return grpElem.WorkingPk, nil
 			}
@@ -296,6 +301,7 @@ func (cnf *OsmConf) GetSelfPrvKey() (*ecdsa.PrivateKey,error) {
 	}
 
 	var keyjson []byte
+	log.Info("GetSelfPrvKey","account.URL.Path",account.URL.Path)
 	keyjson, err = ioutil.ReadFile(account.URL.Path)
 
 	if err != nil {
@@ -307,7 +313,8 @@ func (cnf *OsmConf) GetSelfPrvKey() (*ecdsa.PrivateKey,error) {
 	key, err := keystore.DecryptKey(keyjson, cnf.WorkingPassword)
 	if err != nil {
 		// decrypt account keyjson fail
-		panic("find account from keystore fail")
+		log.Info("GetSelfPrvKey","DecryptKey err ",err)
+		panic("DecryptKey account from keystore fail")
 		return nil, err
 	}
 	return key.PrivateKey,nil
@@ -316,6 +323,7 @@ func (cnf *OsmConf) GetSelfPrvKey() (*ecdsa.PrivateKey,error) {
 func (cnf *OsmConf) SetSelfNodeId(id *discover.NodeID)(error){
 	defer cnf.wrLock.Unlock()
 	cnf.wrLock.Lock()
+	fmt.Printf(">>>>>>>SetSelfNodeId %v \n", id.String())
 	cnf.SelfNodeId = id
 	return nil
 }
@@ -553,7 +561,7 @@ func Difference(slice1, slice2 []uint16) []uint16 {
 
 func pkToAddr(PkBytes []byte) (common.Address, error) {
 	if len(PkBytes) != 65 {
-		return common.Address{}, errors.New("invalid pk address")
+		return common.Address{}, errors.New("invalid pk address in osmconf.go")
 	}
 	pk := crypto.ToECDSAPub(PkBytes[:])
 	address := crypto.PubkeyToAddress(*pk)
