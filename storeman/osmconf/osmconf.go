@@ -58,6 +58,7 @@ type OsmConf struct {
 	confPath        string
 	pwdPath         string
 	wrLock          sync.RWMutex
+	pwdFileMap      map[string]string
 }
 
 //-----------------------configure content begin ---------------------------------
@@ -398,13 +399,16 @@ func (cnf *OsmConf) SetFilePath(path string) error {
 }
 
 func (cnf *OsmConf) GetGpkPwd(gpk string) (string, error) {
-	fileName := path.Join(cnf.pwdPath, gpk+".pwd")
+
+	fn, _ := cnf.getPwdFileName(gpk + ".pwd")
+	fileName := path.Join(cnf.pwdPath, fn)
 	// get password from file
 	return cnf.GetPwd(fileName)
 }
 
 func (cnf *OsmConf) GetWkPwd(address string) (string, error) {
-	fileName := path.Join(cnf.pwdPath, address+".pwd")
+	fn, _ := cnf.getPwdFileName(address + ".pwd")
+	fileName := path.Join(cnf.pwdPath, fn)
 	return cnf.GetPwd(fileName)
 }
 
@@ -432,7 +436,31 @@ func (cnf *OsmConf) SetPwdPath(path string) error {
 		panic(fmt.Sprintf("SetFilePath path is empty"))
 	}
 	cnf.pwdPath = path
+	cnf.buildPwdMap(path)
 	return nil
+}
+
+func (cnf *OsmConf) buildPwdMap(dir string) error {
+	cnf.pwdFileMap = make(map[string]string, 0)
+	flist, err := ioutil.ReadDir(dir)
+
+	if err != nil {
+		return err
+	}
+
+	for _, f := range flist {
+		key := strings.ToUpper(f.Name())
+		cnf.pwdFileMap[key] = f.Name()
+	}
+	return nil
+}
+
+func (cnf *OsmConf) getPwdFileName(incaseFielName string) (string, error) {
+	ret, ok := cnf.pwdFileMap[strings.ToUpper(incaseFielName)]
+	if ok {
+		return ret, nil
+	}
+	return incaseFielName, nil
 }
 
 //-----------------------get group---------------------------------
