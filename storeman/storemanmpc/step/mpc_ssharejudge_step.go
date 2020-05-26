@@ -54,7 +54,6 @@ func (ssj *MpcSSahreJudgeStep) CreateMessage() []mpcprotocol.StepMessage {
 			}
 
 			// send multi judge message to leader,since there are more than one error.
-			// todo only send to leader
 			ret[i] = mpcprotocol.StepMessage{MsgCode: mpcprotocol.MPCMessage,
 				PeerID:    leaderPeerId,
 				Peers:     nil,
@@ -69,10 +68,13 @@ func (ssj *MpcSSahreJudgeStep) CreateMessage() []mpcprotocol.StepMessage {
 }
 
 func (ssj *MpcSSahreJudgeStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mpcprotocol.StoremanManager) error {
-	// todo error handle
-	ssj.saveSlshCount(int(ssj.SSlshCount))
+	err := ssj.saveSlshCount(int(ssj.SSlshCount))
+	if err != nil {
+		log.SyslogErr("MpcSSahreJudgeStep", "FinishStep err", err.Error())
+		return err
+	}
 
-	err := ssj.BaseStep.FinishStep()
+	err = ssj.BaseStep.FinishStep()
 	if err != nil {
 		return err
 	}
@@ -239,9 +241,16 @@ func (ssj *MpcSSahreJudgeStep) saveSlshProof(isSnder bool,
 	sslshByte.Write(grp[:])
 
 	key1 := mpcprotocol.SSlshProof + strconv.Itoa(int(slshCount))
-	// todo error handle
-	ssj.mpcResult.SetValue(key1, sslshValue)
-	ssj.mpcResult.SetByteValue(key1, sslshByte.Bytes())
+	err := ssj.mpcResult.SetValue(key1, sslshValue)
+	if err != nil {
+		log.SyslogErr("MpcSSahreJudgeStep", "saveSlshProof.SetValue err ", err.Error())
+		return err
+	}
+	err = ssj.mpcResult.SetByteValue(key1, sslshByte.Bytes())
+	if err != nil {
+		log.SyslogErr("MpcSSahreJudgeStep", "saveSlshProof.SetByteValue err ", err.Error())
+		return err
+	}
 
 	return nil
 }

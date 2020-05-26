@@ -18,6 +18,15 @@ type MemStatus struct {
 	Self uint64 `json:"self"`
 }
 
+const InternalErr = -1
+const (
+	success = iota
+	rNW
+	sNW
+	rSlsh
+	sSlsh
+)
+
 type MpcStepFunc interface {
 	mpcprotocol.GetMessageInterface
 	InitMessageLoop(mpcprotocol.GetMessageInterface) error
@@ -41,39 +50,26 @@ type MpcContext struct {
 	MapStepChan map[uint64]chan *mpcprotocol.StepMessage
 }
 
-
-//func buildDataByIndexes(indexes *[]big.Int) (*big.Int,error){
-//
-//	ret := schnorrmpc.BigZero
-//	for _,indexBig := range *indexes{
-//		bigTm := big.NewInt(0)
-//		*bigTm = *bigTm.Exp(schnorrmpc.BigOne,&indexBig,nil)
-//		log.SyslogInfo(">>>>>>buildDataByIndexes","indexBig",indexBig,"*bigTm",*bigTm)
-//		ret = ret.Add(ret,bigTm)
-//	}
-//	return ret, nil
-//}
-
-func (mpcCtx *MpcContext) getMpcResult(err error) (interface{}, error){
+func (mpcCtx *MpcContext) getMpcResult(err error) (interface{}, error) {
 
 	sr := mpcprotocol.SignedResult{}
 	mpcResult := mpcCtx.mpcResult
 
 	if err == nil {
-		sr.ResultType = 0
+		sr.ResultType = success
 		value, err := mpcCtx.mpcResult.GetByteValue(mpcprotocol.MpcContextResult)
 
-		grpId,grpIdString,_ := osmconf.GetGrpId(mpcResult)
+		grpId, grpIdString, _ := osmconf.GetGrpId(mpcResult)
 
-		log.SyslogInfo("getMpcResult","grpIdString",grpIdString)
+		log.SyslogInfo("getMpcResult", "grpIdString", grpIdString)
 
-		okIndexes,_ := mpcResult.GetValue(mpcprotocol.SOKIndex)
+		okIndexes, _ := mpcResult.GetValue(mpcprotocol.SOKIndex)
 
-		log.SyslogInfo("getMpcResult","okIndexes",okIndexes)
+		log.SyslogInfo("getMpcResult", "okIndexes", okIndexes)
 
 		retBig, _ := osmconf.BuildDataByIndexes(&okIndexes)
 		sr.IncntData = retBig.Bytes()
-		log.SyslogInfo("getMpcResult","IncntData",hexutil.Encode(sr.IncntData))
+		log.SyslogInfo("getMpcResult", "IncntData", hexutil.Encode(sr.IncntData))
 
 		if err != nil {
 			return nil, err
@@ -83,39 +79,31 @@ func (mpcCtx *MpcContext) getMpcResult(err error) (interface{}, error){
 			sr.GrpId = grpId
 
 			//sr.IncntData
-			return sr,nil
+			return sr, nil
 		}
 	}
-
-	// todo change to const value, or enum.
-	// -1: internal error
-	// 0: success
-	// 1: rNW
-	// 2: sNW
-	// 3. rSlsh
-	// 4. sSlsh
 
 	if err != mpcprotocol.ErrRSlsh &&
 		err != mpcprotocol.ErrSSlsh &&
 		err != mpcprotocol.ErrRNW &&
 		err != mpcprotocol.ErrSNW {
-		return nil,err
+		return nil, err
 	}
 
-	if err  == mpcprotocol.ErrRSlsh {
+	if err == mpcprotocol.ErrRSlsh {
 		//build R slash proof
-		sr.ResultType = 3
+		sr.ResultType = rSlsh
 
 		keyErrNum := mpcprotocol.RSkErrNum
-		errNum,_ := mpcResult.GetValue(keyErrNum)
+		errNum, _ := mpcResult.GetValue(keyErrNum)
 		errNumInt64 := errNum[0].Int64()
-		for i:=0; i< int(errNumInt64); i++{
+		for i := 0; i < int(errNumInt64); i++ {
 			key := mpcprotocol.RSlshProof + strconv.Itoa(int(i))
-			rslshValue,_ := mpcResult.GetValue(key)
+			rslshValue, _ := mpcResult.GetValue(key)
 
 			if len(rslshValue) != 9 {
 				// todo error handle
-			}else{
+			} else {
 
 				oneRPrf := mpcprotocol.RSlshPrf{}
 				oneRPrf.PolyCMR = rslshValue[1].Bytes()
@@ -123,44 +111,42 @@ func (mpcCtx *MpcContext) getMpcResult(err error) (interface{}, error){
 				oneRPrf.PolyData = rslshValue[3].Bytes()
 				oneRPrf.PolyDataR = rslshValue[4].Bytes()
 				oneRPrf.PolyDataS = rslshValue[5].Bytes()
-				oneRPrf.SndrAndRcvrIndex = [2]uint8{uint8(rslshValue[6].Int64()),uint8(rslshValue[7].Int64())}
+				oneRPrf.SndrAndRcvrIndex = [2]uint8{uint8(rslshValue[6].Int64()), uint8(rslshValue[7].Int64())}
 
 				if rslshValue[0].Cmp(schnorrmpc.BigZero) == 0 {
 					oneRPrf.BecauseSndr = false
-				}else{
+				} else {
 					oneRPrf.BecauseSndr = true
 				}
 
 				polyLen := int(rslshValue[8].Int64())
 
-				rslshBytes,_ := mpcResult.GetByteValue(key)
+				rslshBytes, _ := mpcResult.GetByteValue(key)
 
 				// todo error handle
-				oneRPrf.PolyCM = rslshBytes[0:65*polyLen]
+				oneRPrf.PolyCM = rslshBytes[0 : 65*polyLen]
 				sr.GrpId = rslshBytes[65*polyLen:]
 
-				sr.RSlsh = append(sr.RSlsh,oneRPrf)
+				sr.RSlsh = append(sr.RSlsh, oneRPrf)
 			}
 
-
 		}
-		return sr,err
+		return sr, err
 	}
 	if err == mpcprotocol.ErrSSlsh {
 		// build S slash proof
-		//build R slash proof
-		sr.ResultType = 4
+		sr.ResultType = sSlsh
 
 		keyErrNum := mpcprotocol.SShareErrNum
-		errNum,_ := mpcResult.GetValue(keyErrNum)
+		errNum, _ := mpcResult.GetValue(keyErrNum)
 		errNumInt64 := errNum[0].Int64()
-		for i:=0; i< int(errNumInt64); i++{
+		for i := 0; i < int(errNumInt64); i++ {
 			key := mpcprotocol.SSlshProof + strconv.Itoa(int(i))
-			rslshValue,_ := mpcResult.GetValue(key)
+			rslshValue, _ := mpcResult.GetValue(key)
 
 			if len(rslshValue) != 8 {
 				// todo error handle
-			}else{
+			} else {
 
 				oneRPrf := mpcprotocol.SSlshPrf{}
 				oneRPrf.M = rslshValue[1].Bytes()
@@ -168,70 +154,66 @@ func (mpcCtx *MpcContext) getMpcResult(err error) (interface{}, error){
 				oneRPrf.PolyDataR = rslshValue[3].Bytes()
 				oneRPrf.PolyDataS = rslshValue[4].Bytes()
 
-				oneRPrf.SndrAndRcvrIndex = [2]uint8{uint8(rslshValue[5].Int64()),uint8(rslshValue[6].Int64())}
+				oneRPrf.SndrAndRcvrIndex = [2]uint8{uint8(rslshValue[5].Int64()), uint8(rslshValue[6].Int64())}
 
 				if rslshValue[0].Cmp(schnorrmpc.BigZero) == 0 {
 					oneRPrf.BecauseSndr = false
-				}else{
+				} else {
 					oneRPrf.BecauseSndr = true
 				}
 
-				rslshBytes,_ := mpcResult.GetByteValue(key)
+				rslshBytes, _ := mpcResult.GetByteValue(key)
 
 				// todo error handle
 				oneRPrf.RPKShare = rslshBytes[0:65]
-				oneRPrf.GPKShare = rslshBytes[65:65*2]
+				oneRPrf.GPKShare = rslshBytes[65 : 65*2]
 				sr.GrpId = rslshBytes[65*2:]
 
-				sr.SSlsh = append(sr.SSlsh,oneRPrf)
+				sr.SSlsh = append(sr.SSlsh, oneRPrf)
 			}
-
 
 		}
 		return sr, err
 	}
 
 	if err == mpcprotocol.ErrRNW {
-		// build S slash proof
-		sr.ResultType = 1
-		grpId,grpIdString,_ := osmconf.GetGrpId(mpcResult)
-		log.SyslogInfo("getMpcResult","grpIdString",grpIdString)
+		sr.ResultType = rNW
+		grpId, grpIdString, _ := osmconf.GetGrpId(mpcResult)
+		log.SyslogInfo("getMpcResult", "grpIdString", grpIdString)
 
-		RNOIndex,_ := mpcResult.GetValue(mpcprotocol.RNOIndex)
+		RNOIndex, _ := mpcResult.GetValue(mpcprotocol.RNOIndex)
 
-		log.SyslogInfo("getMpcResult","RNOIndex",RNOIndex)
+		log.SyslogInfo("getMpcResult", "RNOIndex", RNOIndex)
 
 		retBig, _ := osmconf.BuildDataByIndexes(&RNOIndex)
 		sr.RNW = retBig.Bytes()
 		sr.GrpId = grpId
 
-		log.SyslogInfo("getMpcResult","RNW",hexutil.Encode(sr.RNW))
+		log.SyslogInfo("getMpcResult", "RNW", hexutil.Encode(sr.RNW))
 
 		return sr, nil
 	}
 
 	if err == mpcprotocol.ErrSNW {
-		// build S slash proof
+		sr.ResultType = sNW
 
-		sr.ResultType = 2
+		grpId, grpIdString, _ := osmconf.GetGrpId(mpcResult)
+		log.SyslogInfo("getMpcResult", "grpIdString", grpIdString)
 
-		grpId,grpIdString,_ := osmconf.GetGrpId(mpcResult)
-		log.SyslogInfo("getMpcResult","grpIdString",grpIdString)
+		SNOIndex, _ := mpcResult.GetValue(mpcprotocol.SNOIndex)
 
-		SNOIndex,_ := mpcResult.GetValue(mpcprotocol.SNOIndex)
-
-		log.SyslogInfo("getMpcResult","SNOIndex",SNOIndex)
+		log.SyslogInfo("getMpcResult", "SNOIndex", SNOIndex)
 
 		retBig, _ := osmconf.BuildDataByIndexes(&SNOIndex)
 		sr.SNW = retBig.Bytes()
 		sr.GrpId = grpId
 
-		log.SyslogInfo("getMpcResult","SNW",hexutil.Encode(sr.IncntData))
+		log.SyslogInfo("getMpcResult", "SNW", hexutil.Encode(sr.IncntData))
 
 		return sr, nil
 	}
 
-	return nil,nil
+	return nil, nil
 }
 
 func (mpcCtx *MpcContext) getMessage(PeerID *discover.NodeID,
@@ -316,10 +298,10 @@ func (mpcCtx *MpcContext) mainMPCProcess(StoremanManager mpcprotocol.StoremanMan
 
 			// todo need think over. should initmessageLoop here or above??
 			err = mpcCtx.MpcSteps[i].InitMessageLoop(mpcCtx.MpcSteps[i])
-				if err != nil {
-					mpcErr = err
-					break
-				}
+			if err != nil {
+				mpcErr = err
+				break
+			}
 			log.SyslogInfo("\n")
 			log.SyslogInfo("===============================Start============================================")
 			log.SyslogInfo("\n")
@@ -338,8 +320,8 @@ func (mpcCtx *MpcContext) mainMPCProcess(StoremanManager mpcprotocol.StoremanMan
 						log.SyslogInfo("step send a p2p msg", "ctxid", mpcCtx.ContextID, "stepId", i)
 					} else {
 
-						for _,item := range peerIDs{
-							log.SyslogInfo("step boardcast a p2p msg", "peerid",item.String())
+						for _, item := range peerIDs {
+							log.SyslogInfo("step boardcast a p2p msg", "peerid", item.String())
 						}
 
 						StoremanManager.BroadcastMessage(peerIDs, item.MsgCode, mpcMsg)
@@ -369,9 +351,9 @@ func (mpcCtx *MpcContext) mainMPCProcess(StoremanManager mpcprotocol.StoremanMan
 			StepID: 0,
 			Peers:  []byte(mpcErr.Error())}
 
-		_,grpIdString,_ := osmconf.GetGrpId(mpcCtx.mpcResult)
-		isLeader,_ := osmconf.GetOsmConf().IsLeader(grpIdString)
-		if isLeader{
+		_, grpIdString, _ := osmconf.GetGrpId(mpcCtx.mpcResult)
+		isLeader, _ := osmconf.GetOsmConf().IsLeader(grpIdString)
+		if isLeader {
 			StoremanManager.BroadcastMessage(peerIDs, mpcprotocol.MPCError, mpcMsg)
 		}
 	}

@@ -52,7 +52,6 @@ func (rsj *MpcRSkJudgeStep) CreateMessage() []mpcprotocol.StepMessage {
 			}
 
 			// send multi judge message to leader,since there are more than one error.
-			// todo only send to leader
 			ret[i] = mpcprotocol.StepMessage{MsgCode: mpcprotocol.MPCMessage,
 				PeerID:    leaderPeerId,
 				Peers:     nil,
@@ -68,10 +67,13 @@ func (rsj *MpcRSkJudgeStep) CreateMessage() []mpcprotocol.StepMessage {
 
 func (rsj *MpcRSkJudgeStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mpcprotocol.StoremanManager) error {
 
-	// todo error handle
-	rsj.saveSlshCount(int(rsj.RSlshCount))
+	err := rsj.saveSlshCount(int(rsj.RSlshCount))
+	if err != nil {
+		log.SyslogErr("MpcRSkJudgeStep", "FinishStep err ", err.Error())
+		return err
+	}
 
-	err := rsj.BaseStep.FinishStep()
+	err = rsj.BaseStep.FinishStep()
 	if err != nil {
 		return err
 	}
@@ -103,9 +105,7 @@ func (rsj *MpcRSkJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	bSnderWrong := true
 
 	if !bVerifySig {
-		// sig error , todo sender error
-		// 1. write slash poof
-		// 2. save slash num
+		log.SyslogErr("MpcRSkJudgeStep", "HandleMessage.bVerifySig", bVerifySig, "bSnderWrong", true)
 		bSnderWrong = true
 	}
 
@@ -128,11 +128,11 @@ func (rsj *MpcRSkJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 
 	bContentCheck := true
 	if ok, _ := schnorrmpc.PkEqual(sijg, sijgEval); !ok {
-		// todo sender error
+		log.SyslogErr("MpcRSkJudgeStep", "bSnderWrong", bSnderWrong, "bContentCheck", bContentCheck)
 		bSnderWrong = true
 		bContentCheck = false
 	} else {
-		// todo receiver error
+		log.SyslogErr("MpcRSkJudgeStep", "bSnderWrong", bSnderWrong, "bContentCheck", bContentCheck)
 		bSnderWrong = false
 	}
 
@@ -149,9 +149,12 @@ func (ssj *MpcRSkJudgeStep) saveSlshCount(slshCount int) error {
 	sslshValue := make([]big.Int, 1)
 	sslshValue[0] = *big.NewInt(0).SetInt64(int64(ssj.RSlshCount))
 
-	// todo error handle
 	key := mpcprotocol.RSlshProofNum + strconv.Itoa(int(ssj.RSlshCount))
-	ssj.mpcResult.SetValue(key, sslshValue)
+	err := ssj.mpcResult.SetValue(key, sslshValue)
+	if err != nil {
+		log.SyslogErr("MpcRSkJudgeStep", "saveSlshCount err ", err.Error())
+		return err
+	}
 
 	return nil
 }
@@ -182,9 +185,15 @@ func (ssj *MpcRSkJudgeStep) saveSlshProof(isSnder bool,
 	sslshByte.Write(grp[:])
 
 	key1 := mpcprotocol.RSlshProof + strconv.Itoa(int(slshCount))
-	// todo error handle
-	ssj.mpcResult.SetValue(key1, sslshValue)
-	ssj.mpcResult.SetByteValue(key1, sslshByte.Bytes())
-
+	err := ssj.mpcResult.SetValue(key1, sslshValue)
+	if err != nil {
+		log.SyslogErr("MpcRSkJudgeStep", "saveSlshProof.SetValue", err.Error())
+		return err
+	}
+	err = ssj.mpcResult.SetByteValue(key1, sslshByte.Bytes())
+	if err != nil {
+		log.SyslogErr("MpcRSkJudgeStep", "saveSlshProof.SetByteValue", err.Error())
+		return err
+	}
 	return nil
 }

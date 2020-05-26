@@ -311,16 +311,8 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 			// mpc private share
 			preSetValue = append(preSetValue, *value)
 		}
+	}
 
-		// todo
-		//peers = peers1
-	} /*else {
-		for i := 0; i < len(mpcServer.StoreManGroup); i++ {
-			peers = append(peers, mpcprotocol.PeerInfo{PeerID: mpcServer.StoreManGroup[i], Seed: 0})
-		}
-	}*/
-
-	// todo error
 	peers, err = osmconf.GetOsmConf().GetPeersByGrpId(grpIdStr)
 	if err != nil {
 		log.SyslogErr("createRequestMpcContext", "GetPeersByGrpId", err.Error())
@@ -346,8 +338,6 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 	//}
 
 	return mpc.getMpcResult(err)
-	//log.SyslogInfo("MpcDistributor createRequestMpcContext, succeed", "result", common.ToHex(result))
-
 }
 
 func (mpcServer *MpcDistributor) loadStoremanAddress(address *common.Address) (*MpcValue, error) {
@@ -366,62 +356,15 @@ func (mpcServer *MpcDistributor) loadStoremanAddress(address *common.Address) (*
 			return nil, err
 		}
 
-		//b := make([]byte, 8)
-		//peers := make([]mpcprotocol.PeerInfo, len(mpcServer.StoreManGroup))
-		//for i := 0; i < len(mpcServer.StoreManGroup); i++ {
-		//	copy(b[5:], key.WAddress[i*3:])
-		//	seed := binary.BigEndian.Uint64(b)
-		//	peers[i].PeerID = mpcServer.StoreManGroup[i]
-		//	peers[i].Seed = seed
-		//}
-
 		value = &mpcAccount{*address, *key.PrivateKey.D, nil, key.Exten}
 
 		mpcServer.mpcAccountMap[*address] = value
 	}
 
-	// todo Not get gpk from keystore and get gpk from the sign message.
-	// sigmessage : gpk + dataNeedToBeSigned.
-
 	gpkShare, _ := schnorrmpc.SkG(&value.privateShare)
-	log.SyslogInfo("^^^^^^^^^^^^^^^^^^^^loadStoremanAddress", "gpkShare", hexutil.Encode(crypto.FromECDSAPub(gpkShare)))
+	log.SyslogInfo("loadStoremanAddress", "gpkShare", hexutil.Encode(crypto.FromECDSAPub(gpkShare)))
 	return &MpcValue{mpcprotocol.MpcPrivateShare, []big.Int{value.privateShare}, nil}, nil
 }
-
-//func (mpcServer *MpcDistributor) SetMessagePeers(mpcMessage *mpcprotocol.MpcMessage, peers *[]mpcprotocol.PeerInfo) {
-//	if peers == nil || len(*peers) == 0 {
-//		return
-//	}
-//
-//	mpcMessage.Peers = make([]byte, len(*peers)*4)
-//	for i, peer := range *peers {
-//		mpcMessage.Peers[i*4] = mpcServer.storeManIndex[peer.PeerID]
-//		b := make([]byte, 8)
-//		binary.BigEndian.PutUint64(b, peer.Seed)
-//		copy(mpcMessage.Peers[i*4+1:], b[5:])
-//	}
-//}
-
-//func (mpcServer *MpcDistributor) getMessagePeers(mpcMessage *mpcprotocol.MpcMessage) *[]mpcprotocol.PeerInfo {
-//	peerLen := len(mpcMessage.Peers)
-//	if peerLen == 0 || peerLen%4 != 0 {
-//		return nil
-//	}
-//
-//	peerLen = peerLen / 4
-//	peers := make([]mpcprotocol.PeerInfo, peerLen)
-//	b := make([]byte, 8)
-//	for i := 0; i < peerLen; i++ {
-//		peerIndex := int(mpcMessage.Peers[i*4])
-//		if peerIndex < len(mpcServer.StoreManGroup) {
-//			peers[i].PeerID = mpcServer.StoreManGroup[peerIndex]
-//			copy(b[5:], mpcMessage.Peers[i*4+1:])
-//			peers[i].Seed = binary.BigEndian.Uint64(b)
-//		}
-//	}
-//
-//	return &peers
-//}
 
 func (mpcServer *MpcDistributor) getMpcID() (uint64, error) {
 	var mpcID uint64
