@@ -58,7 +58,7 @@ type OsmConf struct {
 }
 
 //-----------------------configure content begin ---------------------------------
-type GrpElemCotent struct {
+type GrpElemContent struct {
 	Inx       string        `json:"index"`
 	WorkingPk hexutil.Bytes `json:"workingPk"`
 	NodeId    hexutil.Bytes `json:"nodeId"`
@@ -66,12 +66,12 @@ type GrpElemCotent struct {
 }
 
 type GrpInfoItemContent struct {
-	GrpId           string          `json:"grpId"`
-	GrpPk           hexutil.Bytes   `json:"grpPk"`
-	LeaderInx       string          `json:"leaderInx"`
-	TotalNumber     string          `json:"totalNumber"`
-	ThresholdNumber string          `json:"thresholdNumber"`
-	GrpElms         []GrpElemCotent `json:"grpElms"`
+	GrpId           string           `json:"grpId"`
+	GrpPk           hexutil.Bytes    `json:"grpPk"`
+	LeaderInx       string           `json:"leaderInx"`
+	TotalNumber     string           `json:"totalNumber"`
+	ThresholdNumber string           `json:"thresholdNumber"`
+	GrpElms         []GrpElemContent `json:"grpElms"`
 }
 
 type OsmFileContent struct {
@@ -305,9 +305,18 @@ func (cnf *OsmConf) GetSelfNodeId() (*discover.NodeID, error) {
 }
 
 func (cnf *OsmConf) GetSelfPrvKey() (*ecdsa.PrivateKey, error) {
-	pk, _ := cnf.GetSelfPubKey()
+	pk, err := cnf.GetSelfPubKey()
+	if err != nil {
+		log.SyslogErr("OsmConf", "GetSelfPrvKey.GetSelfPubKey", err.Error())
+		return nil, err
+	}
+	err = schnorrmpc.CheckPK(pk)
+	if err != nil {
+		log.SyslogErr("OsmConf", "GetSelfPrvKey.CheckPK", err.Error())
+		return nil, err
+	}
 	address, err := pkToAddr(crypto.FromECDSAPub(pk))
-	log.Info("GetSelfPrvKey", "pk", hexutil.Encode(crypto.FromECDSAPub(pk)), "address", address.String())
+	log.SyslogInfo("GetSelfPrvKey", "pk", hexutil.Encode(crypto.FromECDSAPub(pk)), "address", address.String())
 	if err != nil {
 		panic("Error in pk to address")
 		return nil, err
@@ -431,7 +440,7 @@ func (cnf *OsmConf) GetGrpInxByGpk(gpk hexutil.Bytes) (string, error) {
 		}
 
 	}
-	return "", nil
+	panic(fmt.Sprintf("GetGrpInxByGpk error. gpk = %v ", hexutil.Encode(gpk)))
 }
 
 //-----------------------others ---------------------------------
@@ -444,6 +453,10 @@ func (cnf *OsmConf) getPkHash(grpId string, smInx uint16) (common.Hash, error) {
 
 	cnf.checkGrpId(grpId)
 	pk, _ := cnf.GetPK(grpId, smInx)
+	err := schnorrmpc.CheckPK(pk)
+	if err != nil {
+		return common.Hash{}, err
+	}
 	h := sha256.Sum256(crypto.FromECDSAPub(pk))
 	return h, nil
 }
@@ -514,7 +527,7 @@ func (cnf *OsmConf) GetNodeIdByIndex(grpId string, index uint16) (*discover.Node
 		}
 	}
 
-	return nil, errors.New("node id not found")
+	panic(fmt.Sprintf("node id not found, grpId = %v, index = %v", grpId, index))
 }
 
 func (cnf *OsmConf) GetXValueByIndex(grpId string, index uint16) (*big.Int, error) {

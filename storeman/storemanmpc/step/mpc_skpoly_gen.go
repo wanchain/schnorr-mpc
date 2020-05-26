@@ -14,7 +14,7 @@ import (
 )
 
 type RandomPolynomialGen struct {
-	randCoefficient []big.Int          //coefficient
+	randCoefficient []big.Int                   //coefficient
 	message         map[discover.NodeID]big.Int //Polynomial result
 	polyValue       []big.Int
 	polyValueSigR   []*big.Int
@@ -24,11 +24,11 @@ type RandomPolynomialGen struct {
 
 func createSkPolyGen(degree int, peerNum int) *RandomPolynomialGen {
 	return &RandomPolynomialGen{make([]big.Int, degree+1),
-	make(map[discover.NodeID]big.Int),
-	make([]big.Int, peerNum),
-	make([]*big.Int, peerNum),
-	make([]*big.Int, peerNum),
-	nil}
+		make(map[discover.NodeID]big.Int),
+		make([]big.Int, peerNum),
+		make([]*big.Int, peerNum),
+		make([]*big.Int, peerNum),
+		nil}
 }
 
 func (poly *RandomPolynomialGen) initialize(peers *[]mpcprotocol.PeerInfo,
@@ -37,11 +37,14 @@ func (poly *RandomPolynomialGen) initialize(peers *[]mpcprotocol.PeerInfo,
 	log.Info("RandomPolynomialGen::initialize ", "len of recieved message", len(poly.message))
 
 	// get randCoefficient
-	_,grpIdString,_ := osmconf.GetGrpId(result)
+	_, grpIdString, _ := osmconf.GetGrpId(result)
 
-	selfIndex, _ := osmconf.GetOsmConf().GetSelfInx(grpIdString)
+	selfIndex, err := osmconf.GetOsmConf().GetSelfInx(grpIdString)
+	if err != nil {
+		log.SyslogErr("RandomPolynomialGen", "initialize", err.Error())
+	}
 	key := mpcprotocol.RPolyCoff + strconv.Itoa(int(selfIndex))
-	poly.randCoefficient,_ = result.GetValue(key)
+	poly.randCoefficient, _ = result.GetValue(key)
 
 	// todo check threshold and len(poly.randCoefficient)
 	threshold, _ := osmconf.GetOsmConf().GetThresholdNum(grpIdString)
@@ -50,8 +53,11 @@ func (poly *RandomPolynomialGen) initialize(peers *[]mpcprotocol.PeerInfo,
 	// get x = hash(pk)
 	for i := 0; i < len(poly.polyValue); i++ {
 		nodeId := &(*peers)[i].PeerID
-		xValue,_ := osmconf.GetOsmConf().GetXValueByNodeId(grpIdString,nodeId)
-		rcvIndex,_ := osmconf.GetOsmConf().GetInxByNodeId(grpIdString,nodeId)
+		xValue, err := osmconf.GetOsmConf().GetXValueByNodeId(grpIdString, nodeId)
+		if err != nil {
+			log.SyslogErr("RandomPolynomialGen", "initialize.GetXValueByNodeId", err.Error())
+		}
+		rcvIndex, _ := osmconf.GetOsmConf().GetInxByNodeId(grpIdString, nodeId)
 
 		log.Info("============RandomPolynomialGen::initialize poly ",
 			"len(poly.randCoefficient)", len(poly.randCoefficient),
@@ -63,19 +69,19 @@ func (poly *RandomPolynomialGen) initialize(peers *[]mpcprotocol.PeerInfo,
 			degree)
 		// todo handle error
 		h := sha256.Sum256(poly.polyValue[i].Bytes())
-		prv,_ := osmconf.GetOsmConf().GetSelfPrvKey()
+		prv, _ := osmconf.GetOsmConf().GetSelfPrvKey()
 
-		poly.polyValueSigR[i], poly.polyValueSigS[i], _ = schnorrmpc.SignInternalData(prv,h[:])
+		poly.polyValueSigR[i], poly.polyValueSigS[i], _ = schnorrmpc.SignInternalData(prv, h[:])
 		log.Info("RandomPolynomialGen::initialize poly ",
 			"group id", grpIdString,
-			"senderPk",hexutil.Encode(crypto.FromECDSAPub(&prv.PublicKey)),
-			"senderIndex",selfIndex,
+			"senderPk", hexutil.Encode(crypto.FromECDSAPub(&prv.PublicKey)),
+			"senderIndex", selfIndex,
 			"rcvIndex", rcvIndex,
 			"poly peerId", (*peers)[i].PeerID.String(),
 			"poly x seed", xValue,
 			"sigR", hexutil.Encode(poly.polyValueSigR[i].Bytes()),
 			"sigS", hexutil.Encode(poly.polyValueSigS[i].Bytes()),
-			"h",hexutil.Encode(h[:]))
+			"h", hexutil.Encode(h[:]))
 	}
 
 	return nil

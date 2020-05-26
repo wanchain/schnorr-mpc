@@ -568,28 +568,31 @@ func SetP2PConfig(ctx *cli.Context, cfg *p2p.Config) {
 		}
 		// todo error handle
 		osmconf.GetOsmConf().SetFilePath(grpInfoPath)
-		osmconf.GetOsmConf().LoadCnf(grpInfoPath)
+		err = osmconf.GetOsmConf().LoadCnf(grpInfoPath)
+		if err != nil {
+			panic(err)
+		}
 
 		/*
-		var SIDs []string
-		errUnmarshal := json.Unmarshal(b, &SIDs)
-		if errUnmarshal != nil {
-			log.Error("Unmarshal error", "errUnmarshal", errUnmarshal)
-			panic(errUnmarshal)
-		} else {
-			fmt.Println(SIDs)
-			for _, url := range SIDs {
-				node, err := discover.ParseNode(url)
-				if err != nil {
-					log.Error("Storeman URL _4.invalid", "enode", url, "err", err)
-					continue
+			var SIDs []string
+			errUnmarshal := json.Unmarshal(b, &SIDs)
+			if errUnmarshal != nil {
+				log.Error("Unmarshal error", "errUnmarshal", errUnmarshal)
+				panic(errUnmarshal)
+			} else {
+				fmt.Println(SIDs)
+				for _, url := range SIDs {
+					node, err := discover.ParseNode(url)
+					if err != nil {
+						log.Error("Storeman URL _4.invalid", "enode", url, "err", err)
+						continue
+					}
+
+					cfg.StoremanNodes = append(cfg.StoremanNodes, node)
+
 				}
-
-				cfg.StoremanNodes = append(cfg.StoremanNodes, node)
-
+				log.Debug("target is ", "storemanNodes", cfg.StoremanNodes)
 			}
-			log.Debug("target is ", "storemanNodes", cfg.StoremanNodes)
-		}
 
 		*/
 	}

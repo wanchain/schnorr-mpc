@@ -19,24 +19,25 @@ import (
 const (
 	MpcPolycmStepMsgDataNumber = 2
 )
+
 type MpcPolycmStep struct {
 	BaseStep
-	message     map[discover.NodeID]bool
-	polycmGMap  	schnorrmpc.PolyGMap
-	polycmGMSigMap	schnorrmpc.PolyGSigMap
-	polyCoff	schnorrmpc.Polynomial
-	selfIndex	uint16
-	grpId		string
+	message        map[discover.NodeID]bool
+	polycmGMap     schnorrmpc.PolyGMap
+	polycmGMSigMap schnorrmpc.PolyGSigMap
+	polyCoff       schnorrmpc.Polynomial
+	selfIndex      uint16
+	grpId          string
 }
 
 func CreateMpcPolycmStep(peers *[]mpcprotocol.PeerInfo) *MpcPolycmStep {
 
 	return &MpcPolycmStep{
-		BaseStep:    *CreateBaseStep(peers, len(*peers)-1),
-		message:     make(map[discover.NodeID]bool),
-		polycmGMap:  make(schnorrmpc.PolyGMap),
-		polycmGMSigMap:  make(schnorrmpc.PolyGSigMap),
-		polyCoff:	 nil}
+		BaseStep:       *CreateBaseStep(peers, len(*peers)-1),
+		message:        make(map[discover.NodeID]bool),
+		polycmGMap:     make(schnorrmpc.PolyGMap),
+		polycmGMSigMap: make(schnorrmpc.PolyGSigMap),
+		polyCoff:       nil}
 }
 
 func (req *MpcPolycmStep) InitStep(result mpcprotocol.MpcResultInterface) error {
@@ -44,10 +45,10 @@ func (req *MpcPolycmStep) InitStep(result mpcprotocol.MpcResultInterface) error 
 	req.BaseStep.InitStep(result)
 	// build self polynomial
 
-	_,grpIdString,_ := osmconf.GetGrpId(req.mpcResult)
+	_, grpIdString, _ := osmconf.GetGrpId(req.mpcResult)
 
 	threshold, _ := osmconf.GetOsmConf().GetThresholdNum(grpIdString)
-	degree := threshold -1
+	degree := threshold - 1
 	s, err := rand.Int(rand.Reader, crypto.S256().Params().N)
 	if err != nil {
 		log.SyslogErr("MpcPolycmStep::InitStep", "rand.Int fail. err", err.Error())
@@ -56,28 +57,32 @@ func (req *MpcPolycmStep) InitStep(result mpcprotocol.MpcResultInterface) error 
 
 	cof := schnorrmpc.RandPoly(int(degree), *s)
 
-	req.polyCoff = make(schnorrmpc.Polynomial,len(cof))
+	req.polyCoff = make(schnorrmpc.Polynomial, len(cof))
 	copy(req.polyCoff, cof)
 
-	log.SyslogInfo("MpcPolycmStep:InitStep","len(req.polyCoff)",len(req.polyCoff),"len(cof)",len(cof))
+	log.SyslogInfo("MpcPolycmStep:InitStep", "len(req.polyCoff)", len(req.polyCoff), "len(cof)", len(cof))
 
 	// build polycmG
-	pg := make(schnorrmpc.PolynomialG,threshold)
+	pg := make(schnorrmpc.PolynomialG, threshold)
 	for index, value := range cof {
 		skG, _ := schnorrmpc.SkG(&value)
 		pg[index] = *skG
 	}
 	// todo error
 	req.grpId = grpIdString
-	selfIndex, _ := osmconf.GetOsmConf().GetSelfInx(grpIdString)
+	selfIndex, err := osmconf.GetOsmConf().GetSelfInx(grpIdString)
+	if err != nil {
+		log.SyslogErr("MpcPolycmStep:InitStep", "GetSelfInx", err.Error())
+		return err
+	}
 	req.selfIndex = selfIndex
 
 	req.polycmGMap[selfIndex] = pg
 
-	for key , value := range req.polycmGMap{
-		log.SyslogInfo("-----------------key",key)
-		for index,pk := range value{
-			log.SyslogInfo("-----------------G","index",index,"G",hexutil.Encode(crypto.FromECDSAPub(&pk)))
+	for key, value := range req.polycmGMap {
+		log.SyslogInfo("-----------------key", key)
+		for index, pk := range value {
+			log.SyslogInfo("-----------------G", "index", index, "G", hexutil.Encode(crypto.FromECDSAPub(&pk)))
 		}
 	}
 	return nil
@@ -87,7 +92,7 @@ func (req *MpcPolycmStep) CreateMessage() []mpcprotocol.StepMessage {
 	// broadcast self polynomialG
 	// grpId + threshold G + R + S
 	log.SyslogInfo("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@MpcPolycmStep.CreateMessage.....")
-	log.Info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@MpcPolycmStep","CreateMessage peers",*req.peers)
+	log.Info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@MpcPolycmStep", "CreateMessage peers", *req.peers)
 	msg := mpcprotocol.StepMessage{
 		MsgCode:   mpcprotocol.MPCMessage,
 		PeerID:    nil,
@@ -95,17 +100,17 @@ func (req *MpcPolycmStep) CreateMessage() []mpcprotocol.StepMessage {
 		Data:      nil,
 		BytesData: nil}
 
-	_,grpIdString,_ := osmconf.GetGrpId(req.mpcResult)
+	_, grpIdString, _ := osmconf.GetGrpId(req.mpcResult)
 
 	threshold, _ := osmconf.GetOsmConf().GetThresholdNum(grpIdString)
 	// Data[0]: R
 	// Data[1]: S
 
 	// BytesData[i]: the ith poly commit G
-	msg.BytesData = make([][]byte,threshold)
+	msg.BytesData = make([][]byte, threshold)
 
-	for i:=0;i<int(threshold);i++{
-		msg.BytesData[i] = make([]byte,65)  // len of pk is :65.
+	for i := 0; i < int(threshold); i++ {
+		msg.BytesData[i] = make([]byte, 65) // len of pk is :65.
 	}
 	// build msg.data & msg.bytedata
 	var buf bytes.Buffer
@@ -117,14 +122,14 @@ func (req *MpcPolycmStep) CreateMessage() []mpcprotocol.StepMessage {
 
 	//prv,_ := osmconf.GetOsmConf().GetSelfPrvKey()
 	h := sha256.Sum256(buf.Bytes())
-	prv,_ := osmconf.GetOsmConf().GetSelfPrvKey()
-	r,s,_ := schnorrmpc.SignInternalData(prv,h[:])
+	prv, _ := osmconf.GetOsmConf().GetSelfPrvKey()
+	r, s, _ := schnorrmpc.SignInternalData(prv, h[:])
 
 	msg.Data = make([]big.Int, 2)
 	msg.Data[0] = *r
 	msg.Data[1] = *s
 
-	req.polycmGMSigMap[req.selfIndex] = make([]big.Int,2)
+	req.polycmGMSigMap[req.selfIndex] = make([]big.Int, 2)
 	req.polycmGMSigMap[req.selfIndex][0] = *r
 	req.polycmGMSigMap[req.selfIndex][0] = *s
 
@@ -140,38 +145,38 @@ func (req *MpcPolycmStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc 
 	for index, polyCms := range req.polycmGMap {
 		key := mpcprotocol.RPolyCMG + strconv.Itoa(int(index))
 		var buf bytes.Buffer
-		for _, polyCmItem := range polyCms{
+		for _, polyCmItem := range polyCms {
 			buf.Write(crypto.FromECDSAPub(&polyCmItem))
 		}
 		result.SetByteValue(key, buf.Bytes())
 
-		log.SyslogInfo("Save polyCmG","index",index, "key", key,
-			"poly commits",hex.EncodeToString(buf.Bytes()))
+		log.SyslogInfo("Save polyCmG", "index", index, "key", key,
+			"poly commits", hex.EncodeToString(buf.Bytes()))
 	}
 
 	// save other poly commit sig to the mpc context, value: sig
 	for index, polyCmsSig := range req.polycmGMSigMap {
 		key := mpcprotocol.RPolyCMG + strconv.Itoa(int(index))
 
-		bigs := make([]big.Int,2)
+		bigs := make([]big.Int, 2)
 		bigs[0] = polyCmsSig[0]
 		bigs[1] = polyCmsSig[1]
 		result.SetValue(key, bigs)
 
-		log.SyslogInfo("Save polyCmsSig","index",index, "key", key,
-			"R",hex.EncodeToString(bigs[0].Bytes()),
-			"S",hex.EncodeToString(bigs[1].Bytes()))
+		log.SyslogInfo("Save polyCmsSig", "index", index, "key", key,
+			"R", hex.EncodeToString(bigs[0].Bytes()),
+			"S", hex.EncodeToString(bigs[1].Bytes()))
 	}
 
 	// save self poly commit coff to the mpc context
 	key := mpcprotocol.RPolyCoff + strconv.Itoa(int(req.selfIndex))
 
 	coff := make([]big.Int, 0)
-	for _, polyCmCoffItem := range req.polyCoff{
+	for _, polyCmCoffItem := range req.polyCoff {
 		coff = append(coff, polyCmCoffItem)
 	}
 
-	log.SyslogInfo("======MpcPolycmStep:FinishStep save coff ","len(coff)", len(coff))
+	log.SyslogInfo("======MpcPolycmStep:FinishStep save coff ", "len(coff)", len(coff))
 
 	result.SetValue(key, coff[:])
 	return nil
@@ -179,10 +184,10 @@ func (req *MpcPolycmStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc 
 
 func (req *MpcPolycmStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	// save others polynomial
-	log.SyslogInfo("MpcPolycmStep::HandleMessage","MpcPolycmStep.HandleMessage begin, peerID", msg.PeerID.String())
+	log.SyslogInfo("MpcPolycmStep::HandleMessage", "MpcPolycmStep.HandleMessage begin, peerID", msg.PeerID.String())
 	_, exist := req.message[*msg.PeerID]
 	if exist {
-		log.SyslogErr("MpcPolycmStep::HandleMessage","MpcPolycmStep.HandleMessage, get message from peerID fail. peer",
+		log.SyslogErr("MpcPolycmStep::HandleMessage", "MpcPolycmStep.HandleMessage, get message from peerID fail. peer",
 			msg.PeerID.String())
 		return false
 	}
@@ -192,10 +197,10 @@ func (req *MpcPolycmStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	threshold, _ := osmconf.GetOsmConf().GetThresholdNum(req.grpId)
 
 	log.SyslogInfo("MpcPolycmStep::HandleMessage",
-		"peerId",msg.PeerID.String(),
-		"threshold",threshold,
-		"len(msg.BytesData)",len(msg.BytesData),
-		"len(msg.Data)",len(msg.Data))
+		"peerId", msg.PeerID.String(),
+		"threshold", threshold,
+		"len(msg.BytesData)", len(msg.BytesData),
+		"len(msg.Data)", len(msg.Data))
 
 	if len(msg.BytesData) != int(threshold) {
 		// todo data has error
@@ -212,7 +217,6 @@ func (req *MpcPolycmStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	return true
 }
 
-
 func (req *MpcPolycmStep) checkSig(msg *mpcprotocol.StepMessage) bool {
 	// todo check the sig of polyCommit
 	return true
@@ -221,25 +225,24 @@ func (req *MpcPolycmStep) checkSig(msg *mpcprotocol.StepMessage) bool {
 func (req *MpcPolycmStep) fillCmIntoMap(msg *mpcprotocol.StepMessage) bool {
 	nodeId := msg.PeerID
 
-	inx, _ := osmconf.GetOsmConf().GetInxByNodeId(req.grpId,nodeId)
+	inx, _ := osmconf.GetOsmConf().GetInxByNodeId(req.grpId, nodeId)
 
-	_,grpIdString,_ := osmconf.GetGrpId(req.mpcResult)
+	_, grpIdString, _ := osmconf.GetGrpId(req.mpcResult)
 
 	threshold, _ := osmconf.GetOsmConf().GetThresholdNum(grpIdString)
 	// build polycmG
-	pg := make(schnorrmpc.PolynomialG,threshold)
+	pg := make(schnorrmpc.PolynomialG, threshold)
 
-
-	log.SyslogInfo("fillCmIntoMap","map key",inx,"group",grpIdString,"threshold",threshold,"len(msg.BytesData)",len(msg.BytesData))
-	for i := 0; i< len(msg.BytesData);i++ {
+	log.SyslogInfo("fillCmIntoMap", "map key", inx, "group", grpIdString, "threshold", threshold, "len(msg.BytesData)", len(msg.BytesData))
+	for i := 0; i < len(msg.BytesData); i++ {
 		pk := crypto.ToECDSAPub(msg.BytesData[i][:])
-		log.SyslogInfo("		fillCmIntoMap","item index",i,"one poly commit item G",hexutil.Encode(msg.BytesData[i][:]))
+		log.SyslogInfo("		fillCmIntoMap", "item index", i, "one poly commit item G", hexutil.Encode(msg.BytesData[i][:]))
 		pg[i] = *pk
 	}
 	req.polycmGMap[inx] = pg
 
-	req.polycmGMSigMap[inx] = append(req.polycmGMSigMap[inx],msg.Data[0])
-	req.polycmGMSigMap[inx] = append(req.polycmGMSigMap[inx],msg.Data[1])
+	req.polycmGMSigMap[inx] = append(req.polycmGMSigMap[inx], msg.Data[0])
+	req.polycmGMSigMap[inx] = append(req.polycmGMSigMap[inx], msg.Data[1])
 
 	return true
 }

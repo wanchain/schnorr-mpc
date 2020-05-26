@@ -19,7 +19,7 @@ type mpcSGenerator struct {
 	message     map[discover.NodeID]big.Int
 	result      big.Int
 	preValueKey string
-	grpIdString	string
+	grpIdString string
 }
 
 func createSGenerator(preValueKey string) *mpcSGenerator {
@@ -77,7 +77,6 @@ func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcpr
 	rpkShare.Curve = crypto.S256()
 	rpkShare.X, rpkShare.Y = crypto.S256().ScalarBaseMult(rskShare[0].Bytes())
 
-
 	gpkShare := new(ecdsa.PublicKey)
 	gpkShare.Curve = crypto.S256()
 	gpkShare.X, rpkShare.Y = crypto.S256().ScalarBaseMult(gskShare[0].Bytes())
@@ -86,13 +85,12 @@ func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcpr
 	log.Info("@@@@@@@@@@@@@@ SchnorrSign @@@@@@@@@@@@@@",
 		"M", hexutil.Encode(MBytes),
 		"m", hexutil.Encode(m.Bytes()),
-		"gskShare",hexutil.Encode(gskShare[0].Bytes()),
-		"rskShare",hexutil.Encode(rskShare[0].Bytes()),
-		"gpkShare",hexutil.Encode(crypto.FromECDSAPub(gpkShare)),
-		"rpkShare",hexutil.Encode(crypto.FromECDSAPub(rpkShare)))
+		"gskShare", hexutil.Encode(gskShare[0].Bytes()),
+		"rskShare", hexutil.Encode(rskShare[0].Bytes()),
+		"gpkShare", hexutil.Encode(crypto.FromECDSAPub(gpkShare)),
+		"rpkShare", hexutil.Encode(crypto.FromECDSAPub(rpkShare)))
 
-
-	_,grpIdString,_ := osmconf.GetGrpId(result)
+	_, grpIdString, _ := osmconf.GetGrpId(result)
 
 	msg.grpIdString = grpIdString
 
@@ -107,7 +105,11 @@ func (msg *mpcSGenerator) calculateResult() error {
 	sigshares := make([]big.Int, 0)
 	for nodeId, value := range msg.message {
 		// get seeds, need sort seeds, and make seeds as a key of map, and check the map's count??
-		xValue,_ := osmconf.GetOsmConf().GetXValueByNodeId(msg.grpIdString,&nodeId)
+		xValue, err := osmconf.GetOsmConf().GetXValueByNodeId(msg.grpIdString, &nodeId)
+		if err != nil {
+			log.SyslogErr("mpcSGenerator", "calculateResult.GetXValueByNodeId", err.Error())
+		}
+
 		seeds = append(seeds, *xValue)
 		// sigshares
 		sigshares = append(sigshares, value)
@@ -127,8 +129,6 @@ func (msg *mpcSGenerator) calculateResult() error {
 		//}
 
 	}
-
-
 
 	result := schnorrmpc.Lagrange(sigshares, seeds[:], mpcprotocol.MPCDegree)
 	msg.result = result

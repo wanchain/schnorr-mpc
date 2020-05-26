@@ -16,9 +16,9 @@ import (
 type mpcPointGenerator struct {
 	seed        ecdsa.PublicKey
 	message     map[discover.NodeID]ecdsa.PublicKey
-	result 		ecdsa.PublicKey
+	result      ecdsa.PublicKey
 	preValueKey string
-	grpIdString	string
+	grpIdString string
 }
 
 func createPointGenerator(preValueKey string) *mpcPointGenerator {
@@ -33,7 +33,11 @@ func (point *mpcPointGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result
 
 	point.grpIdString = grpIdString
 
-	selfIndex,_ := osmconf.GetOsmConf().GetSelfInx(grpIdString)
+	selfIndex, err := osmconf.GetOsmConf().GetSelfInx(grpIdString)
+	if err != nil {
+		log.SyslogErr("mpcPointGenerator", "initialize", err)
+		return err
+	}
 	key := mpcprotocol.RPkShare + strconv.Itoa(int(selfIndex))
 	value, err := result.GetByteValue(key)
 
@@ -59,7 +63,11 @@ func (point *mpcPointGenerator) calculateResult() error {
 	gpkshares := make([]ecdsa.PublicKey, 0)
 	for nodeId, value := range point.message {
 
-		xValue,_ := osmconf.GetOsmConf().GetXValueByNodeId(point.grpIdString,&nodeId)
+		xValue, err := osmconf.GetOsmConf().GetXValueByNodeId(point.grpIdString, &nodeId)
+		if err != nil {
+			log.SyslogErr("mpcPointGenerator", "calculateResult", err.Error())
+			return err
+		}
 		seeds = append(seeds, *xValue)
 
 		// build PK[]
@@ -98,7 +106,7 @@ func (point *mpcPointGenerator) calculateResult() error {
 	result := schnorrmpc.LagrangeECC(gpkshares, seeds[:], mpcprotocol.MPCDegree)
 
 	if !schnorrmpc.ValidatePublicKey(result) {
-		log.SyslogErr("mpcPointGenerator::calculateResult","mpcPointGenerator.ValidatePublicKey fail. err", mpcprotocol.ErrPointZero.Error())
+		log.SyslogErr("mpcPointGenerator::calculateResult", "mpcPointGenerator.ValidatePublicKey fail. err", mpcprotocol.ErrPointZero.Error())
 		return mpcprotocol.ErrPointZero
 	}
 

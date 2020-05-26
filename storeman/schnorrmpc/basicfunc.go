@@ -7,6 +7,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/crypto"
+	"github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
 )
 
@@ -167,7 +168,7 @@ func PkToAddress(PkBytes []byte) (common.Address, error) {
 	return address, nil
 }
 
-func PkToHexString(pk *ecdsa.PublicKey) (string) {
+func PkToHexString(pk *ecdsa.PublicKey) string {
 	pkByte := crypto.FromECDSAPub(pk)
 	return hexutil.Encode(pkByte)
 }
@@ -175,12 +176,11 @@ func PkToHexString(pk *ecdsa.PublicKey) (string) {
 func StringtoPk(str string) (*ecdsa.PublicKey, error) {
 	pkBytes, err := hexutil.Decode(str)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	pk := crypto.ToECDSAPub(pkBytes)
 	return pk, nil
 }
-
 
 //sg
 func SkG(s *big.Int) (*ecdsa.PublicKey, error) {
@@ -190,28 +190,28 @@ func SkG(s *big.Int) (*ecdsa.PublicKey, error) {
 	return sG, nil
 }
 
-func SkMul(pk *ecdsa.PublicKey,s *big.Int) (*ecdsa.PublicKey, error) {
+func SkMul(pk *ecdsa.PublicKey, s *big.Int) (*ecdsa.PublicKey, error) {
 
 	ret := new(ecdsa.PublicKey)
 	ret.Curve = crypto.S256()
 
-	ret.X, ret.Y = crypto.S256().ScalarMult(pk.X,pk.Y,s.Bytes())
+	ret.X, ret.Y = crypto.S256().ScalarMult(pk.X, pk.Y, s.Bytes())
 	return ret, nil
 }
 
 //
 func SplitPksFromBytes(buf []byte) ([]*ecdsa.PublicKey, error) {
-	nPk := len(buf)/PkLength
-	ret := make([]*ecdsa.PublicKey,nPk)
-	for i:=0;i<nPk;i++{
-		onePkBytes := buf[i*PkLength:(i+1)*PkLength]
+	nPk := len(buf) / PkLength
+	ret := make([]*ecdsa.PublicKey, nPk)
+	for i := 0; i < nPk; i++ {
+		onePkBytes := buf[i*PkLength : (i+1)*PkLength]
 		onePk := crypto.ToECDSAPub(onePkBytes[:])
 		ret[i] = onePk
 	}
-	return ret,nil
+	return ret, nil
 }
 
-func EvalByPolyG(pks []*ecdsa.PublicKey,degree uint16,x *big.Int) (*ecdsa.PublicKey, error) {
+func EvalByPolyG(pks []*ecdsa.PublicKey, degree uint16, x *big.Int) (*ecdsa.PublicKey, error) {
 	// check input parameters
 
 	sumPk := new(ecdsa.PublicKey)
@@ -226,24 +226,34 @@ func EvalByPolyG(pks []*ecdsa.PublicKey,degree uint16,x *big.Int) (*ecdsa.Public
 		temp1Pk := new(ecdsa.PublicKey)
 		temp1Pk.Curve = crypto.S256()
 
-		temp1Pk.X, temp1Pk.Y = crypto.S256().ScalarMult(pks[i].X,pks[i].Y,temp1.Bytes())
+		temp1Pk.X, temp1Pk.Y = crypto.S256().ScalarMult(pks[i].X, pks[i].Y, temp1.Bytes())
 
-		sumPk.X, sumPk.Y = crypto.S256().Add(sumPk.X,sumPk.Y,temp1Pk.X,temp1Pk.Y)
+		sumPk.X, sumPk.Y = crypto.S256().Add(sumPk.X, sumPk.Y, temp1Pk.X, temp1Pk.Y)
 
 	}
-	return sumPk,nil
+	return sumPk, nil
 }
 
-
-func PkEqual(pk1,pk2 *ecdsa.PublicKey,) (bool, error) {
+func PkEqual(pk1, pk2 *ecdsa.PublicKey) (bool, error) {
 	// check input parameters
-	return pk1.X.Cmp(pk2.X)==0 && pk1.Y.Cmp(pk2.Y) == 0 , nil
+	return pk1.X.Cmp(pk2.X) == 0 && pk1.Y.Cmp(pk2.Y) == 0, nil
 }
 
-func SignInternalData(prv *ecdsa.PrivateKey,hash []byte) (r, s *big.Int, err error) {
-	return ecdsa.Sign(Rand.Reader,prv,hash[:])
+func SignInternalData(prv *ecdsa.PrivateKey, hash []byte) (r, s *big.Int, err error) {
+	return ecdsa.Sign(Rand.Reader, prv, hash[:])
 }
 
 func VerifyInternalData(pub *ecdsa.PublicKey, hash []byte, r, s *big.Int) bool {
-	return ecdsa.Verify(pub,hash,r,s)
+	return ecdsa.Verify(pub, hash, r, s)
+}
+
+func CheckPK(pk *ecdsa.PublicKey) error {
+	if pk == nil {
+		return protocol.ErrInvalidPK
+	}
+	if !crypto.S256().IsOnCurve(pk.X, pk.Y) {
+		return protocol.ErrInvalidPK
+	} else {
+		return nil
+	}
 }

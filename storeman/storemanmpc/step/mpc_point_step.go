@@ -19,18 +19,18 @@ type MpcPointStep struct {
 	resultKeys []string
 	signNum    int
 
-	RShareErrNum	int
-	rpkshareOKIndex  []uint16
-	rpkshareKOIndex  []uint16
-	rpkshareNOIndex  []uint16
+	RShareErrNum    int
+	rpkshareOKIndex []uint16
+	rpkshareKOIndex []uint16
+	rpkshareNOIndex []uint16
 }
 
 func CreateMpcPointStep(peers *[]mpcprotocol.PeerInfo, preValueKeys []string, resultKeys []string) *MpcPointStep {
 	log.SyslogInfo("CreateMpcPointStep begin")
 
 	signNum := len(preValueKeys)
-	mpc := &MpcPointStep{*CreateBaseMpcStep(peers, signNum), resultKeys, signNum,0,
-		make([]uint16,0),make([]uint16,0),make([]uint16,0)}
+	mpc := &MpcPointStep{*CreateBaseMpcStep(peers, signNum), resultKeys, signNum, 0,
+		make([]uint16, 0), make([]uint16, 0), make([]uint16, 0)}
 
 	for i := 0; i < signNum; i++ {
 		mpc.messages[i] = createPointGenerator(preValueKeys[i])
@@ -46,21 +46,20 @@ func (ptStep *MpcPointStep) CreateMessage() []mpcprotocol.StepMessage {
 	message[0].MsgCode = mpcprotocol.MPCMessage
 	message[0].PeerID = nil
 
+	pointer := ptStep.messages[0].(*mpcPointGenerator)
+	var buf bytes.Buffer
+	buf.Write(crypto.FromECDSAPub(&pointer.seed))
+	h := sha256.Sum256(buf.Bytes())
 
-		pointer := ptStep.messages[0].(*mpcPointGenerator)
-		var buf bytes.Buffer
-		buf.Write(crypto.FromECDSAPub(&pointer.seed))
-		h:=sha256.Sum256(buf.Bytes())
+	prv, _ := osmconf.GetOsmConf().GetSelfPrvKey()
+	r, s, _ := schnorrmpc.SignInternalData(prv, h[:])
+	// send rpkshare, sig of rpkshare
+	message[0].Data = make([]big.Int, 2)
+	message[0].Data[0] = *r
+	message[0].Data[1] = *s
 
-		prv,_ := osmconf.GetOsmConf().GetSelfPrvKey()
-		r,s,_ := schnorrmpc.SignInternalData(prv,h[:])
-		// send rpkshare, sig of rpkshare
-		message[0].Data = make([]big.Int,2)
-		message[0].Data[0] = *r
-		message[0].Data[1] = *s
-
-		// only one point, rpkShare
-		message[0].BytesData = append(message[0].BytesData,crypto.FromECDSAPub(&pointer.seed))
+	// only one point, rpkShare
+	message[0].BytesData = append(message[0].BytesData, crypto.FromECDSAPub(&pointer.seed))
 
 	return message
 }
@@ -71,48 +70,51 @@ func (ptStep *MpcPointStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		"peerID", msg.PeerID.String(),
 		"gpk x", hex.EncodeToString(msg.BytesData[0]))
 
+	pointer := ptStep.messages[0].(*mpcPointGenerator)
+	_, exist := pointer.message[*msg.PeerID]
+	if exist {
+		log.SyslogErr("HandleMessage", "MpcPointStep.HandleMessage, get msg from seed fail. peer", msg.PeerID.String())
+		return false
+	}
 
-		pointer := ptStep.messages[0].(*mpcPointGenerator)
-		_, exist := pointer.message[*msg.PeerID]
-		if exist {
-			log.SyslogErr("HandleMessage","MpcPointStep.HandleMessage, get msg from seed fail. peer", msg.PeerID.String())
-			return false
-		}
+	// todo check fail , not save RPKShare
+	// todo check RPKShare sig
 
-		// todo check fail , not save RPKShare
-		// todo check RPKShare sig
+	pointPk := crypto.ToECDSAPub(msg.BytesData[0])
+	r := msg.Data[0]
+	s := msg.Data[1]
 
-		pointPk := crypto.ToECDSAPub(msg.BytesData[0])
-		r := msg.Data[0]
-		s := msg.Data[1]
+	_, grpIdString, _ := osmconf.GetGrpId(ptStep.mpcResult)
 
+	senderPk, _ := osmconf.GetOsmConf().GetPKByNodeId(grpIdString, msg.PeerID)
+	err := schnorrmpc.CheckPK(senderPk)
+	if err != nil {
+		log.SyslogErr("MpcPointStep", "HandleMessage", err.Error())
+	}
 
-		_,grpIdString,_ := osmconf.GetGrpId(ptStep.mpcResult)
+	senderIndex, _ := osmconf.GetOsmConf().GetInxByNodeId(grpIdString, msg.PeerID)
 
-		senderPk,_ := osmconf.GetOsmConf().GetPKByNodeId(grpIdString,msg.PeerID)
-		senderIndex,_ := osmconf.GetOsmConf().GetInxByNodeId(grpIdString,msg.PeerID)
+	var buf bytes.Buffer
+	buf.Write(msg.BytesData[0])
+	h := sha256.Sum256(buf.Bytes())
 
-		var buf bytes.Buffer
-		buf.Write(msg.BytesData[0])
-		h:=sha256.Sum256(buf.Bytes())
+	bVerifySig := schnorrmpc.VerifyInternalData(senderPk, h[:], &r, &s)
 
-		bVerifySig := schnorrmpc.VerifyInternalData(senderPk,h[:],&r,&s)
+	if bVerifySig {
+		pointer.message[*msg.PeerID] = *pointPk
 
-		if bVerifySig {
-			pointer.message[*msg.PeerID] = *pointPk
+		// save rpkshare for check data of s
+		key := mpcprotocol.RPkShare + strconv.Itoa(int(senderIndex))
+		ptStep.mpcResult.SetByteValue(key, msg.BytesData[0])
+		log.SyslogInfo("@@@@@@@@@@@@save rpkshare", "key", key, "rpkshare", hexutil.Encode(msg.BytesData[0]))
 
-			// save rpkshare for check data of s
-			key := mpcprotocol.RPkShare + strconv.Itoa(int(senderIndex))
-			ptStep.mpcResult.SetByteValue(key,msg.BytesData[0])
-			log.SyslogInfo("@@@@@@@@@@@@save rpkshare","key",key,"rpkshare",hexutil.Encode(msg.BytesData[0]))
+		ptStep.rpkshareOKIndex = append(ptStep.rpkshareOKIndex, uint16(senderIndex))
+	} else {
+		log.SyslogErr("MpcPointStep::HandleMessage", " check sig fail")
+		ptStep.rpkshareKOIndex = append(ptStep.rpkshareKOIndex, uint16(senderIndex))
+	}
 
-			ptStep.rpkshareOKIndex = append(ptStep.rpkshareOKIndex, uint16(senderIndex))
-		}else{
-			log.SyslogErr("MpcPointStep::HandleMessage"," check sig fail")
-			ptStep.rpkshareKOIndex = append(ptStep.rpkshareKOIndex, uint16(senderIndex))
-		}
-
-		// update no work indexes.
+	// update no work indexes.
 
 	return true
 }
@@ -151,26 +153,24 @@ func (ptStep *MpcPointStep) FinishStep(result mpcprotocol.MpcResultInterface, mp
 	//ptStep.mpcResult.SetValue(mpcprotocol.RKOIndex,koIndex)
 	//ptStep.mpcResult.SetValue(mpcprotocol.RNOIndex,noIndex)
 
-
 	err := ptStep.BaseMpcStep.FinishStep()
 	if err != nil {
 		return err
 	}
 
+	pointer := ptStep.messages[0].(*mpcPointGenerator)
+	log.Info("generated gpk MpcPointStep::FinishStep",
+		"result key", ptStep.resultKeys[0],
+		"result value ", hexutil.Encode(crypto.FromECDSAPub(&pointer.result)))
 
-		pointer := ptStep.messages[0].(*mpcPointGenerator)
-		log.Info("generated gpk MpcPointStep::FinishStep",
-			"result key", ptStep.resultKeys[0],
-			"result value ", hexutil.Encode(crypto.FromECDSAPub(&pointer.result)))
-
-		//err = result.SetByteValue(ptStep.resultKeys[0], crypto.FromECDSAPub(&pointer.result))
+	//err = result.SetByteValue(ptStep.resultKeys[0], crypto.FromECDSAPub(&pointer.result))
 	err = result.SetByteValue(mpcprotocol.RPk, crypto.FromECDSAPub(&pointer.result))
-		if err != nil {
-			log.SyslogErr("HandleMessage","MpcPointStep.FinishStep, SetValue fail. err", err.Error())
-			return err
-		}
+	if err != nil {
+		log.SyslogErr("HandleMessage", "MpcPointStep.FinishStep, SetValue fail. err", err.Error())
+		return err
+	}
 
-	log.SyslogInfo("@@@@@@@@@@@@save RPK","key",mpcprotocol.RPk,"RPK",hexutil.Encode(crypto.FromECDSAPub(&pointer.result)))
+	log.SyslogInfo("@@@@@@@@@@@@save RPK", "key", mpcprotocol.RPk, "RPK", hexutil.Encode(crypto.FromECDSAPub(&pointer.result)))
 	log.SyslogInfo("MpcPointStep.FinishStep succeed")
 	return nil
 }

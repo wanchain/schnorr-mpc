@@ -18,7 +18,7 @@ type MpcRSkJudgeStep struct {
 
 func CreateMpcRSkJudgeStep(peers *[]mpcprotocol.PeerInfo) *MpcRSkJudgeStep {
 	return &MpcRSkJudgeStep{
-		*CreateBaseStep(peers, 0),0}
+		*CreateBaseStep(peers, 0), 0}
 }
 
 func (rsj *MpcRSkJudgeStep) InitStep(result mpcprotocol.MpcResultInterface) error {
@@ -29,26 +29,25 @@ func (rsj *MpcRSkJudgeStep) InitStep(result mpcprotocol.MpcResultInterface) erro
 
 func (rsj *MpcRSkJudgeStep) CreateMessage() []mpcprotocol.StepMessage {
 	keyErrNum := mpcprotocol.RSkErrNum
-	errNum,_ := rsj.mpcResult.GetValue(keyErrNum)
+	errNum, _ := rsj.mpcResult.GetValue(keyErrNum)
 	errNumInt64 := errNum[0].Int64()
 
-
-	_,grpIdString,_ := osmconf.GetGrpId(rsj.mpcResult)
+	_, grpIdString, _ := osmconf.GetGrpId(rsj.mpcResult)
 
 	var ret []mpcprotocol.StepMessage
 
 	if errNumInt64 > 0 {
 
-		leaderIndex,_ := osmconf.GetOsmConf().GetLeaderIndex(grpIdString)
-		leaderPeerId,_:= osmconf.GetOsmConf().GetNodeIdByIndex(grpIdString,leaderIndex)
+		leaderIndex, _ := osmconf.GetOsmConf().GetLeaderIndex(grpIdString)
+		leaderPeerId, _ := osmconf.GetOsmConf().GetNodeIdByIndex(grpIdString, leaderIndex)
 
-		for i:=0; i< int(errNumInt64); i++{
+		for i := 0; i < int(errNumInt64); i++ {
 			ret = make([]mpcprotocol.StepMessage, int(errNumInt64))
 			keyErrInfo := mpcprotocol.RSkErrInfos + strconv.Itoa(int(i))
-			errInfo,_:= rsj.mpcResult.GetValue(keyErrInfo)
+			errInfo, _ := rsj.mpcResult.GetValue(keyErrInfo)
 
 			data := make([]big.Int, 5)
-			for j:=0; j< 5; j++ {
+			for j := 0; j < 5; j++ {
 				data[i] = errInfo[i]
 			}
 
@@ -60,7 +59,7 @@ func (rsj *MpcRSkJudgeStep) CreateMessage() []mpcprotocol.StepMessage {
 				Data:      data,
 				BytesData: nil}
 		}
-	}else{
+	} else {
 		log.SyslogInfo("MpcRSkJudgeStep there is on record need to be judged.")
 	}
 
@@ -91,15 +90,19 @@ func (rsj *MpcRSkJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	r := msg.Data[3]
 	s := msg.Data[4]
 
-	grpId,grpIdString,_ := osmconf.GetGrpId(rsj.mpcResult)
-	senderPk,_ := osmconf.GetOsmConf().GetPK(grpIdString,uint16(senderIndex))
+	grpId, grpIdString, _ := osmconf.GetGrpId(rsj.mpcResult)
 
+	senderPk, _ := osmconf.GetOsmConf().GetPK(grpIdString, uint16(senderIndex))
+	err := schnorrmpc.CheckPK(senderPk)
+	if err != nil {
+		log.SyslogErr("MpcRSkJudgeStep", "HandleMessage", err.Error())
+	}
 	// 1. check sig
 	h := sha256.Sum256(sij.Bytes())
-	bVerifySig := schnorrmpc.VerifyInternalData(senderPk,h[:],&r,&s)
+	bVerifySig := schnorrmpc.VerifyInternalData(senderPk, h[:], &r, &s)
 	bSnderWrong := true
 
-	if !bVerifySig{
+	if !bVerifySig {
 		// sig error , todo sender error
 		// 1. write slash poof
 		// 2. save slash num
@@ -110,55 +113,58 @@ func (rsj *MpcRSkJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 
 	// get send poly commit
 	keyPolyCMG := mpcprotocol.RPolyCMG + strconv.Itoa(int(senderIndex))
-	pgBytes,_:= rsj.mpcResult.GetByteValue(keyPolyCMG)
-	sigs,_ := rsj.mpcResult.GetValue(keyPolyCMG)
+	pgBytes, _ := rsj.mpcResult.GetByteValue(keyPolyCMG)
+	sigs, _ := rsj.mpcResult.GetValue(keyPolyCMG)
 
-	xValue, _ := osmconf.GetOsmConf().GetXValueByIndex(grpIdString,uint16(rcvIndex))
+	xValue, err := osmconf.GetOsmConf().GetXValueByIndex(grpIdString, uint16(rcvIndex))
+	if err != nil {
+		log.SyslogErr("MpcRSkJudgeStep", "HandleMessage.GetXValueByIndex", err.Error())
+	}
 
 	//split the pk list
 	pks, _ := schnorrmpc.SplitPksFromBytes(pgBytes[:])
-	sijgEval, _ := schnorrmpc.EvalByPolyG(pks,uint16(len(pks)-1),xValue)
-	sijg,_ := schnorrmpc.SkG(&sij)
+	sijgEval, _ := schnorrmpc.EvalByPolyG(pks, uint16(len(pks)-1), xValue)
+	sijg, _ := schnorrmpc.SkG(&sij)
 
 	bContentCheck := true
-	if ok,_ := schnorrmpc.PkEqual(sijg, sijgEval); !ok{
+	if ok, _ := schnorrmpc.PkEqual(sijg, sijgEval); !ok {
 		// todo sender error
 		bSnderWrong = true
 		bContentCheck = false
-	}else{
+	} else {
 		// todo receiver error
 		bSnderWrong = false
 	}
 
 	if !bContentCheck || !bVerifySig {
 		rsj.RSlshCount += 1
-		rsj.saveSlshProof(bSnderWrong,&sigs[0],&sigs[1],&sij,&r,&s,senderIndex,rcvIndex,int(rsj.RSlshCount),grpId,pgBytes,uint16(len(pks)))
+		rsj.saveSlshProof(bSnderWrong, &sigs[0], &sigs[1], &sij, &r, &s, senderIndex, rcvIndex, int(rsj.RSlshCount), grpId, pgBytes, uint16(len(pks)))
 	}
 
 	return true
 }
 
-func (ssj *MpcRSkJudgeStep) saveSlshCount(slshCount int) (error) {
+func (ssj *MpcRSkJudgeStep) saveSlshCount(slshCount int) error {
 
-	sslshValue := make([]big.Int,1)
+	sslshValue := make([]big.Int, 1)
 	sslshValue[0] = *big.NewInt(0).SetInt64(int64(ssj.RSlshCount))
 
 	// todo error handle
 	key := mpcprotocol.RSlshProofNum + strconv.Itoa(int(ssj.RSlshCount))
-	ssj.mpcResult.SetValue(key,sslshValue)
+	ssj.mpcResult.SetValue(key, sslshValue)
 
 	return nil
 }
 
 func (ssj *MpcRSkJudgeStep) saveSlshProof(isSnder bool,
-	polyR,polyS, sij, r, s *big.Int,
+	polyR, polyS, sij, r, s *big.Int,
 	sndrIndex, rcvrIndex, slshCount int,
-	grp []byte,polyCM []byte,polyCMLen uint16) (error) {
+	grp []byte, polyCM []byte, polyCMLen uint16) error {
 
-	sslshValue := make([]big.Int,9)
-	if isSnder{
+	sslshValue := make([]big.Int, 9)
+	if isSnder {
 		sslshValue[0] = *schnorrmpc.BigOne
-	}else{
+	} else {
 		sslshValue[0] = *schnorrmpc.BigZero
 	}
 	sslshValue[1] = *polyR
@@ -177,8 +183,8 @@ func (ssj *MpcRSkJudgeStep) saveSlshProof(isSnder bool,
 
 	key1 := mpcprotocol.RSlshProof + strconv.Itoa(int(slshCount))
 	// todo error handle
-	ssj.mpcResult.SetValue(key1,sslshValue)
-	ssj.mpcResult.SetByteValue(key1,sslshByte.Bytes())
+	ssj.mpcResult.SetValue(key1, sslshValue)
+	ssj.mpcResult.SetByteValue(key1, sslshByte.Bytes())
 
 	return nil
 }
