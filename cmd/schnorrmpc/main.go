@@ -24,10 +24,8 @@ import (
 	"os"
 	"runtime"
 	"sort"
-	"strings"
 	"time"
 
-	"github.com/wanchain/schnorr-mpc/accounts/keystore"
 	"github.com/wanchain/schnorr-mpc/cmd/utils"
 	"github.com/wanchain/schnorr-mpc/console"
 	"github.com/wanchain/schnorr-mpc/log"
@@ -184,23 +182,23 @@ func startNode(ctx *cli.Context, stack *node.Node) {
 			ctx.GlobalString(utils.SyslogTagFlag.Name))
 	}
 
-	// Unlock any account specifically requested
-	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
-
-	passwords := utils.MakePasswordList(ctx)
-	unlocks := strings.Split(ctx.GlobalString(utils.UnlockedAccountFlag.Name), ",")
-	for i, account := range unlocks {
-		if trimmed := strings.TrimSpace(account); trimmed != "" {
-			if ctx.IsSet(utils.AwsKmsFlag.Name) {
-				unlockAccountFromAwsKmsFile(ctx, ks, trimmed, i, passwords)
-			} else {
-				unlockAccount(ctx, ks, trimmed, i, passwords)
-			}
-		}
-	}
-
-	// Send unlock account finish event
-	stack.AccountManager().SendStartupUnlockFinish()
+	//// Unlock any account specifically requested
+	//ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
+	//
+	//passwords := utils.MakePasswordList(ctx)
+	//unlocks := strings.Split(ctx.GlobalString(utils.UnlockedAccountFlag.Name), ",")
+	//for i, account := range unlocks {
+	//	if trimmed := strings.TrimSpace(account); trimmed != "" {
+	//		if ctx.IsSet(utils.AwsKmsFlag.Name) {
+	//			unlockAccountFromAwsKmsFile(ctx, ks, trimmed, i, passwords)
+	//		} else {
+	//			unlockAccount(ctx, ks, trimmed, i, passwords)
+	//		}
+	//	}
+	//}
+	//
+	//// Send unlock account finish event
+	//stack.AccountManager().SendStartupUnlockFinish()
 
 	// Start up the node itself
 	utils.StartNode(stack)

@@ -540,6 +540,15 @@ func MakePasswordList(ctx *cli.Context) []string {
 	return lines
 }
 
+func GetPathWordDir(ctx *cli.Context) string {
+	path := ctx.GlobalString(PasswordFileFlag.Name)
+	if path == "" {
+		return DataDirFlag.Value.Value
+	} else {
+		return path
+	}
+}
+
 func SetP2PConfig(ctx *cli.Context, cfg *p2p.Config) {
 	setNodeKey(ctx, cfg)
 	setNAT(ctx, cfg)

@@ -37,7 +37,6 @@ import (
 )
 
 var (
-
 	accountCommand = cli.Command{
 		Name:     "account",
 		Usage:    "Manage accounts",
@@ -182,7 +181,6 @@ func unlockAccount(ctx *cli.Context, ks *keystore.KeyStore, address string, i in
 	return accounts.Account{}, ""
 }
 
-
 func unlockAccountFromAwsKmsFile(ctx *cli.Context, ks *keystore.KeyStore, address string, i int, passwords []string) (accounts.Account, string) {
 	account, err := utils.MakeAddress(ks, address)
 	if err != nil {
@@ -297,20 +295,6 @@ func ambiguousAddrRecovery(ks *keystore.KeyStore, err *keystore.AmbiguousAddrErr
 	return *match
 }
 
-// accountCreate creates a new account into the keystore defined by the CLI flags.
-func accountCreate(ctx *cli.Context) error {
-	stack, _ := makeConfigNode(ctx)
-	password := getPassPhrase("Your new account is locked with a password. Please give a password. Do not forget this password.", true, 0, utils.MakePasswordList(ctx))
-
-	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
-	account, err := ks.NewAccount(password)
-	if err != nil {
-		utils.Fatalf("Failed to create account: %v", err)
-	}
-	fmt.Printf("Address: {%s}\n", account.Address.Hex()[2:])
-	return nil
-}
-
 // accountUpdate transitions an account from a previous format to the current
 // one, also providing the possibility to change the pass-phrase.
 func accountUpdate(ctx *cli.Context) error {
@@ -323,13 +307,13 @@ func accountUpdate(ctx *cli.Context) error {
 	for _, pkStr := range ctx.Args() {
 
 		pk, err := schnorrmpc.StringtoPk(pkStr)
-		if err!=nil {
+		if err != nil {
 			fmt.Println("StringtoPk error", err.Error())
 			continue
 		}
 
 		pkBytes := crypto.FromECDSAPub(pk)
-		addr,err := schnorrmpc.PkToAddress(pkBytes[:])
+		addr, err := schnorrmpc.PkToAddress(pkBytes[:])
 		if err != nil {
 			fmt.Println("PkToAddress error", err.Error())
 			continue
@@ -345,62 +329,18 @@ func accountUpdate(ctx *cli.Context) error {
 		//desFile := ""
 		//desFile = fa.URL.Path
 		//fmt.Printf("gpk=%v\n",desFile)
-		log.Info("change password","gpk",pkStr,"account",addr.String())
+		log.Info("change password", "gpk", pkStr, "account", addr.String())
 
 		//account, oldPassword := unlockAccount(ctx, ks, addr.String(), 0, nil)
 		account, oldPassword := unlockAccount(ctx, ks, addr.String(), 0, nil)
 		newPassword := getPassPhrase("Please give a new password. Do not forget this password.", true, 0, nil)
 
-
 		if err := ks.UpdateStoreman(account, oldPassword, newPassword); err != nil {
 			utils.Fatalf("Could not update the account: %v", err)
 		}
 
-		fmt.Printf("Change password of %v successfully\n",pkStr)
+		fmt.Printf("Change password of %v successfully\n", pkStr)
 	}
-	return nil
-}
-
-func importWallet(ctx *cli.Context) error {
-	keyfile := ctx.Args().First()
-	if len(keyfile) == 0 {
-		utils.Fatalf("keyfile must be given as argument")
-	}
-	keyJson, err := ioutil.ReadFile(keyfile)
-	if err != nil {
-		utils.Fatalf("Could not read wallet file: %v", err)
-	}
-
-	stack, _ := makeConfigNode(ctx)
-	passphrase := getPassPhrase("", false, 0, utils.MakePasswordList(ctx))
-
-	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
-	acct, err := ks.ImportPreSaleKey(keyJson, passphrase)
-	if err != nil {
-		utils.Fatalf("%v", err)
-	}
-	fmt.Printf("Address: {%x}\n", acct.Address)
-	return nil
-}
-
-func accountImport(ctx *cli.Context) error {
-	keyfile := ctx.Args().First()
-	if len(keyfile) == 0 {
-		utils.Fatalf("keyfile must be given as argument")
-	}
-	key, key1, err := keystore.LoadECDSAPair(keyfile)
-	if err != nil {
-		utils.Fatalf("Failed to load the private key: %v", err)
-	}
-	stack, _ := makeConfigNode(ctx)
-	passphrase := getPassPhrase("Your new account is locked with a password. Please give a password. Do not forget this password.", true, 0, utils.MakePasswordList(ctx))
-
-	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
-	acct, err := ks.ImportECDSA(key, key1, passphrase)
-	if err != nil {
-		utils.Fatalf("Could not create the account: %v", err)
-	}
-	fmt.Printf("Address: {%s}\n", acct.Address.Hex()[2:])
 	return nil
 }
 
@@ -459,20 +399,20 @@ func accountEncrypt(ctx *cli.Context) error {
 	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 	for _, pkStr := range ctx.Args() {
 		pk, err := schnorrmpc.StringtoPk(pkStr)
-		if err!=nil {
+		if err != nil {
 			fmt.Println("StringtoPk error", err.Error())
 			continue
 		}
 
 		pkBytes := crypto.FromECDSAPub(pk)
-		addr,err := schnorrmpc.PkToAddress(pkBytes[:])
+		addr, err := schnorrmpc.PkToAddress(pkBytes[:])
 		if err != nil {
 			fmt.Println("PkToAddress error", err.Error())
 			continue
 		}
 
 		exceptAddr := addr
-		a := accounts.Account{Address:exceptAddr}
+		a := accounts.Account{Address: exceptAddr}
 		fa, err := ks.Find(a)
 		if err != nil {
 			return err
@@ -484,25 +424,25 @@ func accountEncrypt(ctx *cli.Context) error {
 			return err
 		}
 
-		fmt.Println("encrypt account(",  addr, ") successfully into new keystore file : ", desFile)
+		fmt.Println("encrypt account(", addr, ") successfully into new keystore file : ", desFile)
 	}
 	/*
-	for _, addr := range ctx.Args() {
-		exceptAddr := common.HexToAddress(addr)
-		a := accounts.Account{Address:exceptAddr}
-		fa, err := ks.Find(a)
-		if err != nil {
-			return err
-		}
+		for _, addr := range ctx.Args() {
+			exceptAddr := common.HexToAddress(addr)
+			a := accounts.Account{Address:exceptAddr}
+			fa, err := ks.Find(a)
+			if err != nil {
+				return err
+			}
 
-		desFile := fa.URL.Path + keystore.AwsKMSCiphertextFileExt
-		err = awskms.EncryptFile(fa.URL.Path, desFile, keyVals[0], keyVals[1], keyVals[2], keyVals[3])
-		if err != nil {
-			return err
-		}
+			desFile := fa.URL.Path + keystore.AwsKMSCiphertextFileExt
+			err = awskms.EncryptFile(fa.URL.Path, desFile, keyVals[0], keyVals[1], keyVals[2], keyVals[3])
+			if err != nil {
+				return err
+			}
 
-		fmt.Println("encrypt account(",  addr, ") successfully into new keystore file : ", desFile)
-	}
+			fmt.Println("encrypt account(",  addr, ") successfully into new keystore file : ", desFile)
+		}
 	*/
 	return nil
 }
@@ -525,40 +465,40 @@ func accountDecrypt(ctx *cli.Context) error {
 	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 
 	/*
-	for _, addr := range ctx.Args() {
-		exceptAddr := common.HexToAddress(addr)
-		a := accounts.Account{Address:exceptAddr}
-		fa, err := ks.Find(a)
-		if err != nil {
-			return err
-		}
+		for _, addr := range ctx.Args() {
+			exceptAddr := common.HexToAddress(addr)
+			a := accounts.Account{Address:exceptAddr}
+			fa, err := ks.Find(a)
+			if err != nil {
+				return err
+			}
 
-		desFile := ""
-		pot := strings.LastIndex(fa.URL.Path, keystore.AwsKMSCiphertextFileExt)
-		if pot != -1 {
-			desFile = fa.URL.Path[:pot]
-		} else {
-			desFile = fa.URL.Path + "-plain"
-		}
+			desFile := ""
+			pot := strings.LastIndex(fa.URL.Path, keystore.AwsKMSCiphertextFileExt)
+			if pot != -1 {
+				desFile = fa.URL.Path[:pot]
+			} else {
+				desFile = fa.URL.Path + "-plain"
+			}
 
-		err = awskms.DecryptFile(fa.URL.Path, desFile, keyVals[0], keyVals[1], keyVals[2])
-		if err != nil {
-			return err
-		}
+			err = awskms.DecryptFile(fa.URL.Path, desFile, keyVals[0], keyVals[1], keyVals[2])
+			if err != nil {
+				return err
+			}
 
-		fmt.Println("decrypt account(",  addr, ") successfully into new keystore file : ", desFile)
-	}
+			fmt.Println("decrypt account(",  addr, ") successfully into new keystore file : ", desFile)
+		}
 	*/
 	for _, pkStr := range ctx.Args() {
 
 		pk, err := schnorrmpc.StringtoPk(pkStr)
-		if err!=nil {
+		if err != nil {
 			fmt.Println("StringtoPk error", err.Error())
 			continue
 		}
 
 		pkBytes := crypto.FromECDSAPub(pk)
-		addr,err := schnorrmpc.PkToAddress(pkBytes[:])
+		addr, err := schnorrmpc.PkToAddress(pkBytes[:])
 		if err != nil {
 			fmt.Println("PkToAddress error", err.Error())
 			continue
@@ -566,7 +506,7 @@ func accountDecrypt(ctx *cli.Context) error {
 
 		exceptAddr := addr
 
-		a := accounts.Account{Address:exceptAddr}
+		a := accounts.Account{Address: exceptAddr}
 		fa, err := ks.Find(a)
 		if err != nil {
 			return err
@@ -585,7 +525,7 @@ func accountDecrypt(ctx *cli.Context) error {
 			return err
 		}
 
-		fmt.Println("decrypt account(",  addr, ") successfully into new keystore file : ", desFile)
+		fmt.Println("decrypt account(", addr, ") successfully into new keystore file : ", desFile)
 	}
 	return nil
 }
@@ -595,20 +535,19 @@ func tryPwd(ctx *cli.Context) error {
 		utils.Fatalf("No accounts specified to decrypt")
 	}
 
-
 	fmt.Println("begin decrypting...")
 	stack, _ := makeConfigNode(ctx)
 	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 	for _, pkStr := range ctx.Args() {
 
 		pk, err := schnorrmpc.StringtoPk(pkStr)
-		if err!=nil {
+		if err != nil {
 			fmt.Println("StringtoPk error", err.Error())
 			continue
 		}
 
 		pkBytes := crypto.FromECDSAPub(pk)
-		addr,err := schnorrmpc.PkToAddress(pkBytes[:])
+		addr, err := schnorrmpc.PkToAddress(pkBytes[:])
 		if err != nil {
 			fmt.Println("PkToAddress error", err.Error())
 			continue
@@ -616,7 +555,7 @@ func tryPwd(ctx *cli.Context) error {
 
 		exceptAddr := addr
 
-		a := accounts.Account{Address:exceptAddr}
+		a := accounts.Account{Address: exceptAddr}
 		fa, err := ks.Find(a)
 		if err != nil {
 			return err
@@ -625,11 +564,9 @@ func tryPwd(ctx *cli.Context) error {
 		desFile := ""
 		desFile = fa.URL.Path
 
-
 		var keyjson []byte
 
 		keyjson, err = ioutil.ReadFile(desFile)
-
 
 		fi, err := os.Open("pwds.txt")
 		if err != nil {
@@ -647,9 +584,9 @@ func tryPwd(ctx *cli.Context) error {
 			//fmt.Println(string(a))
 			_, err := keystore.DecryptKey(keyjson, string(a))
 			if err != nil {
-				fmt.Printf("try %v fail err:%v\n",string(a),err.Error())
-			}else{
-				fmt.Printf("try success! pwd is : %v\n",string(a))
+				fmt.Printf("try %v fail err:%v\n", string(a), err.Error())
+			} else {
+				fmt.Printf("try success! pwd is : %v\n", string(a))
 				break
 			}
 		}

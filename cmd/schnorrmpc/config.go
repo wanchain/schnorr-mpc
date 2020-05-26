@@ -201,43 +201,42 @@ func makeFullNode(ctx *cli.Context) *node.Node {
 		cfg.Sm.DataPath = cfg.Node.DataDir
 		enableKms := ctx.GlobalIsSet(utils.AwsKmsFlag.Name)
 
-		enableCheckGpk := ctx.GlobalIsSet(utils.CheckGpkFlag.Name)
-
-		var status int
-		var suc bool
+		//enableCheckGpk := ctx.GlobalIsSet(utils.CheckGpkFlag.Name)
+		//
+		//var status int
+		//var suc bool
 
 		kmsInfo := &storemanmpc.KmsInfo{}
 		if enableKms {
 			kmsInfo = getKmsInfo()
 		}
 
-		password := getPassword(ctx, false)
-		verify, accounts := getVerifyAccounts(enableCheckGpk)
-		if verify {
-			suc, status = verifySecurityInfo(stack, enableKms, kmsInfo, password, accounts)
-			for !suc {
-				log.Error("verify security info fail, please input again")
-				if status == 0x00 || (status == 0x01 && !enableKms) {
-					verify, accounts = getVerifyAccounts(enableCheckGpk)
-				} else if status == 0x01 {
-					kmsInfo = getKmsInfo()
-				} else {
-					password = getPassword(ctx, true)
-				}
+		//password := getPassword(ctx, false)
+		//verify, accounts := getVerifyAccounts(enableCheckGpk)
+		//if verify {
+		//	suc, status = verifySecurityInfo(stack, enableKms, kmsInfo, password, accounts)
+		//	for !suc {
+		//		log.Error("verify security info fail, please input again")
+		//		if status == 0x00 || (status == 0x01 && !enableKms) {
+		//			verify, accounts = getVerifyAccounts(enableCheckGpk)
+		//		} else if status == 0x01 {
+		//			kmsInfo = getKmsInfo()
+		//		} else {
+		//			password = getPassword(ctx, true)
+		//		}
+		//
+		//		if verify {
+		//			suc, status = verifySecurityInfo(stack, enableKms, kmsInfo, password, accounts)
+		//		} else {
+		//			suc = true
+		//		}
+		//	}
+		//}
 
-				if verify {
-					suc, status = verifySecurityInfo(stack, enableKms, kmsInfo, password, accounts)
-				} else {
-					suc = true
-				}
-			}
-		}
-
-		cfg.Sm.Password = password
-
-		// todo add working password
-		// todo need seperate working password and gpk password
-		osmconf.GetOsmConf().SetPassword(password)
+		cfg.Sm.Password = "" // no use for osm version, get password from the configure file.
+		path := utils.GetPathWordDir(ctx)
+		log.SyslogInfo("makeFullNode", "path GetPathWordDir", path)
+		osmconf.GetOsmConf().SetPwdPath(path)
 
 		utils.RegisterSmService(stack, &cfg.Sm, kmsInfo.AKID, kmsInfo.SecretKey, kmsInfo.Region)
 	}
@@ -366,19 +365,19 @@ func getVerifyAccounts(checkGpk bool) (bool, []common.Address) {
 
 		splits := strings.Split(string(read), " ")
 		for _, pkStr := range splits {
-			log.Info("getVerifyAccounts","StringtoPk :",pkStr)
+			log.Info("getVerifyAccounts", "StringtoPk :", pkStr)
 			pk, err := schnorrmpc.StringtoPk(pkStr)
-			if err != nil{
-				log.Error("getVerifyAccounts","StringtoPk error:",err.Error())
+			if err != nil {
+				log.Error("getVerifyAccounts", "StringtoPk error:", err.Error())
 				continue
 			}
 			pkBytes := crypto.FromECDSAPub(pk)
-			addr,err := schnorrmpc.PkToAddress(pkBytes[:])
+			addr, err := schnorrmpc.PkToAddress(pkBytes[:])
 			if err != nil {
-				log.Error("getVerifyAccounts","PkToAddress error:",err.Error())
+				log.Error("getVerifyAccounts", "PkToAddress error:", err.Error())
 				continue
 			}
-			log.Info("getVerifyAccounts","addr :",addr,"len(addr)",len(addr))
+			log.Info("getVerifyAccounts", "addr :", addr, "len(addr)", len(addr))
 			if len(addr) == (common.AddressLength) {
 				accounts = append(accounts, addr)
 			}

@@ -18,7 +18,9 @@ import (
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"io/ioutil"
 	"math/big"
+	"path"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -54,6 +56,7 @@ type OsmConf struct {
 	WorkingPassword string
 	AccMng          *accounts.Manager
 	confPath        string
+	pwdPath         string
 	wrLock          sync.RWMutex
 }
 
@@ -142,8 +145,8 @@ func (cnf *OsmConf) LoadCnf(confPath string) error {
 			Inx, _ := strconv.Atoi(ge.Inx)
 			gii.ArrGrpElems[i].Inx = uint16(Inx)
 			gii.ArrGrpElems[i].PkShare = crypto.ToECDSAPub(ge.PkShare)
-			log.SyslogErr("LoadCnf", "ge.WorkingPk", ge.WorkingPk)
-			log.SyslogErr("LoadCnf", "ge.PkShare", ge.PkShare)
+			log.SyslogInfo("LoadCnf", "ge.WorkingPk", ge.WorkingPk)
+			log.SyslogInfo("LoadCnf", "ge.PkShare", ge.PkShare)
 
 			gii.ArrGrpElems[i].WorkingPk = crypto.ToECDSAPub(ge.WorkingPk)
 
@@ -341,7 +344,9 @@ func (cnf *OsmConf) GetSelfPrvKey() (*ecdsa.PrivateKey, error) {
 		return nil, err
 	}
 
-	key, err := keystore.DecryptKey(keyjson, cnf.WorkingPassword)
+	wkPassword, _ := cnf.GetWkPwd(address.String())
+	//key, err := keystore.DecryptKey(keyjson, cnf.WorkingPassword)
+	key, err := keystore.DecryptKey(keyjson, wkPassword)
 	if err != nil {
 		// decrypt account keyjson fail
 		log.Info("GetSelfPrvKey", "DecryptKey err ", err)
@@ -365,11 +370,15 @@ func (cnf *OsmConf) SetSelfNodeId(id *discover.NodeID) error {
 	return nil
 }
 
-func (cnf *OsmConf) SetPassword(pwd string) error {
-	cnf.WorkingPassword = pwd
-	cnf.GpkPassword = pwd
-	return nil
-}
+//func (cnf *OsmConf) SetGpkPassword(pwd string) error {
+//	cnf.GpkPassword = pwd
+//	return nil
+//}
+//
+//func (cnf *OsmConf) SetWkPassword(pwd string) error {
+//	cnf.WorkingPassword = pwd
+//	return nil
+//}
 
 func (cnf *OsmConf) SetAccountManger(accMng *accounts.Manager) error {
 
@@ -385,6 +394,44 @@ func (cnf *OsmConf) SetFilePath(path string) error {
 		panic(fmt.Sprintf("SetFilePath path is empty"))
 	}
 	cnf.confPath = path
+	return nil
+}
+
+func (cnf *OsmConf) GetGpkPwd(gpk string) (string, error) {
+	fileName := path.Join(cnf.pwdPath, gpk+".pwd")
+	// get password from file
+	return cnf.GetPwd(fileName)
+}
+
+func (cnf *OsmConf) GetWkPwd(address string) (string, error) {
+	fileName := path.Join(cnf.pwdPath, address+".pwd")
+	return cnf.GetPwd(fileName)
+}
+
+func (cnf *OsmConf) GetPwd(fileName string) (string, error) {
+	if fileName == "" {
+		panic(fmt.Sprintf("password file [:%v] is not existing", fileName))
+	}
+	text, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to read password file:[%v]", fileName))
+	}
+	lines := strings.Split(string(text), "\n")
+	if len(lines) == 0 {
+		panic(fmt.Sprintf("empty password [%v]", fileName))
+	}
+	// Sanitise DOS line endings.
+	for i := range lines {
+		lines[i] = strings.TrimRight(lines[i], "\r")
+	}
+	return lines[0], nil
+}
+
+func (cnf *OsmConf) SetPwdPath(path string) error {
+	if path == EmptyString {
+		panic(fmt.Sprintf("SetFilePath path is empty"))
+	}
+	cnf.pwdPath = path
 	return nil
 }
 

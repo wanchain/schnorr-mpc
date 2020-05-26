@@ -278,6 +278,7 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 	}
 
 	var address common.Address
+	var gpkString string
 	if ctxType == mpcprotocol.MpcSignLeader {
 		for _, item := range preSetValue {
 			if item.Key == mpcprotocol.MpcGpkBytes {
@@ -285,6 +286,7 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 				if err != nil {
 					return []byte{}, err
 				}
+				gpkString = hexutil.Encode(item.ByteValue)
 				break
 			}
 		}
@@ -298,7 +300,7 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 			// mpc private share
 			preSetValue = append(preSetValue, *value)
 		} else {
-			value, err := mpcServer.loadStoremanAddress(&address)
+			value, err := mpcServer.loadStoremanAddress(gpkString, &address)
 			if err != nil {
 
 				log.SyslogErr("MpcDistributor createRequestMpcContext, loadStoremanAddress fail",
@@ -340,18 +342,19 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 	return mpc.getMpcResult(err)
 }
 
-func (mpcServer *MpcDistributor) loadStoremanAddress(address *common.Address) (*MpcValue, error) {
+func (mpcServer *MpcDistributor) loadStoremanAddress(gpkStr string, address *common.Address) (*MpcValue, error) {
 	log.SyslogInfo("MpcDistributor.loadStoremanAddress begin", "address", address.String())
 
 	mpcServer.accMu.Lock()
 	defer mpcServer.accMu.Unlock()
 	value, exist := mpcServer.mpcAccountMap[*address]
-
+	password, _ := osmconf.GetOsmConf().GetGpkPwd(gpkStr)
 	var key *keystore.Key
 	var err error
 	if !exist {
 		ks := mpcServer.AccountManager.Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
-		key, _, err = GetPrivateShare(ks, *address, mpcServer.enableAwsKms, &mpcServer.kmsInfo, mpcServer.password)
+		//key, _, err = GetPrivateShare(ks, *address, mpcServer.enableAwsKms, &mpcServer.kmsInfo, mpcServer.password)
+		key, _, err = GetPrivateShare(ks, *address, mpcServer.enableAwsKms, &mpcServer.kmsInfo, password)
 		if err != nil {
 			return nil, err
 		}
@@ -416,6 +419,7 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 
 	log.SyslogInfo("createMpcCtx", "ctxType", ctxType, "ctxId", mpcMessage.ContextID)
 	var grpId string
+	var gpkStr string
 	if ctxType == mpcprotocol.MpcSignPeer {
 		log.SyslogInfo("createMpcCtx MpcSignPeer")
 		mpcM := mpcMessage.BytesData[0]
@@ -430,6 +434,8 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 			return err
 		}
 
+		gpkStr = hexutil.Encode(address[:])
+
 		log.SyslogInfo("createMpcCtx", "address", address, "mpcM", mpcM)
 
 		var MpcPrivateShare *MpcValue
@@ -442,7 +448,7 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 			// mpc private share
 		} else {
 			// load account
-			MpcPrivateShare, err = mpcServer.loadStoremanAddress(&add)
+			MpcPrivateShare, err = mpcServer.loadStoremanAddress(gpkStr, &add)
 			if err != nil {
 				return err
 			}
