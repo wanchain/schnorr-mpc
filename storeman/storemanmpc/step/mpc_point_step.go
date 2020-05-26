@@ -41,7 +41,6 @@ func CreateMpcPointStep(peers *[]mpcprotocol.PeerInfo, preValueKeys []string, re
 
 func (ptStep *MpcPointStep) CreateMessage() []mpcprotocol.StepMessage {
 	log.SyslogInfo("MpcPointStep.CreateMessage begin")
-	// todo add RPKShare and r, s.
 	message := make([]mpcprotocol.StepMessage, 1)
 	message[0].MsgCode = mpcprotocol.MPCMessage
 	message[0].PeerID = nil
@@ -76,9 +75,6 @@ func (ptStep *MpcPointStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		log.SyslogErr("HandleMessage", "MpcPointStep.HandleMessage, get msg from seed fail. peer", msg.PeerID.String())
 		return false
 	}
-
-	// todo check fail , not save RPKShare
-	// todo check RPKShare sig
 
 	pointPk := crypto.ToECDSAPub(msg.BytesData[0])
 	r := msg.Data[0]

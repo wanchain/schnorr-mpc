@@ -81,12 +81,17 @@ func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcpr
 	gpkShare.Curve = crypto.S256()
 	gpkShare.X, rpkShare.Y = crypto.S256().ScalarBaseMult(gskShare[0].Bytes())
 
-	// todo should remove gskShare, rskShare
+	//log.Info("@@@@@@@@@@@@@@ SchnorrSign @@@@@@@@@@@@@@",
+	//	"M", hexutil.Encode(MBytes),
+	//	"m", hexutil.Encode(m.Bytes()),
+	//	"gskShare", hexutil.Encode(gskShare[0].Bytes()),
+	//	"rskShare", hexutil.Encode(rskShare[0].Bytes()),
+	//	"gpkShare", hexutil.Encode(crypto.FromECDSAPub(gpkShare)),
+	//	"rpkShare", hexutil.Encode(crypto.FromECDSAPub(rpkShare)))
+
 	log.Info("@@@@@@@@@@@@@@ SchnorrSign @@@@@@@@@@@@@@",
 		"M", hexutil.Encode(MBytes),
 		"m", hexutil.Encode(m.Bytes()),
-		"gskShare", hexutil.Encode(gskShare[0].Bytes()),
-		"rskShare", hexutil.Encode(rskShare[0].Bytes()),
 		"gpkShare", hexutil.Encode(crypto.FromECDSAPub(gpkShare)),
 		"rpkShare", hexutil.Encode(crypto.FromECDSAPub(rpkShare)))
 

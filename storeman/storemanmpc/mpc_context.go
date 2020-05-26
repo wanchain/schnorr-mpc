@@ -99,10 +99,15 @@ func (mpcCtx *MpcContext) getMpcResult(err error) (interface{}, error) {
 		errNumInt64 := errNum[0].Int64()
 		for i := 0; i < int(errNumInt64); i++ {
 			key := mpcprotocol.RSlshProof + strconv.Itoa(int(i))
-			rslshValue, _ := mpcResult.GetValue(key)
+			rslshValue, err := mpcResult.GetValue(key)
+			if err != nil {
+				log.SyslogErr("getMpcResult", "mpcResult.GetValue error:", err.Error())
+				return nil, err
+			}
 
 			if len(rslshValue) != 9 {
-				// todo error handle
+				log.SyslogErr("getMpcResult rslshValue format error.", "len(rslshValue)", len(rslshValue))
+				return nil, err
 			} else {
 
 				oneRPrf := mpcprotocol.RSlshPrf{}
@@ -121,9 +126,11 @@ func (mpcCtx *MpcContext) getMpcResult(err error) (interface{}, error) {
 
 				polyLen := int(rslshValue[8].Int64())
 
-				rslshBytes, _ := mpcResult.GetByteValue(key)
-
-				// todo error handle
+				rslshBytes, err := mpcResult.GetByteValue(key)
+				if err != nil {
+					log.SyslogErr("getMpcResult", "GetByteValue error,key", key, "error", err.Error())
+					return nil, err
+				}
 				oneRPrf.PolyCM = rslshBytes[0 : 65*polyLen]
 				sr.GrpId = rslshBytes[65*polyLen:]
 
@@ -142,29 +149,33 @@ func (mpcCtx *MpcContext) getMpcResult(err error) (interface{}, error) {
 		errNumInt64 := errNum[0].Int64()
 		for i := 0; i < int(errNumInt64); i++ {
 			key := mpcprotocol.SSlshProof + strconv.Itoa(int(i))
-			rslshValue, _ := mpcResult.GetValue(key)
+			sslshValue, _ := mpcResult.GetValue(key)
 
-			if len(rslshValue) != 8 {
-				// todo error handle
+			if len(sslshValue) != 8 {
+				log.SyslogErr("getMpcResult sslsh format error.", "len(sslshValue)", len(sslshValue))
+				return nil, err
 			} else {
 
 				oneRPrf := mpcprotocol.SSlshPrf{}
-				oneRPrf.M = rslshValue[1].Bytes()
-				oneRPrf.PolyData = rslshValue[2].Bytes()
-				oneRPrf.PolyDataR = rslshValue[3].Bytes()
-				oneRPrf.PolyDataS = rslshValue[4].Bytes()
+				oneRPrf.M = sslshValue[1].Bytes()
+				oneRPrf.PolyData = sslshValue[2].Bytes()
+				oneRPrf.PolyDataR = sslshValue[3].Bytes()
+				oneRPrf.PolyDataS = sslshValue[4].Bytes()
 
-				oneRPrf.SndrAndRcvrIndex = [2]uint8{uint8(rslshValue[5].Int64()), uint8(rslshValue[6].Int64())}
+				oneRPrf.SndrAndRcvrIndex = [2]uint8{uint8(sslshValue[5].Int64()), uint8(sslshValue[6].Int64())}
 
-				if rslshValue[0].Cmp(schnorrmpc.BigZero) == 0 {
+				if sslshValue[0].Cmp(schnorrmpc.BigZero) == 0 {
 					oneRPrf.BecauseSndr = false
 				} else {
 					oneRPrf.BecauseSndr = true
 				}
 
 				rslshBytes, _ := mpcResult.GetByteValue(key)
+				if err != nil {
+					log.SyslogErr("getMpcResult", "GetByteValue error,key", key, "error", err.Error())
+					return nil, err
+				}
 
-				// todo error handle
 				oneRPrf.RPKShare = rslshBytes[0:65]
 				oneRPrf.GPKShare = rslshBytes[65 : 65*2]
 				sr.GrpId = rslshBytes[65*2:]

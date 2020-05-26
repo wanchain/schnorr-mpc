@@ -22,9 +22,9 @@ import (
 )
 
 type Config struct {
-	StoremanNodes []*discover.Node
-	Password      string
-	// todo add working password.
+	StoremanNodes     []*discover.Node
+	Password          string
+	WorkingPwd        string
 	DataPath          string
 	SchnorrThreshold  int
 	SchnorrTotalNodes int
@@ -449,8 +449,6 @@ func (sa *StoremanAPI) Peers(ctx context.Context) []*p2p.PeerInfo {
 //}
 
 func (sa *StoremanAPI) SignDataByApprove(ctx context.Context, data mpcprotocol.SendData) (result interface{}, err error) {
-	//Todo  check the input parameter
-
 	if len(sa.sm.storemanPeers)+1 < mpcprotocol.MpcSchnrThr {
 		return mpcprotocol.SignedResult{R: []byte{}, S: []byte{}}, mpcprotocol.ErrTooLessStoreman
 	}
@@ -472,8 +470,6 @@ func (sa *StoremanAPI) SignDataByApprove(ctx context.Context, data mpcprotocol.S
 }
 
 func (sa *StoremanAPI) SignData(ctx context.Context, data mpcprotocol.SendData) (result interface{}, err error) {
-	//Todo  check the input parameter
-
 	if len(sa.sm.storemanPeers)+1 < mpcprotocol.MpcSchnrThr {
 		return mpcprotocol.SignedResult{R: []byte{}, S: []byte{}}, mpcprotocol.ErrTooLessStoreman
 	}

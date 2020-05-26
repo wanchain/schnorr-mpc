@@ -39,7 +39,6 @@ func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStep
 
 	accTypeStr := ""
 
-	// todo add poly commit step
 	cmStep := step.CreateMpcPolycmStep(&mpc.peers)
 	//cmStep.SetWaiting(mpcprotocol.MpcSchnrThr)
 
@@ -47,8 +46,6 @@ func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStep
 	// wait time out, in order for all node try best get most response, so each node can get the same poly value.
 	// It is not enough for node to wait only MPCDegree response, the reason is above.
 
-
-	// todo add RSK judge step
 	skJudgeStep := step.CreateMpcRSkJudgeStep(&mpc.peers)
 	skJudgeStep.SetWaiting(mpcprotocol.MpcSchnrThr)
 
@@ -58,7 +55,6 @@ func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStep
 	SStep := step.CreateMpcSStep(&mpc.peers, []string{mpcprotocol.MpcPrivateShare}, []string{mpcprotocol.MpcS})
 	SStep.SetWaiting(mpcprotocol.MpcSchnrThr)
 
-	// todo add sshareJudgeStep step
 	sshareJudgeStep := step.CreateMpcSSahreJudgeStep(&mpc.peers)
 	sshareJudgeStep.SetWaiting(mpcprotocol.MpcSchnrThr)
 
@@ -76,7 +72,7 @@ func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStep
 		ackRSStep)
 
 	for stepId, stepItem := range mpc.MpcSteps {
-		stepItem.SetWaiting(len(mpc.peers)+1)
+		stepItem.SetWaiting(len(mpc.peers) + 1)
 		stepItem.SetWaitAll(false)
 		stepItem.SetStepId(stepId)
 	}

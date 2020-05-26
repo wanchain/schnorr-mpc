@@ -141,23 +141,27 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	//split the pk list
 	pks, err := schnorrmpc.SplitPksFromBytes(pgBytes[:])
 	if err != nil {
-
-		// todo error handle
 		log.SyslogErr("MpcRSKShare_Step::HandleMessage",
 			" polyCMG GetBytevalue error", err.Error())
 
 		bContent = false
 	}
 
-	log.SyslogInfo("before evalByPolyG", "len(pks)", len(pks), "degree",
-		len(pks)-1, "xValue", hexutil.Encode(xValue.Bytes()))
-
 	threshold, _ := osmconf.GetOsmConf().GetThresholdNum(grpIdString)
-	if len(pks) != int(threshold) {
+	if threshold < 1 {
+		log.SyslogErr("before evalByPolyG threshold should be greater 1", "threshold", threshold)
 		return true
 	}
-	// todo error handle before EvalByPolyG
-	sijgEval, _ := schnorrmpc.EvalByPolyG(pks, uint16(len(pks)-1), xValue)
+	if len(pks) != int(threshold) {
+		log.SyslogErr("before evalByPolyG", "len(pks)", len(pks), "threshold", threshold)
+		return true
+	}
+	sijgEval, err := schnorrmpc.EvalByPolyG(pks, uint16(len(pks)-1), xValue)
+	if err != nil {
+		log.SyslogErr("schnorrmpc.EvalByPolyG", "error", err.Error())
+		return true
+	}
+
 	sijg, _ := schnorrmpc.SkG(&sij)
 	if ok, _ := schnorrmpc.PkEqual(sijg, sijgEval); !ok {
 		bContent = false

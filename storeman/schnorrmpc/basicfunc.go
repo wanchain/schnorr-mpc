@@ -4,6 +4,7 @@ import (
 	"crypto/ecdsa"
 	Rand "crypto/rand"
 	"errors"
+	"fmt"
 	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/crypto"
@@ -169,6 +170,9 @@ func PkToAddress(PkBytes []byte) (common.Address, error) {
 }
 
 func PkToHexString(pk *ecdsa.PublicKey) string {
+	if pk == nil || !crypto.S256().IsOnCurve(pk.X, pk.Y) {
+		return ""
+	}
 	pkByte := crypto.FromECDSAPub(pk)
 	return hexutil.Encode(pkByte)
 }
@@ -177,6 +181,10 @@ func StringtoPk(str string) (*ecdsa.PublicKey, error) {
 	pkBytes, err := hexutil.Decode(str)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(pkBytes) != PkLength {
+		return nil, errors.New(fmt.Sprintf("len(pkBytes)= %v error. ", len(pkBytes)))
 	}
 	pk := crypto.ToECDSAPub(pkBytes)
 	return pk, nil
@@ -191,7 +199,10 @@ func SkG(s *big.Int) (*ecdsa.PublicKey, error) {
 }
 
 func SkMul(pk *ecdsa.PublicKey, s *big.Int) (*ecdsa.PublicKey, error) {
-
+	err := CheckPK(pk)
+	if err != nil {
+		return nil, err
+	}
 	ret := new(ecdsa.PublicKey)
 	ret.Curve = crypto.S256()
 
@@ -201,6 +212,9 @@ func SkMul(pk *ecdsa.PublicKey, s *big.Int) (*ecdsa.PublicKey, error) {
 
 //
 func SplitPksFromBytes(buf []byte) ([]*ecdsa.PublicKey, error) {
+	if len(buf) < PkLength {
+		return nil, errors.New(fmt.Sprintf("SplitPksFromBytes len(buf) = %v", len(buf)))
+	}
 	nPk := len(buf) / PkLength
 	ret := make([]*ecdsa.PublicKey, nPk)
 	for i := 0; i < nPk; i++ {
@@ -212,8 +226,19 @@ func SplitPksFromBytes(buf []byte) ([]*ecdsa.PublicKey, error) {
 }
 
 func EvalByPolyG(pks []*ecdsa.PublicKey, degree uint16, x *big.Int) (*ecdsa.PublicKey, error) {
-	// check input parameters
+	if len(pks) == 0 || x.Cmp(bigZero) == 0 {
+		return nil, errors.New("len(pks)==0 or xvalue is zero")
+	}
+	if len(pks) != int(degree+1) {
+		return nil, errors.New("degree is not content with the len(pks)")
+	}
 
+	for _, pk := range pks {
+		err := CheckPK(pk)
+		if err != nil {
+			return nil, err
+		}
+	}
 	sumPk := new(ecdsa.PublicKey)
 	sumPk.Curve = crypto.S256()
 	sumPk.X, sumPk.Y = pks[0].X, pks[0].Y

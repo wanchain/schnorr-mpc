@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"crypto/sha256"
+	"errors"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
@@ -217,7 +218,12 @@ func (msStep *MpcSStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mp
 }
 
 func (msStep *MpcSStep) checkContent(sshare, m *big.Int, rpkShare, gpkShare *ecdsa.PublicKey) (bool, error) {
-	// todo check input parameters
+	if sshare == nil || m == nil {
+		return false, errors.New("sshare is nil or m is nil")
+	}
+	if schnorrmpc.CheckPK(rpkShare) != nil || schnorrmpc.CheckPK(gpkShare) != nil {
+		return false, errors.New("rpkShare is invalid pk or gpkShare is invalid pk")
+	}
 	sshareG, _ := schnorrmpc.SkG(sshare)
 	mPkShare, _ := schnorrmpc.SkMul(gpkShare, m)
 

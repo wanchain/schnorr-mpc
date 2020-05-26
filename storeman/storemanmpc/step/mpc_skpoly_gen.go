@@ -2,6 +2,8 @@ package step
 
 import (
 	"crypto/sha256"
+	"errors"
+	"fmt"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
@@ -46,8 +48,13 @@ func (poly *RandomPolynomialGen) initialize(peers *[]mpcprotocol.PeerInfo,
 	key := mpcprotocol.RPolyCoff + strconv.Itoa(int(selfIndex))
 	poly.randCoefficient, _ = result.GetValue(key)
 
-	// todo check threshold and len(poly.randCoefficient)
+	// check threshold and len(poly.randCoefficient)
 	threshold, _ := osmconf.GetOsmConf().GetThresholdNum(grpIdString)
+	if threshold < 1 || int(threshold) != len(poly.randCoefficient) {
+		err := errors.New(fmt.Sprintf("RandomPolynomialGen initialize GetThresholdNum threshold = %v", threshold))
+		log.SyslogErr(err.Error())
+		return err
+	}
 	degree := int(threshold) - 1
 
 	// get x = hash(pk)
@@ -67,9 +74,13 @@ func (poly *RandomPolynomialGen) initialize(peers *[]mpcprotocol.PeerInfo,
 		poly.polyValue[i] = schnorrmpc.EvaluatePoly(poly.randCoefficient,
 			xValue,
 			degree)
-		// todo handle error
+
 		h := sha256.Sum256(poly.polyValue[i].Bytes())
-		prv, _ := osmconf.GetOsmConf().GetSelfPrvKey()
+		prv, err := osmconf.GetOsmConf().GetSelfPrvKey()
+		if err != nil {
+			log.SyslogErr("RandomPolynomialGen::initialize", "GetSelfPrvKey error", err.Error())
+			return err
+		}
 
 		poly.polyValueSigR[i], poly.polyValueSigS[i], _ = schnorrmpc.SignInternalData(prv, h[:])
 		log.Info("RandomPolynomialGen::initialize poly ",

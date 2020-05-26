@@ -68,7 +68,6 @@ func (req *MpcPolycmStep) InitStep(result mpcprotocol.MpcResultInterface) error 
 		skG, _ := schnorrmpc.SkG(&value)
 		pg[index] = *skG
 	}
-	// todo error
 	req.grpId = grpIdString
 	selfIndex, err := osmconf.GetOsmConf().GetSelfInx(grpIdString)
 	if err != nil {
@@ -196,18 +195,22 @@ func (req *MpcPolycmStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 
 	threshold, _ := osmconf.GetOsmConf().GetThresholdNum(req.grpId)
 
-	log.SyslogInfo("MpcPolycmStep::HandleMessage",
-		"peerId", msg.PeerID.String(),
-		"threshold", threshold,
-		"len(msg.BytesData)", len(msg.BytesData),
-		"len(msg.Data)", len(msg.Data))
-
 	if len(msg.BytesData) != int(threshold) {
-		// todo data has error
+		log.SyslogInfo("MpcPolycmStep::HandleMessage",
+			"peerId", msg.PeerID.String(),
+			"threshold", threshold,
+			"len(msg.BytesData)", len(msg.BytesData),
+			"len(msg.Data)", len(msg.Data))
+
 		return false
 	}
 	if len(msg.Data) != MpcPolycmStepMsgDataNumber {
-		// todo
+		log.SyslogInfo("MpcPolycmStep::HandleMessage",
+			"peerId", msg.PeerID.String(),
+			"threshold", threshold,
+			"len(msg.BytesData)", len(msg.BytesData),
+			"len(msg.Data)", len(msg.Data))
+
 		return false
 	}
 	if !req.checkSig(msg) {
@@ -218,8 +221,28 @@ func (req *MpcPolycmStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 }
 
 func (req *MpcPolycmStep) checkSig(msg *mpcprotocol.StepMessage) bool {
-	// todo check the sig of polyCommit
-	return true
+	r := &msg.Data[0]
+	s := &msg.Data[1]
+
+	var buf bytes.Buffer
+	for _, pkBytes := range msg.BytesData {
+		buf.Write(pkBytes)
+	}
+	h := sha256.Sum256(buf.Bytes())
+
+	_, grpId, err := osmconf.GetGrpId(req.mpcResult)
+	if err != nil {
+		log.SyslogErr("MpcPolycmStep", "checkSig err", err.Error())
+		return false
+	}
+
+	senderPk, err := osmconf.GetOsmConf().GetPKByNodeId(grpId, msg.PeerID)
+	if err != nil {
+		log.SyslogErr("MpcPolycmStep", "checkSig GetPKByNodeId err", err.Error())
+		return false
+	}
+	return schnorrmpc.VerifyInternalData(senderPk, h[:], r, s)
+
 }
 
 func (req *MpcPolycmStep) fillCmIntoMap(msg *mpcprotocol.StepMessage) bool {

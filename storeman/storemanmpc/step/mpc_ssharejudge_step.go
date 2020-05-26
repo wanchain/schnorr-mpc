@@ -111,9 +111,6 @@ func (ssj *MpcSSahreJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool 
 			"sshare", hex.EncodeToString(sshare.Bytes()),
 			"r", hex.EncodeToString(r.Bytes()),
 			"s", hex.EncodeToString(s.Bytes()))
-		// sig error , todo sender error
-		// todo 1. write slash poof
-		// todo 2. save slash num
 
 		bSnderWrong = true
 	}
@@ -125,10 +122,14 @@ func (ssj *MpcSSahreJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool 
 	bContentCheck, _ := ssj.checkContent(&sshare, m, rpkShare, gpkShare)
 
 	if !bContentCheck {
-		// content error, todo sender error
+		log.SyslogErr("MpcSSahreJudgeStep", "senderIndex", senderIndex,
+			"rcvIndex", rcvIndex,
+			"content error. bSnderWrong:", bSnderWrong)
 		bSnderWrong = true
 	} else {
-		// todo receiver error
+		log.SyslogErr("MpcSSahreJudgeStep", "senderIndex", senderIndex,
+			"rcvIndex", rcvIndex,
+			"content error. bSnderWrong:", bSnderWrong)
 		bSnderWrong = false
 	}
 
@@ -208,9 +209,12 @@ func (ssj *MpcSSahreJudgeStep) saveSlshCount(slshCount int) error {
 	sslshValue := make([]big.Int, 1)
 	sslshValue[0] = *big.NewInt(0).SetInt64(int64(ssj.SSlshCount))
 
-	// todo error handle
 	key := mpcprotocol.MPCSSlshProofNum + strconv.Itoa(int(ssj.SSlshCount))
-	ssj.mpcResult.SetValue(key, sslshValue)
+	err := ssj.mpcResult.SetValue(key, sslshValue)
+	if err != nil {
+		log.SyslogErr("MpcSSahreJudgeStep", "saveSlshCount", err.Error())
+		return err
+	}
 
 	return nil
 }
