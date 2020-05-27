@@ -70,17 +70,17 @@ func New(cfg *Config, accountManager *accounts.Manager, aKID, secretKey, region 
 		peersPort:  make(map[discover.NodeID]string),
 	}
 
-	mpcprotocol.MpcSchnrThr = cfg.SchnorrThreshold
-	mpcprotocol.MpcSchnrNodeNumber = cfg.SchnorrTotalNodes
-	mpcprotocol.MPCDegree = mpcprotocol.MpcSchnrThr - 1
-
-	if mpcprotocol.MpcSchnrNodeNumber < mpcprotocol.MpcSchnrThr {
-		log.SyslogErr("should: SchnorrTotalNodes >= SchnorrThreshold")
-		os.Exit(1)
-	}
-	log.Info("=========New storeman", "SchnorrThreshold", mpcprotocol.MpcSchnrThr)
-	log.Info("=========New storeman", "SchnorrTotalNodes", mpcprotocol.MpcSchnrNodeNumber)
-	mpcprotocol.MPCDegree = mpcprotocol.MpcSchnrThr - 1
+	//mpcprotocol.MpcSchnrThr = cfg.SchnorrThreshold
+	//mpcprotocol.MpcSchnrNodeNumber = cfg.SchnorrTotalNodes
+	//mpcprotocol.MPCDegree = mpcprotocol.MpcSchnrThr - 1
+	//
+	//if mpcprotocol.MpcSchnrNodeNumber < mpcprotocol.MpcSchnrThr {
+	//	log.SyslogErr("should: SchnorrTotalNodes >= SchnorrThreshold")
+	//	os.Exit(1)
+	//}
+	//log.Info("=========New storeman", "SchnorrThreshold", mpcprotocol.MpcSchnrThr)
+	//log.Info("=========New storeman", "SchnorrTotalNodes", mpcprotocol.MpcSchnrNodeNumber)
+	//mpcprotocol.MPCDegree = mpcprotocol.MpcSchnrThr - 1
 
 	storeman.mpcDistributor = storemanmpc.CreateMpcDistributor(accountManager,
 		storeman,
@@ -449,9 +449,9 @@ func (sa *StoremanAPI) Peers(ctx context.Context) []*p2p.PeerInfo {
 //}
 
 func (sa *StoremanAPI) SignDataByApprove(ctx context.Context, data mpcprotocol.SendData) (result interface{}, err error) {
-	if len(sa.sm.storemanPeers)+1 < mpcprotocol.MpcSchnrThr {
-		return mpcprotocol.SignedResult{R: []byte{}, S: []byte{}}, mpcprotocol.ErrTooLessStoreman
-	}
+	//if len(sa.sm.storemanPeers)+1 < mpcprotocol.MpcSchnrThr {
+	//	return mpcprotocol.SignedResult{R: []byte{}, S: []byte{}}, mpcprotocol.ErrTooLessStoreman
+	//}
 
 	PKBytes := data.PKBytes
 
@@ -470,9 +470,9 @@ func (sa *StoremanAPI) SignDataByApprove(ctx context.Context, data mpcprotocol.S
 }
 
 func (sa *StoremanAPI) SignData(ctx context.Context, data mpcprotocol.SendData) (result interface{}, err error) {
-	if len(sa.sm.storemanPeers)+1 < mpcprotocol.MpcSchnrThr {
-		return mpcprotocol.SignedResult{R: []byte{}, S: []byte{}}, mpcprotocol.ErrTooLessStoreman
-	}
+	//if len(sa.sm.storemanPeers)+1 < mpcprotocol.MpcSchnrThr {
+	//	return mpcprotocol.SignedResult{R: []byte{}, S: []byte{}}, mpcprotocol.ErrTooLessStoreman
+	//}
 
 	PKBytes := data.PKBytes
 

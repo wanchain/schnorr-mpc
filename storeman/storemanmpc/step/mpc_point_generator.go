@@ -3,6 +3,7 @@ package step
 import (
 	"crypto/ecdsa"
 	"encoding/hex"
+	"errors"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
@@ -88,11 +89,17 @@ func (point *mpcPointGenerator) calculateResult() error {
 			"seed", hex.EncodeToString(seeds[index].Bytes()))
 	}
 
+	threshold, _ := osmconf.GetOsmConf().GetThresholdNum(point.grpIdString)
+	if threshold < uint16(1) {
+		log.SyslogErr("threshold is lesser 1")
+		return errors.New("threshold is lesser 1")
+	}
+	degree := threshold - 1
 	// lagrangeEcc
 	log.SyslogInfo("all public",
-		"Need nodes number:", mpcprotocol.MpcSchnrThr,
+		"Need nodes number:", threshold,
 		"Now nodes number:", len(gpkshares))
-	if len(gpkshares) < mpcprotocol.MpcSchnrThr {
+	if len(gpkshares) < int(threshold) {
 		return mpcprotocol.ErrRNW
 
 		//if ok,_ := osmconf.GetOsmConf().IsLeader(point.grpIdString);ok{
@@ -103,7 +110,7 @@ func (point *mpcPointGenerator) calculateResult() error {
 		//}
 	}
 
-	result := schnorrmpc.LagrangeECC(gpkshares, seeds[:], mpcprotocol.MPCDegree)
+	result := schnorrmpc.LagrangeECC(gpkshares, seeds[:], int(degree))
 
 	if !schnorrmpc.ValidatePublicKey(result) {
 		log.SyslogErr("mpcPointGenerator::calculateResult", "mpcPointGenerator.ValidatePublicKey fail. err", mpcprotocol.ErrPointZero.Error())

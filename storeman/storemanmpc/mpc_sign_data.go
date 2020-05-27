@@ -1,7 +1,9 @@
 package storemanmpc
 
 import (
+	"errors"
 	"github.com/wanchain/schnorr-mpc/log"
+	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"github.com/wanchain/schnorr-mpc/storeman/storemanmpc/step"
 )
@@ -13,7 +15,15 @@ func reqSignMpc(mpcID uint64, peers []mpcprotocol.PeerInfo, preSetValue ...MpcVa
 	mpc := createMpcContext(mpcID, peers, result)
 
 	reqMpc := step.CreateRequestMpcStep(&mpc.peers, mpcprotocol.MpcSignLeader)
-	reqMpc.SetWaiting(mpcprotocol.MpcSchnrThr)
+
+	_, grpIdString, err := osmconf.GetGrpId(result)
+	if err != nil {
+		log.SyslogErr("reqSignMpc", "GetGrpId error", err.Error())
+		return nil, err
+	}
+
+	threshold, _ := osmconf.GetOsmConf().GetThresholdNum(grpIdString)
+	reqMpc.SetWaiting(int(threshold))
 
 	mpcReady := step.CreateMpcReadyStep(&mpc.peers)
 
@@ -37,29 +47,43 @@ func ackSignMpc(mpcID uint64, peers []mpcprotocol.PeerInfo, preSetValue ...MpcVa
 func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStepFunc) (*MpcContext, error) {
 	log.SyslogInfo("generateTxSignMpc begin")
 
+	result := mpc.mpcResult
+	_, grpIdString, err := osmconf.GetGrpId(result)
+	if err != nil {
+		log.SyslogErr("generateTxSignMpc", "GetGrpId error", err.Error())
+		return nil, err
+	}
+
+	threshold, _ := osmconf.GetOsmConf().GetThresholdNum(grpIdString)
+	if threshold < uint16(1) {
+		log.SyslogErr("generateTxSignMpc", "threshold error", threshold)
+		return nil, errors.New("invalid threshold")
+	}
+	degree := threshold - 1
+
 	accTypeStr := ""
 
 	cmStep := step.CreateMpcPolycmStep(&mpc.peers)
 	//cmStep.SetWaiting(mpcprotocol.MpcSchnrThr)
 
-	skShare := step.CreateMpcRSKShareStep(mpcprotocol.MPCDegree, &mpc.peers)
+	skShare := step.CreateMpcRSKShareStep(int(degree), &mpc.peers)
 	// wait time out, in order for all node try best get most response, so each node can get the same poly value.
 	// It is not enough for node to wait only MPCDegree response, the reason is above.
 
 	skJudgeStep := step.CreateMpcRSkJudgeStep(&mpc.peers)
-	skJudgeStep.SetWaiting(mpcprotocol.MpcSchnrThr)
+	skJudgeStep.SetWaiting(int(threshold))
 
 	RStep := step.CreateMpcRStep(&mpc.peers, accTypeStr)
-	RStep.SetWaiting(mpcprotocol.MpcSchnrThr)
+	RStep.SetWaiting(int(threshold))
 
 	SStep := step.CreateMpcSStep(&mpc.peers, []string{mpcprotocol.MpcPrivateShare}, []string{mpcprotocol.MpcS})
-	SStep.SetWaiting(mpcprotocol.MpcSchnrThr)
+	SStep.SetWaiting(int(threshold))
 
 	sshareJudgeStep := step.CreateMpcSSahreJudgeStep(&mpc.peers)
-	sshareJudgeStep.SetWaiting(mpcprotocol.MpcSchnrThr)
+	sshareJudgeStep.SetWaiting(int(threshold))
 
 	ackRSStep := step.CreateAckMpcRSStep(&mpc.peers, accTypeStr)
-	ackRSStep.SetWaiting(mpcprotocol.MpcSchnrThr)
+	ackRSStep.SetWaiting(int(threshold))
 
 	mpc.setMpcStep(firstStep,
 		readyStep,

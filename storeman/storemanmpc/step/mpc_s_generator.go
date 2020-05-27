@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"crypto/sha256"
+	"errors"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
@@ -120,11 +121,18 @@ func (msg *mpcSGenerator) calculateResult() error {
 		sigshares = append(sigshares, value)
 	}
 
+	threshold, _ := osmconf.GetOsmConf().GetThresholdNum(msg.grpIdString)
+	if threshold < uint16(1) {
+		log.SyslogErr("threshold is lesser 1")
+		return errors.New("threshold is lesser 1")
+	}
+	degree := threshold - 1
+
 	// Lagrange
 	log.SyslogInfo("all signature share",
-		"Need nodes number:", mpcprotocol.MpcSchnrThr,
+		"Need nodes number:", threshold,
 		"Now nodes number:", len(sigshares))
-	if len(sigshares) < mpcprotocol.MpcSchnrThr {
+	if len(sigshares) < int(threshold) {
 		return mpcprotocol.ErrSNW
 		//if ok,_ := osmconf.GetOsmConf().IsLeader(msg.grpIdString);ok{
 		//	// only leader invoke the errRNW and response to client.
@@ -135,7 +143,7 @@ func (msg *mpcSGenerator) calculateResult() error {
 
 	}
 
-	result := schnorrmpc.Lagrange(sigshares, seeds[:], mpcprotocol.MPCDegree)
+	result := schnorrmpc.Lagrange(sigshares, seeds[:], int(degree))
 	msg.result = result
 	log.SyslogInfo("mpcSGenerator.calculateResult succeed")
 

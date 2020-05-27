@@ -7,11 +7,11 @@ import (
 	"time"
 )
 
-var (
-	MpcSchnrThr        = 26 // MpcSchnrThr >= number(storeman )/2 +1
-	MPCDegree          = MpcSchnrThr - 1
-	MpcSchnrNodeNumber = 50 // At least MpcSchnrNodeNumber MPC nodes
-)
+//var (
+//	MpcSchnrThr        = 26 // MpcSchnrThr >= number(storeman )/2 +1
+//	MPCDegree          = MpcSchnrThr - 1
+//	MpcSchnrNodeNumber = 50 // At least MpcSchnrNodeNumber MPC nodes
+//)
 
 const (
 	MpcGPKLeader = iota + 0
@@ -36,37 +36,37 @@ const (
 	//MPCTimeOut = time.Second * 100
 	MPCTimeOut = time.Second * 5
 	//MPCTimeOut = time.Second * 20
-	PName      = "storeman"
-	PVer       = uint64(10)
-	PVerStr    = "1.1"
+	PName   = "storeman"
+	PVer    = uint64(10)
+	PVerStr = "1.1"
 )
 const (
 	MpcPrivateShare = "MpcPrivateShare" // skShare
 
 	// R stage
-	RSkShare = "RSkShare"         	// rskShare   only self RSkShare
-	RPkShare = "RPkShare"         	// rpkShare   rpkShare + "index" save rpkShare
-	RPk      = "RPk" 				// RPk
+	RSkShare = "RSkShare" // rskShare   only self RSkShare
+	RPkShare = "RPkShare" // rpkShare   rpkShare + "index" save rpkShare
+	RPk      = "RPk"      // RPk
 
-	MpcPublicShare  = "MpcPublicShare"  // pkShare
+	MpcPublicShare = "MpcPublicShare" // pkShare
 
-	MpcContextResult = "MpcContextResult"	// The final result of the context.
+	MpcContextResult = "MpcContextResult" // The final result of the context.
 
-	PublicKeyResult  = "PublicKeyResult"  // gpk
+	PublicKeyResult = "PublicKeyResult" // gpk
 
-	MpcM             = "MpcM"             // M
-	MpcS             = "MpcS"             // S: s
+	MpcM = "MpcM" // M
+	MpcS = "MpcS" // S: s
 
-	MpcExt = "MpcExtern" // extern
+	MpcExt       = "MpcExtern"    // extern
 	MpcByApprove = "MpcByApprove" // by approve
-	MpcGrpId	= "MpcGrpId"	 	// group ID
+	MpcGrpId     = "MpcGrpId"     // group ID
 
 	MpcTxHash   = "MpcTxHash"
 	MpcGpkBytes = "MpcGpkBytes"
 	MPCAction   = "MPCAction"
 
 	RPolyCMG = "MPCRPolyCommitG" // node0's comment : RPolyCMG + "0"
-										// bytsvalue: polyValue values: sig of the polyValue
+	// bytsvalue: polyValue values: sig of the polyValue
 	RPolyCoff = "RPolyCoff"
 
 	RSkErrNum   = "RSkErrNum"
@@ -75,7 +75,7 @@ const (
 	SShareErrNum   = "SShareErrNum"
 	SShareErrInfos = "SShareErrInfos"
 
-	ROKIndex    = "ROKIndex"
+	ROKIndex = "ROKIndex"
 	RKOIndex = "RKOIndex"
 	RNOIndex = "RNOIndex"
 
