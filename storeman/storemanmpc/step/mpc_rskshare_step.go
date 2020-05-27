@@ -80,6 +80,25 @@ func (rss *MpcRSKShare_Step) FinishStep(result mpcprotocol.MpcResultInterface, m
 	log.SyslogInfo("@@@@@@@@@@@@@@@@@@@MpcRSKShare_Step",
 		"rpkShare", hexutil.Encode(crypto.FromECDSAPub(rpkShare)),
 		"rskShare", hexutil.Encode((*skpv.result).Bytes()))
+
+	rcvCollection, err := rss.buildRcvedCollection()
+	if err != nil {
+		log.SyslogErr("MpcRSKShare_Step", "buildRcvedCollection err", err.Error())
+		return err
+	}
+
+	err = rss.wrRcvedCollection(rcvCollection)
+	if err != nil {
+		log.SyslogErr("MpcRSKShare_Step", "wrRcvedCollection err", err.Error())
+		return err
+	}
+
+	err = rss.wrSkSIJ()
+	if err != nil {
+		log.SyslogErr("MpcRSKShare_Step", "wrSkShare err", err.Error())
+		return err
+	}
+
 	return nil
 }
 
@@ -208,4 +227,43 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 
 	skpv.message[*msg.PeerID] = msg.Data[0] //message.Value
 	return true
+}
+
+func (rss *MpcRSKShare_Step) buildRcvedCollection() (*big.Int, error) {
+	skpv := rss.messages[0].(*RandomPolynomialGen)
+	_, grpIdString, _ := osmconf.GetGrpId(rss.mpcResult)
+
+	bigs := make([]big.Int, 0)
+	for peerId, _ := range skpv.message {
+		senderIndex, _ := osmconf.GetOsmConf().GetInxByNodeId(grpIdString, &peerId)
+		bigs = append(bigs, *big.NewInt(0).SetUint64(uint64(senderIndex)))
+	}
+	return osmconf.BuildDataByIndexes(&bigs)
+}
+
+func (rss *MpcRSKShare_Step) wrRcvedCollection(rcvCol *big.Int) error {
+
+	err := rss.mpcResult.SetValue(mpcprotocol.RRcvedColl, []big.Int{*rcvCol})
+	if err != nil {
+		log.SyslogErr("MpcRSKShare_Step", "wrRcvedCollection error ", err.Error())
+		return err
+	}
+	return nil
+}
+
+func (rss *MpcRSKShare_Step) wrSkSIJ() error {
+	skpv := rss.messages[0].(*RandomPolynomialGen)
+	_, grpIdString, _ := osmconf.GetGrpId(rss.mpcResult)
+
+	for peerId, sij := range skpv.message {
+		senderIndex, _ := osmconf.GetOsmConf().GetInxByNodeId(grpIdString, &peerId)
+		key := mpcprotocol.RSKSIJ + strconv.Itoa(int(senderIndex))
+		err := rss.mpcResult.SetValue(key, []big.Int{sij})
+		if err != nil {
+			log.SyslogErr("MpcRSKShare_Step", "wrSkSIJ error ", err.Error())
+			return err
+		}
+	}
+
+	return nil
 }

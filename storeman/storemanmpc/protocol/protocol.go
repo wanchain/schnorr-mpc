@@ -44,9 +44,11 @@ const (
 	MpcPrivateShare = "MpcPrivateShare" // skShare
 
 	// R stage
-	RSkShare = "RSkShare" // rskShare   only self RSkShare
-	RPkShare = "RPkShare" // rpkShare   rpkShare + "index" save rpkShare
-	RPk      = "RPk"      // RPk
+	RSKSIJ     = "RSKSIJ"     // save sij with send index.
+	RRcvedColl = "RRcvedColl" // received send index collection.(big.Int)
+	RSkShare   = "RSkShare"   // rskShare   only self RSkShare
+	RPkShare   = "RPkShare"   // rpkShare   rpkShare + "index" save rpkShare
+	RPk        = "RPk"        // RPk
 
 	MpcPublicShare = "MpcPublicShare" // pkShare
 
