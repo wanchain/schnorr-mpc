@@ -731,6 +731,10 @@ func pkToAddr(PkBytes []byte) (common.Address, error) {
 }
 
 func GetGrpId(mpcResult mpcprotocol.MpcResultInterface) ([]byte, string, error) {
+	if mpcResult == nil {
+		log.SyslogErr("GetGrpId error", "error", "mpcresult is nil")
+		return []byte{}, "", errors.New("in function GetGrpId mpcresult is nil")
+	}
 	grpId, err := mpcResult.GetByteValue(mpcprotocol.MpcGrpId)
 	if err != nil {
 		log.SyslogErr("GetGrpId error", "error", err.Error())

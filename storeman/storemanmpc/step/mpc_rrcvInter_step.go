@@ -29,6 +29,8 @@ func CreateMpcRRcvInterStep(peers *[]mpcprotocol.PeerInfo) *MpcRRcvInterStep {
 
 func (ptStep *MpcRRcvInterStep) InitStep(result mpcprotocol.MpcResultInterface) error {
 	log.SyslogInfo("MpcRRcvInterStep.InitStep begin")
+	ptStep.BaseStep.InitStep(result)
+
 	ret, err := result.GetValue(mpcprotocol.RRcvedColl)
 	if err != nil {
 		log.SyslogErr("MpcRRcvInterStep", "InitStep.getValue error", err.Error())
@@ -39,6 +41,7 @@ func (ptStep *MpcRRcvInterStep) InitStep(result mpcprotocol.MpcResultInterface) 
 		return err
 	}
 	ptStep.rcvCol = &ret[0]
+	log.SyslogInfo("MpcRRcvInterStep.InitStep end")
 	return nil
 }
 
@@ -60,11 +63,12 @@ func (ptStep *MpcRRcvInterStep) CreateMessage() []mpcprotocol.StepMessage {
 	message[0].Data[1] = *r
 	message[0].Data[2] = *s
 
+	log.SyslogInfo("MpcRRcvInterStep.CreateMessage end")
 	return message
 }
 
 func (ptStep *MpcRRcvInterStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
-
+	log.SyslogInfo("MpcRRcvInterStep.HandleMessage begin")
 	r := msg.Data[1]
 	s := msg.Data[2]
 
@@ -85,14 +89,14 @@ func (ptStep *MpcRRcvInterStep) HandleMessage(msg *mpcprotocol.StepMessage) bool
 	bVerifySig := schnorrmpc.VerifyInternalData(senderPk, h[:], &r, &s)
 
 	if bVerifySig {
-		log.SyslogErr("MpcRRcvInterStep::HandleMessage", " check sig fail")
+		log.SyslogInfo("MpcRRcvInterStep::HandleMessage check sig success")
 		ptStep.rcvColMap[msg.PeerID] = &msg.Data[0]
 	} else {
-		log.SyslogErr("MpcRRcvInterStep::HandleMessage", " check sig fail")
+		log.SyslogErr("......MpcRRcvInterStep::HandleMessage check sig fail")
 	}
 
 	// update no work indexes.
-
+	log.SyslogInfo("MpcRRcvInterStep.HandleMessage end")
 	return true
 }
 

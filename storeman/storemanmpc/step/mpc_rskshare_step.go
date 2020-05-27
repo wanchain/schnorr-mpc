@@ -92,10 +92,12 @@ func (rss *MpcRSKShare_Step) FinishStep(result mpcprotocol.MpcResultInterface, m
 		log.SyslogErr("MpcRSKShare_Step", "wrRcvedCollection err", err.Error())
 		return err
 	}
+	log.SyslogInfo("\n@@@@@@@@@@@@@@@@@@@MpcRSKShare_Step save RcvedCollection",
+		" rcvCollection", hexutil.Encode(rcvCollection.Bytes()))
 
 	err = rss.wrSkSIJ()
 	if err != nil {
-		log.SyslogErr("MpcRSKShare_Step", "wrSkShare err", err.Error())
+		log.SyslogErr("MpcRSKShare_Step", " wrSkShare err", err.Error())
 		return err
 	}
 
@@ -114,13 +116,13 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	senderPk, _ := osmconf.GetOsmConf().GetPKByNodeId(grpIdString, msg.PeerID)
 	err := schnorrmpc.CheckPK(senderPk)
 	if err != nil {
-		log.SyslogErr("MpcRSKShare_Step", "HandleMessage", err.Error())
+		log.SyslogErr("MpcRSKShare_Step", " HandleMessage", err.Error())
 	}
 
 	senderIndex, _ := osmconf.GetOsmConf().GetInxByNodeId(grpIdString, msg.PeerID)
 	selfIndex, err := osmconf.GetOsmConf().GetSelfInx(grpIdString)
 	if err != nil {
-		log.SyslogErr("MpcRSKShare_Step", "HandleMessage.GetSelfInx", err.Error())
+		log.SyslogErr("MpcRSKShare_Step", " HandleMessage.GetSelfInx", err.Error())
 	}
 
 	// get data, r, s
@@ -260,9 +262,10 @@ func (rss *MpcRSKShare_Step) wrSkSIJ() error {
 		key := mpcprotocol.RSKSIJ + strconv.Itoa(int(senderIndex))
 		err := rss.mpcResult.SetValue(key, []big.Int{sij})
 		if err != nil {
-			log.SyslogErr("MpcRSKShare_Step", "wrSkSIJ error ", err.Error())
+			log.SyslogErr("\t\t\tMpcRSKShare_Step", "wrSkSIJ error ", err.Error())
 			return err
 		}
+		log.SyslogInfo("\t\t\tMpcRSKShare_Step wrSkSIJ", "key", key, "value", hexutil.Encode(sij.Bytes()))
 	}
 
 	return nil

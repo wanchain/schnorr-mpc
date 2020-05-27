@@ -24,7 +24,7 @@ type MpcRRcvJudgeStep struct {
 }
 
 func CreateMpcRRcvJudgeStep(peers *[]mpcprotocol.PeerInfo) *MpcRRcvJudgeStep {
-	log.SyslogInfo("CreateMpcRRcvInterStep begin")
+	log.SyslogInfo("CreateMpcRRcvJudgeStep begin")
 
 	mpc := &MpcRRcvJudgeStep{
 		*CreateBaseStep(peers, -1),
@@ -35,6 +35,8 @@ func CreateMpcRRcvJudgeStep(peers *[]mpcprotocol.PeerInfo) *MpcRRcvJudgeStep {
 
 func (ptStep *MpcRRcvJudgeStep) InitStep(result mpcprotocol.MpcResultInterface) error {
 	log.SyslogInfo("MpcRRcvJudgeStep.InitStep begin")
+	ptStep.BaseStep.InitStep(result)
+
 	ret, err := result.GetValue(mpcprotocol.RRcvedCollInter)
 	if err != nil {
 		log.SyslogErr("MpcRRcvJudgeStep", "InitStep.getValue error", err.Error())
@@ -45,11 +47,13 @@ func (ptStep *MpcRRcvJudgeStep) InitStep(result mpcprotocol.MpcResultInterface) 
 		return err
 	}
 	ptStep.rcvColInter = &ret[0]
+	log.SyslogInfo("......MpcRRcvJudgeStep.InitStep end", "RRcvedCollInter", hexutil.Encode(ptStep.rcvColInter.Bytes()))
+	log.SyslogInfo("MpcRRcvJudgeStep.InitStep end")
 	return nil
 }
 
 func (ptStep *MpcRRcvJudgeStep) CreateMessage() []mpcprotocol.StepMessage {
-	log.SyslogInfo("CreateMpcRRcvInterStep.CreateMessage begin")
+	log.SyslogInfo("MpcRRcvJudgeStep.CreateMessage begin")
 	message := make([]mpcprotocol.StepMessage, 1)
 	message[0].MsgCode = mpcprotocol.MPCMessage
 	message[0].PeerID = nil
@@ -65,12 +69,12 @@ func (ptStep *MpcRRcvJudgeStep) CreateMessage() []mpcprotocol.StepMessage {
 	message[0].Data[0] = *ptStep.rcvColInter
 	message[0].Data[1] = *r
 	message[0].Data[2] = *s
-
+	log.SyslogInfo("MpcRRcvJudgeStep.CreateMessage end")
 	return message
 }
 
 func (ptStep *MpcRRcvJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
-
+	log.SyslogInfo("MpcRRcvJudgeStep.HandleMessage begin")
 	r := msg.Data[1]
 	s := msg.Data[2]
 
@@ -91,16 +95,17 @@ func (ptStep *MpcRRcvJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool
 	bVerifySig := schnorrmpc.VerifyInternalData(senderPk, h[:], &r, &s)
 
 	if bVerifySig {
+		log.SyslogInfo("MpcRRcvInterStep::HandleMessage check sig success")
 		ptStep.rcvColInterMap[msg.PeerID] = &msg.Data[0]
 	} else {
-		log.SyslogErr("MpcRRcvInterStep::HandleMessage", " check sig fail")
+		log.SyslogErr("......MpcRRcvInterStep::HandleMessage check sig fail")
 	}
-
+	log.SyslogInfo("MpcRRcvJudgeStep.HandleMessage end")
 	return true
 }
 
 func (ptStep *MpcRRcvJudgeStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mpcprotocol.StoremanManager) error {
-	log.SyslogInfo("MpcRRcvInterStep.FinishStep begin")
+	log.SyslogInfo("MpcRRcvJudgeStep.FinishStep begin")
 
 	// compute the intersec and save
 	err := ptStep.BaseStep.FinishStep()
@@ -124,12 +129,14 @@ func (ptStep *MpcRRcvJudgeStep) FinishStep(result mpcprotocol.MpcResultInterface
 	if !bIncludeLeader {
 		log.SyslogErr("MpcRRcvJudgeStep leader is not included in the intersection")
 		return err
+	} else {
+		log.SyslogInfo("......self  rcvColInter include leader index")
 	}
 
 	// 2. others' inter collection should be equal to self's inter collection
 	for _, rcvCol := range ptStep.rcvColInterMap {
 		if ptStep.rcvColInter.Cmp(rcvCol) != 0 {
-			log.SyslogErr("MpcRRcvJudgeStep received colInter not equal to self's",
+			log.SyslogErr("......MpcRRcvJudgeStep received colInter not equal to self's",
 				"received", hexutil.Encode(rcvCol.Bytes()),
 				"self", hexutil.Encode(ptStep.rcvColInter.Bytes()))
 
@@ -144,12 +151,12 @@ func (ptStep *MpcRRcvJudgeStep) FinishStep(result mpcprotocol.MpcResultInterface
 		return err
 	}
 	if rrcvedCol[0].Cmp(ptStep.rcvColInter) == 0 {
-		log.SyslogInfo("rrcvedCol is equal rcvColInter")
+		log.SyslogInfo("......rrcvedCol is equal rcvColInter")
 		return nil
 	}
 	// 4. RRcvedColl != RRcvedCollInter
 	// 5. build rskShare and rpkShare
-	log.SyslogInfo("rrcvedCol is NOT equal rcvColInter")
+	log.SyslogInfo("......rrcvedCol is NOT equal rcvColInter")
 
 	totalNumber, err := osmconf.GetOsmConf().GetTotalNum(grpIdString)
 	if err != nil {
@@ -187,6 +194,10 @@ func (ptStep *MpcRRcvJudgeStep) FinishStep(result mpcprotocol.MpcResultInterface
 		return err
 	}
 
+	log.SyslogInfo("......MpcRRcvJudgeStep.FinishStep setValue",
+		"key", mpcprotocol.RSkShare,
+		"value", hexutil.Encode(rskShare.Bytes()))
+
 	rpkShare := new(ecdsa.PublicKey)
 	rpkShare.Curve = crypto.S256()
 	rpkShare.X, rpkShare.Y = crypto.S256().ScalarBaseMult(rskShare.Bytes())
@@ -202,6 +213,10 @@ func (ptStep *MpcRRcvJudgeStep) FinishStep(result mpcprotocol.MpcResultInterface
 		return err
 	}
 
-	log.SyslogInfo("MpcRRcvJudgeStep.FinishStep succeed")
+	log.SyslogInfo("......MpcRRcvJudgeStep.FinishStep SetByteValue",
+		"key", key,
+		"value", hexutil.Encode(crypto.FromECDSAPub(rpkShare)))
+
+	log.SyslogInfo("MpcRRcvJudgeStep.FinishStep end")
 	return nil
 }

@@ -73,6 +73,12 @@ func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStep
 	skJudgeStep := step.CreateMpcRSkJudgeStep(&mpc.peers)
 	skJudgeStep.SetWaiting(int(threshold))
 
+	// add rrcvInter step
+	rrcvInterStep := step.CreateMpcRRcvInterStep(&mpc.peers)
+
+	// add rrcvInter judge step
+	rrcvJudgeStep := step.CreateMpcRRcvJudgeStep(&mpc.peers)
+
 	RStep := step.CreateMpcRStep(&mpc.peers, accTypeStr)
 	RStep.SetWaiting(int(threshold))
 
@@ -90,6 +96,8 @@ func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStep
 		cmStep,
 		skShare,
 		skJudgeStep,
+		rrcvInterStep,
+		rrcvJudgeStep,
 		RStep,
 		SStep,
 		sshareJudgeStep,
