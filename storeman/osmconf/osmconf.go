@@ -760,6 +760,32 @@ func BuildDataByIndexes(indexes *[]big.Int) (*big.Int, error) {
 	return ret, nil
 }
 
+func InterSecByIndexes(indexes *[]big.Int) (*big.Int, error) {
+	if indexes == nil {
+		log.SyslogErr("BuildDataByIndexes indexes is null")
+		return schnorrmpc.BigZero, errors.New("invalid point")
+	}
+	if len(*indexes) == 0 {
+		return nil, errors.New("no indexes needed to be intersected")
+	}
+	var ret *big.Int
+	ret = &(*indexes)[0]
+
+	for i := 1; i < len(*indexes); i++ {
+		ret.And(ret, &(*indexes)[i])
+	}
+	return ret, nil
+}
+
+func IsHaming(sendCol *big.Int, smIndex uint16) (bool, error) {
+	if sendCol == nil {
+		return false, nil
+	}
+
+	b := sendCol.Bit(int(smIndex))
+	return b == uint(1), nil
+}
+
 //////////////// test only begin///////////////
 
 func (cnf *OsmConf) GetPrivateShare() (big.Int, error) {

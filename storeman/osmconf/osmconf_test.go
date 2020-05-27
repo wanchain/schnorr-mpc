@@ -26,44 +26,43 @@ func TestAll(t *testing.T) {
 	osm.SetFilePath(configFilePath)
 	osm.LoadCnf(configFilePath)
 	var nodeId discover.NodeID
-	copy(nodeId[:],hexutil.MustDecode(selfNodeId))
+	copy(nodeId[:], hexutil.MustDecode(selfNodeId))
 
 	// set nodeId
 	osm.SetSelfNodeId(&nodeId)
-	prv,_ := osm.GetSelfPrvKey()
+	prv, _ := osm.GetSelfPrvKey()
 
 	// set pwd
-	osm.SetPassword(pwd)
+	//osm.SetPassword(pwd)
 
 	pk := new(ecdsa.PublicKey)
 	pk.Curve = crypto.S256()
-	pk.X,pk.Y = prv.PublicKey.X,prv.PublicKey.Y
+	pk.X, pk.Y = prv.PublicKey.X, prv.PublicKey.Y
 
 	fmt.Printf(hexutil.Encode(crypto.FromECDSAPub(pk)))
 }
 
 func TestIntersect(t *testing.T) {
-	s1 := []uint16{1,2,3,4}
-	s2 := []uint16{2,3,4,5,6,7}
+	s1 := []uint16{1, 2, 3, 4}
+	s2 := []uint16{2, 3, 4, 5, 6, 7}
 
-	s := Intersect(s1,s2)
-	fmt.Printf("%v",s)
+	s := Intersect(s1, s2)
+	fmt.Printf("%v", s)
 }
 
 func TestDifference(t *testing.T) {
-	s1 := []uint16{1,2,3,4}
-	s2 := []uint16{2,3,4,5,6,7}
+	s1 := []uint16{1, 2, 3, 4}
+	s2 := []uint16{2, 3, 4, 5, 6, 7}
 
-	s := Difference(s1,s2)
-	fmt.Printf("%v\n",s)
+	s := Difference(s1, s2)
+	fmt.Printf("%v\n", s)
 
-	s = Difference(s2,s1)
-	fmt.Printf("%v\n",s)
+	s = Difference(s2, s1)
+	fmt.Printf("%v\n", s)
 
-	s = Difference(s1,s1)
-	fmt.Printf("%v\n",s)
+	s = Difference(s1, s1)
+	fmt.Printf("%v\n", s)
 }
-
 
 func TestBuildDataByIndexes(t *testing.T) {
 	big0 := big.Int{}
@@ -71,14 +70,14 @@ func TestBuildDataByIndexes(t *testing.T) {
 	bg2 := big.NewInt(2)
 	bg3 := big.NewInt(3)
 
-	bigs := []big.Int{big0,*bg1,*bg2,*bg3}
-	ret ,_ := BuildDataByIndexes(&bigs)
+	bigs := []big.Int{big0, *bg1, *bg2, *bg3}
+	ret, _ := BuildDataByIndexes(&bigs)
 
-	fmt.Printf("%v",ret)
+	fmt.Printf("%v", ret)
 }
 
-func TestSwitch(t *testing.T){
-	match := []int{1,2}
+func TestSwitch(t *testing.T) {
+	match := []int{1, 2}
 	lenMatches := len(match)
 
 	switch lenMatches {
@@ -88,5 +87,35 @@ func TestSwitch(t *testing.T){
 		fmt.Printf("0")
 	default:
 		fmt.Printf("default")
+	}
+}
+
+func TestInterSecByIndexes(t *testing.T) {
+	bg0 := big.NewInt(0)
+	bg1 := big.NewInt(1)
+	bg2 := big.NewInt(2)
+	bg3 := big.NewInt(3)
+
+	bigs := []big.Int{*bg0, *bg1, *bg2, *bg3}
+	ret, _ := BuildDataByIndexes(&bigs)
+
+	fmt.Printf("%v\n", ret)
+
+	bg20 := big.NewInt(2)
+	bg30 := big.NewInt(3)
+
+	bigs0 := []big.Int{*bg20, *bg30}
+	ret0, _ := BuildDataByIndexes(&bigs0)
+
+	fmt.Printf("%v\n", ret0)
+
+	bigInter, _ := InterSecByIndexes(&([]big.Int{*ret, *ret0}))
+	fmt.Printf("%v\n", bigInter)
+
+	for i := 0; i < 16; i++ {
+		b, _ := IsHaming(bigInter, uint16(i))
+		if b {
+			fmt.Printf("%v>>>>>>>>%v\n", i, b)
+		}
 	}
 }
