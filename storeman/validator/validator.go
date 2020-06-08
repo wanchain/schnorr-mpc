@@ -25,7 +25,6 @@ func init() {
 
 }
 
-// TODO add ValidateData
 func ValidateData(data *mpcprotocol.SendData) (bool, error) {
 
 	log.SyslogInfo("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& ValidateData, begin",
