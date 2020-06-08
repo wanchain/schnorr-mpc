@@ -5,6 +5,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/rlp"
+	"math/big"
 	"net"
 	"path/filepath"
 	"strings"
@@ -15,10 +16,12 @@ import (
 
 	"github.com/syndtr/goleveldb/leveldb/errors"
 	"github.com/wanchain/schnorr-mpc/accounts"
+	"github.com/wanchain/schnorr-mpc/core/types"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/p2p"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	"github.com/wanchain/schnorr-mpc/rpc"
+	"github.com/wanchain/schnorr-mpc/storeman/btc"
 	"github.com/wanchain/schnorr-mpc/storeman/storemanmpc"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"github.com/wanchain/schnorr-mpc/storeman/validator"
@@ -50,11 +53,10 @@ type StrmanKeepAliveOk struct {
 	status  int
 }
 
-
 type StrmanAllPeers struct {
-	Ip 		[]string
-	Port 	[]string
-	Nodeid 	[]string
+	Ip     []string
+	Port   []string
+	Nodeid []string
 }
 
 type StrmanGetPeers struct {
@@ -66,11 +68,11 @@ const keepaliveMagic = 0x33
 // New creates a Whisper client ready to communicate through the Ethereum P2P network.
 func New(cfg *Config, accountManager *accounts.Manager, aKID, secretKey, region string) *Storeman {
 	storeman := &Storeman{
-		peers: make(map[discover.NodeID]*Peer),
-		quit:  make(chan struct{}),
-		cfg:   cfg,
-		isSentPeer:false,
-		peersPort:make(map[discover.NodeID]string),
+		peers:      make(map[discover.NodeID]*Peer),
+		quit:       make(chan struct{}),
+		cfg:        cfg,
+		isSentPeer: false,
+		peersPort:  make(map[discover.NodeID]string),
 	}
 
 	mpcprotocol.MpcSchnrThr = cfg.SchnorrThreshold
@@ -83,7 +85,7 @@ func New(cfg *Config, accountManager *accounts.Manager, aKID, secretKey, region 
 	}
 	log.Info("=========New storeman", "SchnorrThreshold", mpcprotocol.MpcSchnrThr)
 	log.Info("=========New storeman", "SchnorrTotalNodes", mpcprotocol.MpcSchnrNodeNumber)
-	mpcprotocol.MPCDegree = mpcprotocol.MpcSchnrThr -1
+	mpcprotocol.MPCDegree = mpcprotocol.MpcSchnrThr - 1
 
 	storeman.mpcDistributor = storemanmpc.CreateMpcDistributor(accountManager,
 		storeman,
@@ -129,9 +131,9 @@ type Storeman struct {
 	quit           chan struct{} // Channel used for graceful exit
 	mpcDistributor *storemanmpc.MpcDistributor
 	cfg            *Config
-	server 			*p2p.Server
-	isSentPeer 	   bool
-	peersPort  	   map[discover.NodeID]string
+	server         *p2p.Server
+	isSentPeer     bool
+	peersPort      map[discover.NodeID]string
 
 	//allPeersConnected chan bool
 }
@@ -158,103 +160,98 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 
 		switch packet.Code {
 
-			case mpcprotocol.GetPeersInfo:
-				var peerGeting StrmanGetPeers
-				err := rlp.Decode(packet.Payload, &peerGeting)
+		case mpcprotocol.GetPeersInfo:
+			var peerGeting StrmanGetPeers
+			err := rlp.Decode(packet.Payload, &peerGeting)
+			if err != nil {
+				log.SyslogErr("failed decode peers getting info", "err", err.Error())
+				return err
+			}
+
+			sm.peerMu.Lock()
+
+			sm.peersPort[p.ID()] = peerGeting.LocalPort
+			if err != nil {
+				log.SyslogErr("failed decode port info", "err", err.Error())
+				return err
+			}
+
+			log.Debug("adding peer", "", peerGeting.LocalPort)
+
+			allp := &StrmanAllPeers{make([]string, 0), make([]string, 0), make([]string, 0)}
+
+			for _, smpr := range sm.peers {
+
+				if sm.peersPort[smpr.Peer.ID()] == "" ||
+					smpr.Peer.ID().String() == sm.cfg.StoremanNodes[0].ID.String() {
+					continue
+				}
+
+				n := smpr.Peer.Info()
+
+				addr, err := net.ResolveTCPAddr("tcp", n.Network.RemoteAddress)
 				if err != nil {
-					log.SyslogErr("failed decode peers getting info", "err", err.Error())
+					log.SyslogErr("failed get address for peer", "err", err.Error())
 					return err
 				}
 
-				sm.peerMu.Lock()
+				splits := strings.Split(addr.String(), ":")
 
-				sm.peersPort[p.ID()] = peerGeting.LocalPort
+				allp.Ip = append(allp.Ip, splits[0])
+
+				allp.Port = append(allp.Port, sm.peersPort[smpr.Peer.ID()])
+				allp.Nodeid = append(allp.Nodeid, smpr.ID().String())
+
+				log.Debug("append peer addrs,port", splits[0], sm.peersPort[smpr.ID()])
+			}
+			sm.peerMu.Unlock()
+
+			if len(allp.Port) > 0 {
+				log.Debug("send all peers from leader, count", "", len(allp.Port))
+				p.sendAllpeers(allp)
+			}
+
+		case mpcprotocol.AllPeersInfo:
+
+			var allp StrmanAllPeers
+			err := rlp.Decode(packet.Payload, &allp)
+			if err != nil {
+				log.SyslogErr("failed decode all peers info", "err", err.Error())
+				return err
+			}
+
+			for i := 0; i < len(allp.Port); i++ {
+
+				if allp.Nodeid[i] == sm.server.Self().ID.String() ||
+					allp.Nodeid[i] == sm.cfg.StoremanNodes[0].ID.String() {
+					continue
+				}
+
+				//if allready exist,check next
+				url := "enode://" + allp.Nodeid[i] + "@" + allp.Ip[i] + ":" + allp.Port[i]
+
+				log.Debug("got peer, url=", "", url)
+
+				nd, err := discover.ParseNode(url)
 				if err != nil {
-					log.SyslogErr("failed decode port info", "err", err.Error())
+					log.SyslogErr("failed parse peer url", "err", err.Error())
 					return err
 				}
 
-				log.Debug("adding peer","",peerGeting.LocalPort)
+				sm.server.AddPeer(nd)
+			}
 
-				allp := &StrmanAllPeers{make([]string, 0),make([]string,0),make([]string,0)}
+		default:
 
-
-				for _, smpr := range sm.peers {
-
-					if sm.peersPort[smpr.Peer.ID()] == "" ||
-						smpr.Peer.ID().String() == sm.cfg.StoremanNodes[0].ID.String(){
-						continue
-					}
-
-					n :=  smpr.Peer.Info()
-
-					addr,err := net.ResolveTCPAddr("tcp",n.Network.RemoteAddress)
-					if err != nil {
-						log.SyslogErr("failed get address for peer", "err", err.Error())
-						return err
-					}
-
-					splits := strings.Split(addr.String(),":")
-
-					allp.Ip = append(allp.Ip,splits[0])
-
-
-					allp.Port = append(allp.Port, sm.peersPort[smpr.Peer.ID()])
-					allp.Nodeid = append(allp.Nodeid,smpr.ID().String())
-
-					log.Debug("append peer addrs,port",splits[0],sm.peersPort[smpr.ID()])
-				}
-				sm.peerMu.Unlock()
-
-				if len(allp.Port)>0 {
-					log.Debug("send all peers from leader, count","",len(allp.Port))
-					p.sendAllpeers(allp)
-				}
-
-
-			case mpcprotocol.AllPeersInfo:
-
-				var allp StrmanAllPeers
-				err := rlp.Decode(packet.Payload, &allp)
+			log.SyslogInfo("runMessageLoop, received a msg", "peer", p.Peer.ID().String(), "packet size", packet.Size)
+			if packet.Size > sm.MaxMessageSize() {
+				log.SyslogWarning("runMessageLoop, oversized message received", "peer", p.Peer.ID().String(), "packet size", packet.Size)
+			} else {
+				err = sm.mpcDistributor.GetMessage(p.Peer.ID(), rw, &packet)
 				if err != nil {
-					log.SyslogErr("failed decode all peers info", "err", err.Error())
-					return err
+					log.SyslogErr("runMessageLoop, distributor handle msg fail", "err", err.Error())
 				}
-
-
-				for i:= 0;i<len(allp.Port);i++ {
-
-					if allp.Nodeid[i] == sm.server.Self().ID.String() ||
-					   allp.Nodeid[i] == sm.cfg.StoremanNodes[0].ID.String() 	{
-						continue
-					}
-
-					//if allready exist,check next
-					url := "enode://" + allp.Nodeid[i] + "@" + allp.Ip[i] + ":" + allp.Port[i]
-
-					log.Debug("got peer, url=","",url)
-
-					nd, err := discover.ParseNode(url)
-					if err != nil {
-						log.SyslogErr("failed parse peer url", "err", err.Error())
-						return err
-					}
-
-					sm.server.AddPeer(nd)
-				}
-
-
-			default:
-
-				log.SyslogInfo("runMessageLoop, received a msg", "peer", p.Peer.ID().String(), "packet size", packet.Size)
-				if packet.Size > sm.MaxMessageSize() {
-					log.SyslogWarning("runMessageLoop, oversized message received", "peer", p.Peer.ID().String(), "packet size", packet.Size)
-				} else {
-					err = sm.mpcDistributor.GetMessage(p.Peer.ID(), rw, &packet)
-					if err != nil {
-						log.SyslogErr("runMessageLoop, distributor handle msg fail", "err", err.Error())
-					}
-				}
+			}
 		}
 
 		packet.Discard()
@@ -301,16 +298,15 @@ func (sm *Storeman) Start(server *p2p.Server) error {
 
 func (sm *Storeman) checkPeerInfo() {
 
-
 	// Start the tickers for the updates
 	keepQuest := time.NewTicker(mpcprotocol.KeepaliveCycle * time.Second)
 
-	leaderid,err := discover.BytesID(sm.cfg.StoremanNodes[0].ID.Bytes())
+	leaderid, err := discover.BytesID(sm.cfg.StoremanNodes[0].ID.Bytes())
 	if err != nil {
 		log.Info("err decode leader node id from config")
 	}
 
-	if sm.cfg.StoremanNodes[0].ID.String()==sm.server.Self().ID.String() {
+	if sm.cfg.StoremanNodes[0].ID.String() == sm.server.Self().ID.String() {
 		return
 	}
 
@@ -320,19 +316,20 @@ func (sm *Storeman) checkPeerInfo() {
 	for {
 
 		select {
-			case <-keepQuest.C:
-				//log.Info("Entering checkPeerInfo for loop")
-				if sm.IsActivePeer(&leaderid) {
-					splits := strings.Split(sm.server.ListenAddr, ":")
-					sm.SendToPeer(&leaderid, mpcprotocol.GetPeersInfo, StrmanGetPeers{splits[len(splits)-1]})
-				} else {
-					log.Info("leader is connecting...")
-					sm.server.AddPeer(sm.server.StoremanNodes[0])
-				}
+		case <-keepQuest.C:
+			//log.Info("Entering checkPeerInfo for loop")
+			if sm.IsActivePeer(&leaderid) {
+				splits := strings.Split(sm.server.ListenAddr, ":")
+				sm.SendToPeer(&leaderid, mpcprotocol.GetPeersInfo, StrmanGetPeers{splits[len(splits)-1]})
+			} else {
+				log.Info("leader is connecting...")
+				sm.server.AddPeer(sm.server.StoremanNodes[0])
+			}
 
 		}
 	}
 }
+
 // Stop implements node.Service, stopping the background data propagation thread
 // of the Whisper protocol.
 func (sm *Storeman) Stop() error {
@@ -371,7 +368,6 @@ func (sm *Storeman) HandlePeer(peer *p2p.Peer, rw p2p.MsgReadWriter) error {
 	// Create the new peer and start tracking it
 	storemanPeer := newPeer(sm, peer, rw)
 
-
 	sm.peerMu.Lock()
 	sm.peers[storemanPeer.ID()] = storemanPeer
 	sm.peerMu.Unlock()
@@ -382,15 +378,14 @@ func (sm *Storeman) HandlePeer(peer *p2p.Peer, rw p2p.MsgReadWriter) error {
 		return err
 	}
 
-
 	defer func() {
 		sm.peerMu.Lock()
 
 		delete(sm.peers, storemanPeer.ID())
 
-		for _,smnode := range sm.server.StoremanNodes {
+		for _, smnode := range sm.server.StoremanNodes {
 			if smnode.ID == storemanPeer.ID() {
-				log.Info("remove peer","pid",smnode.ID)
+				log.Info("remove peer", "pid", smnode.ID)
 				sm.server.RemovePeer(smnode)
 				break
 			}
@@ -398,7 +393,6 @@ func (sm *Storeman) HandlePeer(peer *p2p.Peer, rw p2p.MsgReadWriter) error {
 
 		sm.peerMu.Unlock()
 	}()
-
 
 	storemanPeer.start()
 	defer storemanPeer.stop()
@@ -426,81 +420,173 @@ func (sa *StoremanAPI) Peers(ctx context.Context) []*p2p.PeerInfo {
 	return ps
 }
 
-func (sa *StoremanAPI) CreateGPK(ctx context.Context) (pk hexutil.Bytes, err error) {
+//func (sa *StoremanAPI) CreateGPK(ctx context.Context) (pk hexutil.Bytes, err error) {
+//
+//	log.SyslogInfo("CreateGPK begin")
+//	log.SyslogInfo("CreateGPK begin", "peers", len(sa.sm.peers), "storeman peers", len(sa.sm.storemanPeers))
+//
+//	if len(sa.sm.storemanPeers)+1 < mpcprotocol.MpcSchnrThr {
+//		return []byte{}, mpcprotocol.ErrTooLessStoreman
+//	}
+//
+//	gpk, err := sa.sm.mpcDistributor.CreateRequestGPK()
+//	if err == nil {
+//		log.SyslogInfo("CreateGPK end", "gpk", hexutil.Encode(gpk))
+//	} else {
+//		log.SyslogErr("CreateGPK end", "err", err.Error())
+//	}
+//
+//	return gpk, err
+//}
 
-	log.SyslogInfo("CreateGPK begin")
-	log.SyslogInfo("CreateGPK begin", "peers", len(sa.sm.peers), "storeman peers", len(sa.sm.storemanPeers))
+//func (sa *StoremanAPI) SignDataByApprove(ctx context.Context, data mpcprotocol.SendData) (result mpcprotocol.SignedResult, err error) {
+//	//Todo  check the input parameter
+//
+//	if len(sa.sm.storemanPeers)+1 < mpcprotocol.MpcSchnrThr {
+//		return mpcprotocol.SignedResult{R: []byte{}, S: []byte{}}, mpcprotocol.ErrTooLessStoreman
+//	}
+//
+//	PKBytes := data.PKBytes
+//
+//	//signed, err := sa.sm.mpcDistributor.CreateReqMpcSign([]byte(data.Data), PKBytes)
+//	signed, err := sa.sm.mpcDistributor.CreateReqMpcSign([]byte(data.Data), []byte(data.Extern), PKBytes,1)
+//
+//	// signed   R // s
+//	if err == nil {
+//		log.SyslogInfo("SignMpcTransaction end", "signed", common.ToHex(signed))
+//	} else {
+//		log.SyslogErr("SignMpcTransaction end", "err", err.Error())
+//		return mpcprotocol.SignedResult{R: []byte{}, S: []byte{}}, err
+//	}
+//
+//	return mpcprotocol.SignedResult{R: signed[0:65], S: signed[65:]}, nil
+//}
 
-	if len(sa.sm.storemanPeers)+1 < mpcprotocol.MpcSchnrThr {
-		return []byte{}, mpcprotocol.ErrTooLessStoreman
+//func (sa *StoremanAPI) SignData(ctx context.Context, data mpcprotocol.SendData) (result mpcprotocol.SignedResult, err error) {
+//	//Todo  check the input parameter
+//
+//	if len(sa.sm.storemanPeers)+1 < mpcprotocol.MpcSchnrThr {
+//		return mpcprotocol.SignedResult{R: []byte{}, S: []byte{}}, mpcprotocol.ErrTooLessStoreman
+//	}
+//
+//	PKBytes := data.PKBytes
+//
+//	//signed, err := sa.sm.mpcDistributor.CreateReqMpcSign([]byte(data.Data), PKBytes)
+//	signed, err := sa.sm.mpcDistributor.CreateReqMpcSign([]byte(data.Data), []byte(data.Extern), PKBytes,0)
+//
+//	// signed   R // s
+//	if err == nil {
+//		log.SyslogInfo("SignMpcTransaction end", "signed", common.ToHex(signed))
+//	} else {
+//		log.SyslogErr("SignMpcTransaction end", "err", err.Error())
+//		return mpcprotocol.SignedResult{R: []byte{}, S: []byte{}}, err
+//	}
+//
+//	return mpcprotocol.SignedResult{R: signed[0:65], S: signed[65:]}, nil
+//}
+
+//func (sa *StoremanAPI) AddValidData(ctx context.Context, data mpcprotocol.SendData) error {
+//	return validator.AddValidData(&data)
+//}
+//
+//// non leader node polling the data received from leader node
+//func (sa *StoremanAPI) GetDataForApprove(ctx context.Context) ([]mpcprotocol.SendData, error) {
+//	return validator.GetDataForApprove()
+//}
+//
+////// non leader node ApproveData, and make sure that the data is really required to be signed by them.
+//func (sa *StoremanAPI) ApproveData(ctx context.Context, data []mpcprotocol.SendData) []error {
+//	return validator.ApproveData(data)
+//}
+
+func (sa *StoremanAPI) CreateMpcAccount(ctx context.Context, accType string) (common.Address, error) {
+	log.SyslogInfo("CreateMpcAccount begin", "accType", accType)
+
+	if !mpcprotocol.CheckAccountType(accType) {
+		return common.Address{}, mpcprotocol.ErrInvalidStmAccType
 	}
 
-	gpk, err := sa.sm.mpcDistributor.CreateRequestGPK()
+	if len(sa.sm.peers) < len(sa.sm.storemanPeers)-1 {
+		return common.Address{}, mpcprotocol.ErrTooLessStoreman
+	}
+
+	if len(sa.sm.storemanPeers) > 22 {
+		return common.Address{}, mpcprotocol.ErrTooMoreStoreman
+	}
+
+	addr, err := sa.sm.mpcDistributor.CreateRequestStoremanAccount(accType)
 	if err == nil {
-		log.SyslogInfo("CreateGPK end", "gpk", hexutil.Encode(gpk))
+		log.SyslogInfo("CreateMpcAccount end", "addr", addr.String())
 	} else {
-		log.SyslogErr("CreateGPK end", "err", err.Error())
+		log.SyslogErr("CreateMpcAccount end", "err", err.Error())
 	}
 
-	return gpk, err
+	return addr, err
 }
 
-func (sa *StoremanAPI) SignDataByApprove(ctx context.Context, data mpcprotocol.SendData) (result mpcprotocol.SignedResult, err error) {
-	//Todo  check the input parameter
-
-	if len(sa.sm.storemanPeers)+1 < mpcprotocol.MpcSchnrThr {
-		return mpcprotocol.SignedResult{R: []byte{}, S: []byte{}}, mpcprotocol.ErrTooLessStoreman
+func (sa *StoremanAPI) SignMpcTransaction(ctx context.Context, tx mpcprotocol.SendTxArgs) (hexutil.Bytes, error) {
+	if tx.To == nil ||
+		tx.Gas == nil ||
+		tx.GasPrice == nil ||
+		tx.Value == nil ||
+		tx.Nonce == nil ||
+		tx.ChainID == nil {
+		return nil, mpcprotocol.ErrInvalidMpcTx
 	}
 
-	PKBytes := data.PKBytes
+	log.SyslogInfo("SignMpcTransaction begin", "txInfo", tx.String())
 
-	//signed, err := sa.sm.mpcDistributor.CreateReqMpcSign([]byte(data.Data), PKBytes)
-	signed, err := sa.sm.mpcDistributor.CreateReqMpcSign([]byte(data.Data), []byte(data.Extern), PKBytes,1)
+	if len(sa.sm.peers) < mpcprotocol.MPCDegree*2 {
+		return nil, mpcprotocol.ErrTooLessStoreman
+	}
 
-	// signed   R // s
+	trans := types.NewTransaction(uint64(*tx.Nonce), *tx.To, (*big.Int)(tx.Value), (*big.Int)(tx.Gas), (*big.Int)(tx.GasPrice), tx.Data)
+	signed, err := sa.sm.mpcDistributor.CreateRequestMpcSign(trans, tx.From, tx.ChainType, tx.SignType, (*big.Int)(tx.ChainID))
 	if err == nil {
 		log.SyslogInfo("SignMpcTransaction end", "signed", common.ToHex(signed))
 	} else {
 		log.SyslogErr("SignMpcTransaction end", "err", err.Error())
-		return mpcprotocol.SignedResult{R: []byte{}, S: []byte{}}, err
 	}
 
-	return mpcprotocol.SignedResult{R: signed[0:65], S: signed[65:]}, nil
+	return signed, err
 }
 
-func (sa *StoremanAPI) SignData(ctx context.Context, data mpcprotocol.SendData) (result mpcprotocol.SignedResult, err error) {
-	//Todo  check the input parameter
+func (sa *StoremanAPI) SignMpcBtcTransaction(ctx context.Context, args btc.MsgTxArgs) ([]hexutil.Bytes, error) {
+	log.SyslogInfo("SignMpcBtcTransaction begin", "txInfo", args.String())
 
-	if len(sa.sm.storemanPeers)+1 < mpcprotocol.MpcSchnrThr {
-		return mpcprotocol.SignedResult{R: []byte{}, S: []byte{}}, mpcprotocol.ErrTooLessStoreman
+	if len(sa.sm.peers) < mpcprotocol.MPCDegree*2 {
+		return nil, mpcprotocol.ErrTooLessStoreman
 	}
 
-	PKBytes := data.PKBytes
-
-	//signed, err := sa.sm.mpcDistributor.CreateReqMpcSign([]byte(data.Data), PKBytes)
-	signed, err := sa.sm.mpcDistributor.CreateReqMpcSign([]byte(data.Data), []byte(data.Extern), PKBytes,0)
-
-	// signed   R // s
-	if err == nil {
-		log.SyslogInfo("SignMpcTransaction end", "signed", common.ToHex(signed))
-	} else {
-		log.SyslogErr("SignMpcTransaction end", "err", err.Error())
-		return mpcprotocol.SignedResult{R: []byte{}, S: []byte{}}, err
+	msgTx, err := btc.GetMsgTxFromMsgTxArgs(&args)
+	if err != nil {
+		return nil, err
 	}
 
-	return mpcprotocol.SignedResult{R: signed[0:65], S: signed[65:]}, nil
+	if len(msgTx.TxIn) == 0 {
+		log.SyslogErr("SignMpcBtcTransaction, invalid btc MsgTxArgs, doesn't have TxIn")
+		return nil, errors.New("invalid btc MsgTxArgs, doesn't have TxIn")
+	}
+
+	signeds, err := sa.sm.mpcDistributor.CreateRequestBtcMpcSign(&args)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := 0; i < len(signeds); i++ {
+		log.SyslogInfo("SignMpcBtcTransaction end", "signed", common.ToHex(signeds[i]))
+	}
+
+	return signeds, err
 }
 
-func (sa *StoremanAPI) AddValidData(ctx context.Context, data mpcprotocol.SendData) error {
-	return validator.AddValidData(&data)
+// APIs returns the RPC descriptors the Whisper implementation offers
+//AddValidMpcTx stores raw data of cross chain transaction for MPC signing verification
+func (sa *StoremanAPI) AddValidMpcTx(ctx context.Context, tx mpcprotocol.SendTxArgs) error {
+	return validator.AddValidMpcTx(&tx)
 }
 
-// non leader node polling the data received from leader node
-func (sa *StoremanAPI) GetDataForApprove(ctx context.Context) ([]mpcprotocol.SendData, error) {
-	return validator.GetDataForApprove()
-}
-
-//// non leader node ApproveData, and make sure that the data is really required to be signed by them.
-func (sa *StoremanAPI) ApproveData(ctx context.Context, data []mpcprotocol.SendData) []error {
-	return validator.ApproveData(data)
+func (sa *StoremanAPI) AddValidMpcBtcTx(ctx context.Context, args btc.MsgTxArgs) error {
+	log.SyslogInfo("AddValidMpcBtcTx", "txInfo", args.String())
+	return validator.AddValidMpcBtcTx(&args)
 }

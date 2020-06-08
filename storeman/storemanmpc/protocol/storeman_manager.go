@@ -10,4 +10,5 @@ type StoremanManager interface {
 	SetMessagePeers(*MpcMessage, *[]PeerInfo)
 	SelfNodeId() *discover.NodeID
 	CreateKeystore(MpcResultInterface, *[]PeerInfo, string) error
+	SignTransaction(MpcResultInterface, int) error
 }

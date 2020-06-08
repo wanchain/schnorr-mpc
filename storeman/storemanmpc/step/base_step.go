@@ -8,12 +8,12 @@ import (
 )
 
 type BaseStep struct {
-	peers   *[]mpcprotocol.PeerInfo
-	msgChan chan *mpcprotocol.StepMessage
-	finish  chan error
-	waiting int
-	waitAll bool // true: wait all
-	stepId  int
+	peers        *[]mpcprotocol.PeerInfo
+	msgChan      chan *mpcprotocol.StepMessage
+	finish       chan error
+	waiting      int
+	waitAll      bool // true: wait all
+	stepId       int
 	notRecvPeers map[discover.NodeID]*discover.NodeID
 }
 
@@ -36,6 +36,7 @@ func CreateBaseStep(peers *[]mpcprotocol.PeerInfo, wait int) *BaseStep {
 	}
 
 	return step
+
 }
 
 func (step *BaseStep) InitMessageLoop(msger mpcprotocol.GetMessageInterface) error {
@@ -50,7 +51,7 @@ func (step *BaseStep) InitMessageLoop(msger mpcprotocol.GetMessageInterface) err
 				err := step.HandleMessage(msger)
 				if err != nil {
 					if err != mpcprotocol.ErrQuit {
-						log.SyslogErr("BaseStep::InitMessageLoop","InitMessageLoop fail, get message err, err", err.Error())
+						log.SyslogErr("InitMessageLoop fail, get message err, err:%s", err.Error())
 					}
 
 					break
@@ -71,7 +72,7 @@ func (step *BaseStep) FinishStep() error {
 	select {
 	case err := <-step.finish:
 		if err != nil {
-			log.SyslogErr("BaseStep::FinishStep"," get a step finish error. err", err.Error())
+			log.SyslogErr("BaseStep::FinishStep", " get a step finish error. err", err.Error())
 		}
 
 		step.msgChan <- nil
@@ -85,6 +86,7 @@ func (step *BaseStep) FinishStep() error {
 		}
 		return mpcprotocol.ErrTimeOut
 	}
+
 }
 
 func (step *BaseStep) GetMessageChan() chan *mpcprotocol.StepMessage {
@@ -100,19 +102,10 @@ func (step *BaseStep) HandleMessage(msger mpcprotocol.GetMessageInterface) error
 			return mpcprotocol.ErrQuit
 		}
 
-		if msg.StepId != step.GetStepId() {
-			log.SyslogErr("Get message is not in the right steps",
-				"should step", step.stepId,
-				"receive step", msg.StepId)
-		} else {
-			if step.waiting > 0 && msger.HandleMessage(msg) {
-
-				delete(step.notRecvPeers, *msg.PeerID)
-
-				step.waiting--
-				if step.waiting <= 0 {
-					step.finish <- nil
-				}
+		if step.waiting > 0 && msger.HandleMessage(msg) {
+			step.waiting--
+			if step.waiting <= 0 {
+				step.finish <- nil
 			}
 		}
 	}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	"math/big"
+	"strconv"
 	"time"
 )
 
@@ -19,6 +20,14 @@ const (
 	MpcSignLeader
 	MpcSignPeer
 )
+
+const (
+	MpcCreateLockAccountLeader = iota + 0
+	MpcCreateLockAccountPeer
+	MpcTXSignLeader
+	MpcTXSignPeer
+)
+
 const (
 	StatusCode = iota + 10 // used by storeman protocol
 	KeepaliveCode
@@ -40,24 +49,36 @@ const (
 	PVer       = uint64(10)
 	PVerStr    = "1.1"
 )
+
 const (
-	MpcPrivateShare  = "MpcPrivateShare"  // skShare
-	RMpcPrivateShare = "RMpcPrivateShare" // rskShare
-	MpcPublicShare   = "MpcPublicShare"   // pkShare
-	RMpcPublicShare  = "RMpcPublicShare"  // rpkShare
+	MpcPrivateShare  = "MpcPrivateShare"
+	MpcPrivateKey    = "MpcPrivateKey"
+	MpcPublicShare   = "MpcPublicShare"
+	MpcSignA         = "MpcSignA"
+	MpcSignA0        = "MpcSignA0"
+	MpcSignR         = "MpcSignR"
+	MpcSignR0        = "MpcSignR0"
+	MpcSignB         = "MpcSignB"
+	MpcSignC         = "MpcSignC"
+	MpcSignARSeed    = "MpcSignARSeed"
+	MpcSignARResult  = "MpcSignARResult"
+	MpcTxSignSeed    = "MpcTxSignSeed"
+	MpcTxSignResultR = "MpcTxSignResultR"
+	MpcTxSignResultV = "MpcTxSignResultV"
+	MpcTxSignResult  = "MpcTxSignResult"
 	MpcContextResult = "MpcContextResult"
 
-	PublicKeyResult  = "PublicKeyResult"  // gpk
-	RPublicKeyResult = "RPublicKeyResult" // R: rpk
-	MpcM             = "MpcM"             // M
-	MpcS             = "MpcS"             // S: s
-
-	MpcExt = "MpcExtern" // extern
-	MpcByApprove = "MpcByApprove" // by approve
-
-	MpcTxHash  = "MpcTxHash"
-	MpcAddress = "MpcAddress"
-	MPCAction  = "MPCAction"
+	PublicKeyResult = "PublicKeyResult"
+	MpcSignAPoint   = "MpcSignAPoint"
+	MpcTxHash       = "MpcTxHash"
+	MpcTransaction  = "MpcTransaction"
+	MpcChainType    = "MpcChainType"
+	MpcSignType     = "MpcSignType"
+	MpcChainID      = "MpcChainID"
+	MpcAddress      = "MpcAddress"
+	MPCActoin       = "MPCActoin"
+	MPCSignedFrom   = "MPCSignedFrom"
+	MpcStmAccType   = "MpcStmAccType"
 )
 
 const (
@@ -103,3 +124,19 @@ type MpcMessage struct {
 	BytesData [][]byte
 }
 
+func CheckAccountType(accType string) bool {
+	if accType == "WAN" || accType == "ETH" || accType == "BTC" {
+		return true
+	}
+
+	return false
+}
+
+func GetPreSetKeyArr(keySeed string, num int) []string {
+	keyArr := []string{}
+	for i := 0; i < num; i++ {
+		keyArr = append(keyArr, keySeed+"_"+strconv.Itoa(i))
+	}
+
+	return keyArr
+}

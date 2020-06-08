@@ -4,18 +4,20 @@ import (
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 )
 
-type MpcCtxFactory struct {
+type MpcTestCtxFactory struct {
 }
 
-func (*MpcCtxFactory) CreateContext(ctxType int, mpcID uint64, peers []mpcprotocol.PeerInfo, preSetValue ...MpcValue) (MpcInterface, error) {
+func (*MpcTestCtxFactory) CreateContext(ctxType int, mpcID uint64, peers []mpcprotocol.PeerInfo, preSetValue ...MpcValue) (MpcInterface, error) {
 	switch ctxType {
 	case mpcprotocol.MpcCreateLockAccountLeader:
-		return requestCreateLockAccountMpc(mpcID, peers, preSetValue...)
+		return testCreatep2pMpc(mpcID, peers, preSetValue...)
+
 	case mpcprotocol.MpcCreateLockAccountPeer:
-		return acknowledgeCreateLockAccountMpc(mpcID, peers, preSetValue...)
+		return acknowledgeCreatep2pMpc(mpcID, peers, preSetValue...)
 
 	case mpcprotocol.MpcTXSignLeader:
 		return requestTxSignMpc(mpcID, peers, preSetValue...)
+
 	case mpcprotocol.MpcTXSignPeer:
 		return acknowledgeTxSignMpc(mpcID, peers, preSetValue...)
 	}

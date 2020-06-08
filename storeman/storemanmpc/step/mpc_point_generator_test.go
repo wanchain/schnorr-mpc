@@ -1,20 +1,19 @@
 package step
 
 import (
-	"testing"
+	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
-	"github.com/wanchain/schnorr-mpc/crypto"
+	"testing"
 )
-
 
 type mpcPointGeneratorTestContext struct {
 	preValueKey string
-	peers []mpcprotocol.PeerInfo
+	peers       []mpcprotocol.PeerInfo
 }
 
-func (ctx *mpcPointGeneratorTestContext) Init()  {
+func (ctx *mpcPointGeneratorTestContext) Init() {
 	if len(ctx.peers) != 0 {
 		return
 	}
@@ -32,7 +31,7 @@ func (ctx *mpcPointGeneratorTestContext) Init()  {
 
 }
 
-func TestPotGeneratorCalculateResult(t *testing.T)  {
+func TestPotGeneratorCalculateResult(t *testing.T) {
 	var ctx mpcPointGeneratorTestContext
 	ctx.Init()
 
@@ -69,6 +68,3 @@ func TestPotGeneratorCalculateResult(t *testing.T)  {
 	}
 
 }
-
-
-

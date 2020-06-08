@@ -25,3 +25,18 @@ var (
 	ErrApprovedNotConsistent = errors.New("not equal,received  data and approved data in DB")
 	ErrTooLessDataCollected  = errors.New("not enough data collected")
 )
+
+var (
+	ErrAddress        = errors.New("Mpc Address is not found")
+	ErrChainID        = errors.New("Mpc ChainID is not Defined")
+	ErrChainTypeError = errors.New("Mpc transaction chaintype error")
+
+	ErrDecrypt = errors.New("could not decrypt key with given passphrase")
+
+	ErrTooMoreStoreman = errors.New("Mpc alived Storeman is too more")
+	ErrFailedTxVerify  = errors.New("Mpc signing transaction verify failed")
+
+	ErrFailSignRetVerify = errors.New("Mpc signing result verify failed")
+	ErrInvalidStmAccType = errors.New("invalid storeman account type! please input 'WAN' or 'ETH' or 'BTC' ")
+	ErrInvalidMpcTx      = errors.New("invalid mpc transaction")
+)

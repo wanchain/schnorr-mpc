@@ -6,23 +6,22 @@ import (
 	"math/big"
 )
 
-type AckMpcStep struct {
+type AcknowledgeMpcStep struct {
 	BaseStep
 	messageType int64
 }
 
-func CreateAckMpcStep(peers *[]mpcprotocol.PeerInfo, messageType int64) *AckMpcStep {
+func CreateAcknowledgeMpcStep(peers *[]mpcprotocol.PeerInfo, messageType int64) *AcknowledgeMpcStep {
 	log.SyslogInfo("CreateAcknowledgeMpcStep begin")
 
-	return &AckMpcStep{
-		*CreateBaseStep(peers, 0), messageType}
+	return &AcknowledgeMpcStep{*CreateBaseStep(peers, 0), messageType}
 }
 
-func (ack *AckMpcStep) InitStep(mpcprotocol.MpcResultInterface) error {
+func (ack *AcknowledgeMpcStep) InitStep(mpcprotocol.MpcResultInterface) error {
 	return nil
 }
 
-func (ack *AckMpcStep) CreateMessage() []mpcprotocol.StepMessage {
+func (ack *AcknowledgeMpcStep) CreateMessage() []mpcprotocol.StepMessage {
 	log.SyslogInfo("AcknowledgeMpcStep.CreateMessage begin")
 
 	data := make([]big.Int, 1)
@@ -35,7 +34,7 @@ func (ack *AckMpcStep) CreateMessage() []mpcprotocol.StepMessage {
 		BytesData: nil}}
 }
 
-func (ack *AckMpcStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mpcprotocol.StoremanManager) error {
+func (ack *AcknowledgeMpcStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mpcprotocol.StoremanManager) error {
 	log.SyslogInfo("AcknowledgeMpcStep.FinishStep begin")
 
 	err := ack.BaseStep.FinishStep()
@@ -45,16 +44,12 @@ func (ack *AckMpcStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mpc
 
 	data := make([]big.Int, 1)
 	data[0].SetInt64(ack.messageType)
-	result.SetValue(mpcprotocol.MPCAction, data)
+	result.SetValue(mpcprotocol.MPCActoin, data)
 
 	log.SyslogInfo("AcknowledgeMpcStep.FinishStep succeed")
 	return nil
 }
 
-func (ack *AckMpcStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
-	//TODO  should check the message needed to be signed??
-	// 1. add signed data to local db
-	// 2. and set the approved status to false
-	// 3. wait follow node to update the approved status to true.
+func (ack *AcknowledgeMpcStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	return true
 }

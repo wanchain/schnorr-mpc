@@ -1,24 +1,22 @@
 package step
 
 import (
-	"encoding/hex"
-	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/log"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
 )
 
-type MpcPointStep struct {
+type MpcPoint_Step struct {
 	BaseMpcStep
 	resultKeys []string
 	signNum    int
 }
 
-func CreateMpcPointStep(peers *[]mpcprotocol.PeerInfo, preValueKeys []string, resultKeys []string) *MpcPointStep {
-	log.SyslogInfo("CreateMpcPointStep begin")
+func CreateMpcPoint_Step(peers *[]mpcprotocol.PeerInfo, preValueKeys []string, resultKeys []string) *MpcPoint_Step {
+	log.SyslogInfo("CreateMpcPoint_Step begin")
 
 	signNum := len(preValueKeys)
-	mpc := &MpcPointStep{*CreateBaseMpcStep(peers, signNum), resultKeys, signNum}
+	mpc := &MpcPoint_Step{*CreateBaseMpcStep(peers, signNum), resultKeys, signNum}
 
 	for i := 0; i < signNum; i++ {
 		mpc.messages[i] = createPointGenerator(preValueKeys[i])
@@ -27,8 +25,8 @@ func CreateMpcPointStep(peers *[]mpcprotocol.PeerInfo, preValueKeys []string, re
 	return mpc
 }
 
-func (ptStep *MpcPointStep) CreateMessage() []mpcprotocol.StepMessage {
-	log.SyslogInfo("MpcPointStep.CreateMessage begin")
+func (ptStep *MpcPoint_Step) CreateMessage() []mpcprotocol.StepMessage {
+	log.SyslogInfo("MpcPoint_Step.CreateMessage begin")
 
 	message := make([]mpcprotocol.StepMessage, 1)
 	message[0].MsgCode = mpcprotocol.MPCMessage
@@ -42,21 +40,17 @@ func (ptStep *MpcPointStep) CreateMessage() []mpcprotocol.StepMessage {
 	return message
 }
 
-func (ptStep *MpcPointStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
-	seed := ptStep.getPeerSeed(msg.PeerID)
-	log.SyslogInfo("MpcPointStep.HandleMessage begin ",
-		"peerID", msg.PeerID.String(),
-		"gpk x", hex.EncodeToString(msg.Data[0].Bytes()),
-		"gpk y", hex.EncodeToString(msg.Data[1].Bytes()),
-		"seed", seed)
+func (ptStep *MpcPoint_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
+	log.SyslogInfo("MpcPoint_Step.HandleMessage begin, peerID:%s", msg.PeerID.String())
 
+	seed := ptStep.getPeerSeed(msg.PeerID)
 	if seed == 0 {
-		log.SyslogErr("MpcPointStep:HandleMessage","MpcPointStep.HandleMessage, get peer seed fail. peer", msg.PeerID.String())
+		log.SyslogErr("MpcPoint_Step.HandleMessage, get peer seed fail. peer:%s", msg.PeerID.String())
 		return false
 	}
 
 	if len(msg.Data) != 2*ptStep.signNum {
-		log.SyslogErr("HandleMessage","MpcPointStep HandleMessage, msg data len doesn't match requirement, dataLen", len(msg.Data))
+		log.SyslogErr("MpcPoint_Step HandleMessage, msg data len doesn't match requiremant, dataLen:%d", len(msg.Data))
 		return false
 	}
 
@@ -64,7 +58,7 @@ func (ptStep *MpcPointStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		pointer := ptStep.messages[i].(*mpcPointGenerator)
 		_, exist := pointer.message[seed]
 		if exist {
-			log.SyslogErr("HandleMessage","MpcPointStep.HandleMessage, get msg from seed fail. peer", msg.PeerID.String())
+			log.SyslogErr("MpcPoint_Step.HandleMessage, get msg from seed fail. peer:%s", msg.PeerID.String())
 			return false
 		}
 
@@ -74,8 +68,8 @@ func (ptStep *MpcPointStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	return true
 }
 
-func (ptStep *MpcPointStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mpcprotocol.StoremanManager) error {
-	log.SyslogInfo("MpcPointStep.FinishStep begin")
+func (ptStep *MpcPoint_Step) FinishStep(result mpcprotocol.MpcResultInterface, mpc mpcprotocol.StoremanManager) error {
+	log.SyslogInfo("MpcPoint_Step.FinishStep begin")
 	err := ptStep.BaseMpcStep.FinishStep()
 	if err != nil {
 		return err
@@ -83,23 +77,13 @@ func (ptStep *MpcPointStep) FinishStep(result mpcprotocol.MpcResultInterface, mp
 
 	for i := 0; i < ptStep.signNum; i++ {
 		pointer := ptStep.messages[i].(*mpcPointGenerator)
-		//PublicKeyResult
-		//log.Info("generated gpk MpcPointStep::FinishStep",
-		//	"result key", ptStep.resultKeys[i],
-		//	"result value", pointer.result[:])
-
-		log.Info("generated gpk MpcPointStep::FinishStep",
-			"result key", ptStep.resultKeys[i],
-			"result value x", hexutil.Encode(pointer.result[0].Bytes()),
-			"result value y", hexutil.Encode(pointer.result[1].Bytes()))
-
 		err = result.SetValue(ptStep.resultKeys[i], pointer.result[:])
 		if err != nil {
-			log.SyslogErr("HandleMessage","MpcPointStep.FinishStep, SetValue fail. err", err.Error())
+			log.SyslogErr("MpcPoint_Step.FinishStep, SetValue fail. err:%s", err.Error())
 			return err
 		}
 	}
 
-	log.SyslogInfo("MpcPointStep.FinishStep succeed")
+	log.SyslogInfo("MpcPoint_Step.FinishStep succeed")
 	return nil
 }

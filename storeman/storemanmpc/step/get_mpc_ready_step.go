@@ -13,19 +13,15 @@ func (ready *GetMpcReadyStep) InitStep(mpcprotocol.MpcResultInterface) error {
 }
 
 func CreateGetMpcReadyStep(peers *[]mpcprotocol.PeerInfo) *GetMpcReadyStep {
-	return &GetMpcReadyStep{
-		*CreateBaseStep(peers, 1)}
+	return &GetMpcReadyStep{*CreateBaseStep(peers, 1)}
 }
 
 func (ready *GetMpcReadyStep) CreateMessage() []mpcprotocol.StepMessage {
 	return nil
 }
 
-func (ready *GetMpcReadyStep) FinishStep(result mpcprotocol.MpcResultInterface,
-	mpc mpcprotocol.StoremanManager) error {
-
+func (ready *GetMpcReadyStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mpcprotocol.StoremanManager) error {
 	return ready.BaseStep.FinishStep()
-
 }
 
 func (ready *GetMpcReadyStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {

@@ -1,5 +1,7 @@
 package storemanmpc
 
+/*
+
 import (
 	"github.com/wanchain/schnorr-mpc/log"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
@@ -52,3 +54,4 @@ func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStep
 	}
 	return mpc, nil
 }
+*/
