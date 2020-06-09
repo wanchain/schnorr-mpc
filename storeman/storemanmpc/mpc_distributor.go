@@ -366,17 +366,25 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 
 	peers := []mpcprotocol.PeerInfo{}
 
-	var address common.Address
+	//var address common.Address
 	if ctxType == mpcprotocol.MpcSignLeader {
+		//for _, item := range preSetValue {
+		//	if item.Key == mpcprotocol.MpcAddress {
+		//		address, err = shcnorrmpc.PkToAddress(item.ByteValue)
+		//		if err != nil {
+		//			return []byte{}, err
+		//		}
+		//		break
+		//	}
+		//}
+		address := common.Address{}
 		for _, item := range preSetValue {
 			if item.Key == mpcprotocol.MpcAddress {
-				address, err = shcnorrmpc.PkToAddress(item.ByteValue)
-				if err != nil {
-					return []byte{}, err
-				}
+				address = common.BigToAddress(&item.Value[0])
 				break
 			}
 		}
+
 		// peers1: the peers which are used to create the group public key, used to build the sign data.
 		value, peers1, err := mpcServer.loadStoremanAddress(&address)
 		if err != nil {
@@ -917,12 +925,14 @@ func (mpcServer *MpcDistributor) CreateKeystore(result mpcprotocol.MpcResultInte
 		seed[i] = item.Seed
 	}
 
-	_, err = mpcServer.newStoremanKeyStore(result1, &private[0], seed, mpcServer.password, accType)
+	account, err := mpcServer.newStoremanKeyStore(result1, &private[0], seed, mpcServer.password, accType)
 	if err != nil {
 		return err
 	}
 
-	result.SetByteValue(mpcprotocol.MpcContextResult, crypto.FromECDSAPub(result1))
+	//result.SetByteValue(mpcprotocol.MpcContextResult, crypto.FromECDSAPub(result1))
+	result.SetByteValue(mpcprotocol.MpcContextResult, account.Address[:])
+
 	log.Info("CreateKeystore ",
 		"gpk address", crypto.PubkeyToAddress(*result1),
 		"gpk hexutil.Encode", hexutil.Encode(crypto.FromECDSAPub(result1)))
