@@ -539,6 +539,7 @@ func (sa *StoremanAPI) SignMpcTransaction(ctx context.Context, tx mpcprotocol.Se
 	if len(sa.sm.peers) < mpcprotocol.MPCDegree*2 {
 		return nil, mpcprotocol.ErrTooLessStoreman
 	}
+	sa.sm.mpcDistributor.SetCurPeerCount(uint16(len(sa.sm.peers)))
 
 	trans := types.NewTransaction(uint64(*tx.Nonce), *tx.To, (*big.Int)(tx.Value), (*big.Int)(tx.Gas), (*big.Int)(tx.GasPrice), tx.Data)
 	signed, err := sa.sm.mpcDistributor.CreateRequestMpcSign(trans, tx.From, tx.ChainType, tx.SignType, (*big.Int)(tx.ChainID))
@@ -557,6 +558,7 @@ func (sa *StoremanAPI) SignMpcBtcTransaction(ctx context.Context, args btc.MsgTx
 	if len(sa.sm.peers) < mpcprotocol.MPCDegree*2 {
 		return nil, mpcprotocol.ErrTooLessStoreman
 	}
+	sa.sm.mpcDistributor.SetCurPeerCount(uint16(len(sa.sm.peers)))
 
 	msgTx, err := btc.GetMsgTxFromMsgTxArgs(&args)
 	if err != nil {

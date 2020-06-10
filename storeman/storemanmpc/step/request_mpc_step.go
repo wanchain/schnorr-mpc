@@ -20,6 +20,7 @@ type RequestMpcStep struct {
 	signType    []byte
 	txCode      []byte
 	message     map[discover.NodeID]bool
+	peerCount   uint16
 }
 
 func (req *RequestMpcStep) InitStep(result mpcprotocol.MpcResultInterface) error {
@@ -90,8 +91,11 @@ func (req *RequestMpcStep) InitStep(result mpcprotocol.MpcResultInterface) error
 	return nil
 }
 
-func CreateRequestMpcStep(peers *[]mpcprotocol.PeerInfo, messageType int64) *RequestMpcStep {
-	return &RequestMpcStep{BaseStep: *CreateBaseStep(peers, len(*peers)-1), messageType: messageType, message: make(map[discover.NodeID]bool)}
+func CreateRequestMpcStep(peers *[]mpcprotocol.PeerInfo, pc uint16, messageType int64) *RequestMpcStep {
+	return &RequestMpcStep{BaseStep: *CreateBaseStep(peers, len(*peers)-1),
+		messageType: messageType,
+		message:     make(map[discover.NodeID]bool),
+		peerCount:   pc}
 }
 
 func (req *RequestMpcStep) CreateMessage() []mpcprotocol.StepMessage {
@@ -107,6 +111,7 @@ func (req *RequestMpcStep) CreateMessage() []mpcprotocol.StepMessage {
 		msg.Data = append(msg.Data, req.txHash)
 		msg.Data = append(msg.Data, req.address)
 		msg.Data = append(msg.Data, req.chainID)
+		msg.Data = append(msg.Data, *big.NewInt(0).SetUint64(uint64(req.peerCount)))
 		msg.BytesData = make([][]byte, 3)
 		msg.BytesData[0] = req.chainType
 		msg.BytesData[1] = req.txCode

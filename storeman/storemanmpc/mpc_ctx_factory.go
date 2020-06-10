@@ -7,7 +7,7 @@ import (
 type MpcCtxFactory struct {
 }
 
-func (*MpcCtxFactory) CreateContext(ctxType int, mpcID uint64, peers []mpcprotocol.PeerInfo, preSetValue ...MpcValue) (MpcInterface, error) {
+func (*MpcCtxFactory) CreateContext(ctxType int, mpcID uint64, peers []mpcprotocol.PeerInfo, curPeerCount uint16, preSetValue ...MpcValue) (MpcInterface, error) {
 	switch ctxType {
 	case mpcprotocol.MpcCreateLockAccountLeader:
 		return requestCreateLockAccountMpc(mpcID, peers, preSetValue...)
@@ -15,9 +15,9 @@ func (*MpcCtxFactory) CreateContext(ctxType int, mpcID uint64, peers []mpcprotoc
 		return acknowledgeCreateLockAccountMpc(mpcID, peers, preSetValue...)
 
 	case mpcprotocol.MpcTXSignLeader:
-		return requestTxSignMpc(mpcID, peers, preSetValue...)
+		return requestTxSignMpc(mpcID, peers, curPeerCount, preSetValue...)
 	case mpcprotocol.MpcTXSignPeer:
-		return acknowledgeTxSignMpc(mpcID, peers, preSetValue...)
+		return acknowledgeTxSignMpc(mpcID, peers, curPeerCount, preSetValue...)
 	}
 
 	return nil, mpcprotocol.ErrContextType

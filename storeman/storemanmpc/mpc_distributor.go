@@ -31,7 +31,7 @@ import (
 )
 
 type MpcContextCreater interface {
-	CreateContext(int, uint64, []mpcprotocol.PeerInfo, ...MpcValue) (MpcInterface, error) //createContext
+	CreateContext(int, uint64, []mpcprotocol.PeerInfo, uint16, ...MpcValue) (MpcInterface, error) //createContext
 }
 
 type MpcValue struct {
@@ -92,6 +92,7 @@ type MpcDistributor struct {
 	enableAwsKms   bool
 	kmsInfo        KmsInfo
 	password       string
+	peerCount      uint16
 }
 
 func CreateMpcDistributor(accountManager *accounts.Manager,
@@ -112,6 +113,7 @@ func CreateMpcDistributor(accountManager *accounts.Manager,
 		kmsInfo:        kmsInfo,
 		password:       password,
 		P2pMessager:    msger,
+		peerCount:      uint16(0),
 	}
 
 	mpc.enableAwsKms = (aKID != "") && (secretKey != "") && (region != "")
@@ -234,6 +236,14 @@ func (mpcServer *MpcDistributor) InitStoreManGroup() {
 	}
 	log.SyslogInfo("InitStoreManGroup......", "mpcServer.StoreManGroup", mpcServer.StoreManGroup)
 	log.SyslogInfo("InitStoreManGroup......", "storeManIndex", mpcServer.storeManIndex)
+}
+
+func (mpcServer *MpcDistributor) SetCurPeerCount(peerCount uint16) {
+	mpcServer.peerCount = peerCount
+}
+
+func (mpcServer *MpcDistributor) GetCurPeerCount() uint16 {
+	return mpcServer.peerCount
 }
 
 func (mpcServer *MpcDistributor) createMPCTxSigner(ChainType string, ChainID *big.Int) (mpccrypto.MPCTxSigner, error) {
@@ -411,6 +421,7 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 	mpc, err := mpcServer.mpcCreater.CreateContext(ctxType,
 		mpcID,
 		peers,
+		mpcServer.GetCurPeerCount(),
 		preSetValue...)
 
 	if err != nil {
@@ -662,6 +673,7 @@ func (mpcServer *MpcDistributor) createMpcContext(mpcMessage *mpcprotocol.MpcMes
 	}
 
 	log.SyslogInfo("createMpcContext", "ctxType", ctxType, "ctxId", mpcMessage.ContextID)
+	var peerCount big.Int
 	if ctxType == mpcprotocol.MpcTXSignPeer {
 		log.SyslogInfo("createMpcContext MpcTXSignPeer")
 
@@ -671,15 +683,17 @@ func (mpcServer *MpcDistributor) createMpcContext(mpcMessage *mpcprotocol.MpcMes
 		txHash := mpcMessage.Data[1]
 		address := common.BigToAddress(&mpcMessage.Data[2])
 		chainId := mpcMessage.Data[3]
+		peerCount = mpcMessage.Data[4]
 
 		log.SyslogInfo(
-			"createMpcContext",
+			">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>createMpcContext",
 			"chainType", string(chainType),
 			"txData", common.ToHex(txBytesData),
 			"signType", string(txSignType),
 			"txHash", txHash.String(),
 			"address", address.String(),
-			"chainId", chainId.String())
+			"chainId", chainId.String(),
+			"peerCount", peerCount.String())
 
 		// load account
 		MpcPrivateShare, _, err := mpcServer.loadStoremanAddress(&address)
@@ -774,7 +788,7 @@ func (mpcServer *MpcDistributor) createMpcContext(mpcMessage *mpcprotocol.MpcMes
 		preSetValue = append(preSetValue, MpcValue{mpcprotocol.MpcStmAccType, nil, []byte(accType)})
 	}
 
-	mpc, err := mpcServer.mpcCreater.CreateContext(ctxType, mpcMessage.ContextID, *mpcServer.getMessagePeers(mpcMessage), preSetValue...)
+	mpc, err := mpcServer.mpcCreater.CreateContext(ctxType, mpcMessage.ContextID, *mpcServer.getMessagePeers(mpcMessage), uint16(peerCount.Int64()), preSetValue...)
 	if err != nil {
 		log.SyslogErr("createMpcContext, createContext fail", "err", err.Error())
 		return err

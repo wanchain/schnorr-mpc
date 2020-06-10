@@ -9,27 +9,32 @@ import (
 )
 
 //send create LockAccount from leader
-func requestTxSignMpc(mpcID uint64, peers []mpcprotocol.PeerInfo, preSetValue ...MpcValue) (*MpcContext, error) {
+func requestTxSignMpc(mpcID uint64, peers []mpcprotocol.PeerInfo, peerCount uint16, preSetValue ...MpcValue) (*MpcContext, error) {
 	result := createMpcBaseMpcResult()
 	result.InitializeValue(preSetValue...)
+
 	mpc := createMpcContext(mpcID, peers, result)
-	requestMpc := step.CreateRequestMpcStep(&mpc.peers, mpcprotocol.MpcTXSignLeader)
+
+	requestMpc := step.CreateRequestMpcStep(&mpc.peers, peerCount, mpcprotocol.MpcTXSignLeader)
+	//requestMpc.SetWaiting(int(peerCount))
 
 	mpcReady := step.CreateMpcReadyStep(&mpc.peers)
-	return generateTxSignMpc(mpc, requestMpc, mpcReady)
+	return generateTxSignMpc(mpc, requestMpc, mpcReady, peerCount)
 }
 
 //get message from leader and create Context
-func acknowledgeTxSignMpc(mpcID uint64, peers []mpcprotocol.PeerInfo, preSetValue ...MpcValue) (*MpcContext, error) {
+func acknowledgeTxSignMpc(mpcID uint64, peers []mpcprotocol.PeerInfo, peerCount uint16, preSetValue ...MpcValue) (*MpcContext, error) {
 	result := createMpcBaseMpcResult()
 	result.InitializeValue(preSetValue...)
 	mpc := createMpcContext(mpcID, peers, result)
 	AcknowledgeMpc := step.CreateAcknowledgeMpcStep(&mpc.peers, mpcprotocol.MpcTXSignPeer)
+	// wait 0
 	mpcReady := step.CreateGetMpcReadyStep(&mpc.peers)
-	return generateTxSignMpc(mpc, AcknowledgeMpc, mpcReady)
+	// wait 1
+	return generateTxSignMpc(mpc, AcknowledgeMpc, mpcReady, peerCount)
 }
 
-func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStepFunc) (*MpcContext, error) {
+func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStepFunc, peerCount uint16) (*MpcContext, error) {
 	log.SyslogInfo("generateTxSignMpc begin")
 
 	signNum, err := getSignNumFromTxInfo(mpc)
@@ -38,16 +43,21 @@ func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStep
 	}
 
 	JRJZ := step.CreateTXSignJR_JZ_Step(mpcprotocol.MPCDegree, &mpc.peers, signNum)
+	//JRJZ.SetWaiting(int(peerCount))
 
 	pointStepPreValueKeys := mpcprotocol.GetPreSetKeyArr(mpcprotocol.MpcSignA0, signNum)
 	pointStepResultKeys := mpcprotocol.GetPreSetKeyArr(mpcprotocol.MpcSignAPoint, signNum)
 	AGPoint := step.CreateMpcPoint_Step(&mpc.peers, pointStepPreValueKeys, pointStepResultKeys)
+	//AGPoint.SetWaiting(int(peerCount))
 
 	lagStepPreValueKeys := mpcprotocol.GetPreSetKeyArr(mpcprotocol.MpcSignARSeed, signNum)
 	lagStepResultKeys := mpcprotocol.GetPreSetKeyArr(mpcprotocol.MpcSignARResult, signNum)
 	ARLag := step.CreateTXSign_Lagrange_Step(&mpc.peers, lagStepPreValueKeys, lagStepResultKeys)
+	//ARLag.SetWaiting(int(peerCount))
 
 	TXSignLag := step.CreateTxSign_CalSignStep(&mpc.peers, mpcprotocol.MpcTxSignResult, signNum)
+	//ARLag.SetWaiting(int(peerCount))
+
 	mpc.setMpcStep(firstStep, readyStep, JRJZ, AGPoint, ARLag, TXSignLag)
 
 	for index, step := range mpc.MpcSteps {

@@ -16,10 +16,10 @@ func (*MpcTestCtxFactory) CreateContext(ctxType int, mpcID uint64, peers []mpcpr
 		return acknowledgeCreatep2pMpc(mpcID, peers, preSetValue...)
 
 	case mpcprotocol.MpcTXSignLeader:
-		return requestTxSignMpc(mpcID, peers, preSetValue...)
+		return requestTxSignMpc(mpcID, peers, uint16(0), preSetValue...)
 
 	case mpcprotocol.MpcTXSignPeer:
-		return acknowledgeTxSignMpc(mpcID, peers, preSetValue...)
+		return acknowledgeTxSignMpc(mpcID, peers, uint16(0), preSetValue...)
 	}
 
 	return nil, mpcprotocol.ErrContextType
