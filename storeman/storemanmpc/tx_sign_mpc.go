@@ -14,6 +14,7 @@ func requestTxSignMpc(mpcID uint64, peers []mpcprotocol.PeerInfo, preSetValue ..
 	result.InitializeValue(preSetValue...)
 	mpc := createMpcContext(mpcID, peers, result)
 	requestMpc := step.CreateRequestMpcStep(&mpc.peers, mpcprotocol.MpcTXSignLeader)
+
 	mpcReady := step.CreateMpcReadyStep(&mpc.peers)
 	return generateTxSignMpc(mpc, requestMpc, mpcReady)
 }
@@ -48,6 +49,11 @@ func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStep
 
 	TXSignLag := step.CreateTxSign_CalSignStep(&mpc.peers, mpcprotocol.MpcTxSignResult, signNum)
 	mpc.setMpcStep(firstStep, readyStep, JRJZ, AGPoint, ARLag, TXSignLag)
+
+	for index, step := range mpc.MpcSteps {
+		step.SetStepId(index)
+		step.SetWaitAll(false)
+	}
 	return mpc, nil
 }
 
