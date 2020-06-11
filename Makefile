@@ -2,21 +2,21 @@
 # with Go source code. If you know what GOPATH is then you probably
 # don't need to bother with make.
 
-.PHONY: schnorrmpc evm all test clean
+.PHONY: mpc evm all test clean
 
 GOBIN = build/bin
 GO ?= latest
 
-linuxDir=$(shell echo schnorrmpc-linux-amd64-`cat ./VERSION`-`git rev-parse --short=8 HEAD`)
-windowsDir=$(shell echo schnorrmpc-windows-amd64-`cat ./VERSION`-`git rev-parse --short=8 HEAD`)
-darwinDir=$(shell echo schnorrmpc-mac-amd64-`cat ./VERSION`-`git rev-parse --short=8 HEAD`)
-# The schnorrmpc target build schnorrmpc binary
+linuxDir=$(shell echo mpc-linux-amd64-`cat ./VERSION`-`git rev-parse --short=8 HEAD`)
+windowsDir=$(shell echo mpc-windows-amd64-`cat ./VERSION`-`git rev-parse --short=8 HEAD`)
+darwinDir=$(shell echo mpc-mac-amd64-`cat ./VERSION`-`git rev-parse --short=8 HEAD`)
+# The mpc target build mpc binary
 
-schnorrmpc:
-	build/env.sh  go run   -gcflags "-N -l"    build/ci.go   install ./cmd/schnorrmpc
+mpc:
+	build/env.sh  go run   -gcflags "-N -l"    build/ci.go   install ./cmd/mpc
 	build/env.sh  go run   -gcflags "-N -l"    build/ci.go   install ./cmd/bootnode
 	@echo "Done building."
-	@echo "Run \"$(GOBIN)/schnorrmpc\" to launch schnorrmpc."
+	@echo "Run \"$(GOBIN)/mpc\" to launch mpc."
 
 
 # The clean target clear all the build output
@@ -36,31 +36,31 @@ devtools:
 
 # Cross Compilation Targets (xgo)
 
-schnorrmpc-linux-amd64:
-	build/env.sh go run build/ci.go xgo -- --go=$(GO) --targets=linux/amd64 --ldflags "-s -w"  -v ./cmd/schnorrmpc
+mpc-linux-amd64:
+	build/env.sh go run build/ci.go xgo -- --go=$(GO) --targets=linux/amd64 --ldflags "-s -w"  -v ./cmd/mpc
 	@echo "Linux amd64 cross compilation done:"
-	@ls -ld $(GOBIN)/schnorrmpc-linux-* | grep amd64
+	@ls -ld $(GOBIN)/mpc-linux-* | grep amd64
 	mkdir -p ${linuxDir}
-	cp ./build/bin/schnorrmpc-linux-* ${linuxDir}/schnorrmpc
-	tar zcf ${linuxDir}.tar.gz ${linuxDir}/schnorrmpc
+	cp ./build/bin/mpc-linux-* ${linuxDir}/mpc
+	tar zcf ${linuxDir}.tar.gz ${linuxDir}/mpc
 
-schnorrmpc-darwin-amd64:
-	build/env.sh go run build/ci.go xgo -- --go=$(GO) --targets=darwin/amd64 --ldflags "-s -w"  -v ./cmd/schnorrmpc
+mpc-darwin-amd64:
+	build/env.sh go run build/ci.go xgo -- --go=$(GO) --targets=darwin/amd64 --ldflags "-s -w"  -v ./cmd/mpc
 	@echo "Darwin amd64 cross compilation done:"
-	@ls -ld $(GOBIN)/schnorrmpc-darwin-* | grep amd64
+	@ls -ld $(GOBIN)/mpc-darwin-* | grep amd64
 	mkdir -p ${darwinDir}
-	cp ./build/bin/schnorrmpc-darwin-* ${darwinDir}/schnorrmpc
-	tar zcf ${darwinDir}.tar.gz ${darwinDir}/schnorrmpc
+	cp ./build/bin/mpc-darwin-* ${darwinDir}/mpc
+	tar zcf ${darwinDir}.tar.gz ${darwinDir}/mpc
 
 
-schnorrmpc-windows-amd64:
-	build/env.sh go run build/ci.go xgo -- --go=$(GO) --targets=windows/amd64 --ldflags "-s -w"  -v ./cmd/schnorrmpc
+mpc-windows-amd64:
+	build/env.sh go run build/ci.go xgo -- --go=$(GO) --targets=windows/amd64 --ldflags "-s -w"  -v ./cmd/mpc
 	@echo "Windows amd64 cross compilation done:"
-	@ls -ld $(GOBIN)/schnorrmpc-windows-* | grep amd64
+	@ls -ld $(GOBIN)/mpc-windows-* | grep amd64
 	mkdir -p ${windowsDir}
-	cp ./build/bin/schnorrmpc-windows-* ${windowsDir}/schnorrmpc.exe
-	zip ${windowsDir}.zip ${windowsDir}/schnorrmpc.exe
+	cp ./build/bin/mpc-windows-* ${windowsDir}/mpc.exe
+	zip ${windowsDir}.zip ${windowsDir}/mpc.exe
 
-release: clean schnorrmpc-linux-amd64 schnorrmpc-windows-amd64 schnorrmpc-darwin-amd64
+release: clean mpc-linux-amd64 mpc-windows-amd64 mpc-darwin-amd64
 
 

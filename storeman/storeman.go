@@ -77,7 +77,7 @@ func New(cfg *Config, accountManager *accounts.Manager, aKID, secretKey, region 
 
 	mpcprotocol.MpcSchnrThr = cfg.SchnorrThreshold
 	mpcprotocol.MpcSchnrNodeNumber = cfg.SchnorrTotalNodes
-	mpcprotocol.MPCDegree = mpcprotocol.MpcSchnrThr - 1
+	mpcprotocol.MPCDegree = mpcprotocol.MpcSchnrThr / 2 // 17/2 = 8
 
 	if mpcprotocol.MpcSchnrNodeNumber < mpcprotocol.MpcSchnrThr {
 		log.SyslogErr("should: SchnorrTotalNodes >= SchnorrThreshold")
@@ -85,7 +85,7 @@ func New(cfg *Config, accountManager *accounts.Manager, aKID, secretKey, region 
 	}
 	log.Info("=========New storeman", "SchnorrThreshold", mpcprotocol.MpcSchnrThr)
 	log.Info("=========New storeman", "SchnorrTotalNodes", mpcprotocol.MpcSchnrNodeNumber)
-	mpcprotocol.MPCDegree = mpcprotocol.MpcSchnrThr - 1
+	log.Info("=========New storeman", "MPCDegree", mpcprotocol.MPCDegree)
 
 	storeman.mpcDistributor = storemanmpc.CreateMpcDistributor(accountManager,
 		storeman,
