@@ -455,6 +455,8 @@ func (mpcServer *MpcDistributor) loadStoremanAddress(address *common.Address) (*
 		ks := mpcServer.AccountManager.Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 		key, _, err := GetPrivateShare(ks, *address, mpcServer.enableAwsKms, &mpcServer.kmsInfo, mpcServer.password)
 		if err != nil {
+			log.SyslogInfo("MpcDistributor.loadStoremanAddress ", "error", err.Error())
+			panic(err.Error())
 			return nil, nil, err
 		}
 
