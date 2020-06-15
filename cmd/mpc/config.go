@@ -23,16 +23,13 @@ import (
 	"fmt"
 	"github.com/wanchain/schnorr-mpc/accounts/keystore"
 	"github.com/wanchain/schnorr-mpc/common"
-	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/storeman"
-	"github.com/wanchain/schnorr-mpc/storeman/shcnorrmpc"
 	"github.com/wanchain/schnorr-mpc/storeman/storemanmpc"
 	"golang.org/x/crypto/ssh/terminal"
 	"io"
 	"os"
 	"reflect"
-	"strings"
 	"unicode"
 
 	"gopkg.in/urfave/cli.v1"
@@ -200,7 +197,7 @@ func makeFullNode(ctx *cli.Context) *node.Node {
 		cfg.Sm.DataPath = cfg.Node.DataDir
 		enableKms := ctx.GlobalIsSet(utils.AwsKmsFlag.Name)
 
-		enableCheckGpk := ctx.GlobalIsSet(utils.CheckGpkFlag.Name)
+		//enableCheckGpk := ctx.GlobalIsSet(utils.CheckGpkFlag.Name)
 
 		var status int
 		var suc bool
@@ -211,13 +208,15 @@ func makeFullNode(ctx *cli.Context) *node.Node {
 		}
 
 		password := getPassword(ctx, false)
-		verify, accounts := getVerifyAccounts(enableCheckGpk)
+		verify, accounts := getVerifyAccounts(stack)
 		if verify {
 			suc, status = verifySecurityInfo(stack, enableKms, kmsInfo, password, accounts)
-			for !suc {
+			tryTimes := 0
+			maxTimes := 3
+			for !suc && tryTimes < maxTimes {
 				log.Error("verify security info fail, please input again")
 				if status == 0x00 || (status == 0x01 && !enableKms) {
-					verify, accounts = getVerifyAccounts(enableCheckGpk)
+					verify, accounts = getVerifyAccounts(stack)
 				} else if status == 0x01 {
 					kmsInfo = getKmsInfo()
 				} else {
@@ -229,6 +228,11 @@ func makeFullNode(ctx *cli.Context) *node.Node {
 				} else {
 					suc = true
 				}
+				tryTimes++
+			}
+			if tryTimes >= maxTimes {
+				fmt.Println("Accounts verify failed.")
+				os.Exit(0)
 			}
 		}
 
@@ -343,48 +347,42 @@ func getPassword(ctx *cli.Context, retry bool) string {
 	return confirmed
 }
 
-func getVerifyAccounts(checkGpk bool) (bool, []common.Address) {
-	if !checkGpk {
-		return false, nil
-	}
-	fmt.Println("")
-	reader := bufio.NewReader(os.Stdin)
+func getVerifyAccounts(node *node.Node) (bool, []common.Address) {
+	/*
+		fmt.Println("")
+		reader := bufio.NewReader(os.Stdin)
+		var accounts []string
+
+		for {
+			fmt.Println("please input accounts to verify (like: addr1 addr2. noinput means don't verify):")
+			read, _, _ := reader.ReadLine()
+			if len(read) == 0 {
+				return false, accounts
+			}
+
+			splits := strings.Split(string(read), " ")
+			for _, addr := range splits {
+				if len(addr) == (common.AddressLength*2 + 2) {
+					accounts = append(accounts, addr)
+				}
+			}
+
+			if len(accounts) == 0 {
+				fmt.Println("invalid account info. please try again")
+				continue
+			} else {
+				break
+			}
+		}
+
+		return true, accounts
+	*/
+	ks := node.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 	var accounts []common.Address
 
-	for {
-		fmt.Println("please input pks to verify (like: pk1 pk2 (0x..). noinput means don't verify):")
-		read, _, _ := reader.ReadLine()
-		if len(read) == 0 {
-			return false, accounts
-		}
-
-		splits := strings.Split(string(read), " ")
-		for _, pkStr := range splits {
-			log.Info("getVerifyAccounts","StringtoPk :",pkStr)
-			pk, err := shcnorrmpc.StringtoPk(pkStr)
-			if err != nil{
-				log.Error("getVerifyAccounts","StringtoPk error:",err.Error())
-				continue
-			}
-			pkBytes := crypto.FromECDSAPub(pk)
-			addr,err := shcnorrmpc.PkToAddress(pkBytes[:])
-			if err != nil {
-				log.Error("getVerifyAccounts","PkToAddress error:",err.Error())
-				continue
-			}
-			log.Info("getVerifyAccounts","addr :",addr,"len(addr)",len(addr))
-			if len(addr) == (common.AddressLength) {
-				accounts = append(accounts, addr)
-			}
-		}
-
-		if len(accounts) == 0 {
-			fmt.Println("invalid account info. please try again")
-			continue
-		} else {
-			break
-		}
+	ac, _ := ks.GetAccountCache()
+	for _, account := range ac.Accounts() {
+		accounts = append(accounts, account.Address)
 	}
-
 	return true, accounts
 }

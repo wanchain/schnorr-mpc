@@ -43,9 +43,9 @@ import (
 )
 
 var (
-	ErrLocked  = accounts.NewAuthNeededError("password or unlock")
-	ErrNoMatch = errors.New("no key for given address or file")
-	ErrDecrypt = errors.New("could not decrypt key with given passphrase")
+	ErrLocked         = accounts.NewAuthNeededError("password or unlock")
+	ErrNoMatch        = errors.New("no key for given address or file")
+	ErrDecrypt        = errors.New("could not decrypt key with given passphrase")
 	ErrInvalidKmsInfo = errors.New("invalid AWS KMS info")
 )
 
@@ -116,6 +116,13 @@ func (ks *KeyStore) init(keydir string) {
 	for i := 0; i < len(accs); i++ {
 		ks.wallets[i] = &keystoreWallet{account: accs[i], keystore: ks}
 	}
+}
+
+func (ks *KeyStore) GetAccountCache() (*accountCache, error) {
+	// Lock the mutex since the account cache might call back with events
+	ks.mu.Lock()
+	defer ks.mu.Unlock()
+	return ks.cache, nil
 }
 
 // Wallets implements accounts.Backend, returning all single-key wallets from the
@@ -270,7 +277,6 @@ func (ks *KeyStore) SignHash(a accounts.Account, hash []byte) ([]byte, error) {
 	return crypto.Sign(hash, unlockedKey.PrivateKey)
 }
 
-
 func (ks *KeyStore) ComputeOTAPPKeys(a accounts.Account, AX, AY, BX, BY string) ([]string, error) {
 	ks.mu.RLock()
 	defer ks.mu.RUnlock()
@@ -310,7 +316,6 @@ func (ks *KeyStore) Unlock(a accounts.Account, passphrase string) error {
 func (ks *KeyStore) UnlockMemKey(a accounts.Account, keyjson []byte, passphrase string) error {
 	return ks.TimedUnlockMemKey(a, keyjson, passphrase, 0)
 }
-
 
 // Lock removes the private key with the given address from memory.
 func (ks *KeyStore) Lock(addr common.Address) error {
@@ -399,7 +404,7 @@ func (ks *KeyStore) Find(a accounts.Account) (accounts.Account, error) {
 }
 
 func (ks *KeyStore) GetDecryptedKey(a accounts.Account, auth string) (accounts.Account, *Key, error) {
-	return ks.getDecryptedKey(a,auth)
+	return ks.getDecryptedKey(a, auth)
 }
 
 func (ks *KeyStore) getDecryptedKey(a accounts.Account, auth string) (accounts.Account, *Key, error) {
@@ -489,7 +494,6 @@ func (ks *KeyStore) NewStoremanAccount(pKey *ecdsa.PublicKey, pShare *big.Int, s
 	return account, nil
 }
 
-
 // Export exports as a JSON key, encrypted with newPassphrase.
 func (ks *KeyStore) Export(a accounts.Account, passphrase, newPassphrase string) (keyJSON []byte, err error) {
 	_, key, err := ks.getDecryptedKey(a, passphrase)
@@ -504,8 +508,6 @@ func (ks *KeyStore) Export(a accounts.Account, passphrase, newPassphrase string)
 	}
 	return EncryptKey(key, newPassphrase, N, P)
 }
-
-
 
 // Import stores the given encrypted JSON key into the key directory.
 func (ks *KeyStore) Import(keyJSON []byte, passphrase, newPassphrase string) (accounts.Account, error) {
@@ -572,7 +574,6 @@ func (ks *KeyStore) Update(a accounts.Account, passphrase, newPassphrase string)
 	return ks.storage.StoreKey(a.URL.Path, key, newPassphrase)
 }
 
-
 func (ks *KeyStore) UpdateStoreman(a accounts.Account, passphrase, newPassphrase string) error {
 	fa, err := ks.Find(a)
 	if err != nil {
@@ -607,7 +608,7 @@ func (ks *KeyStore) ImportPreSaleKey(keyJSON []byte, passphrase string) (account
 }
 
 // TODO: temp add, for quickly print public keys, maybe removed later
-func (ks *KeyStore) GetKey(a accounts.Account,  passphrase string) (*Key, error) {
+func (ks *KeyStore) GetKey(a accounts.Account, passphrase string) (*Key, error) {
 	keyJSON, err := ioutil.ReadFile(a.URL.Path)
 	if err != nil {
 		return nil, err
@@ -618,7 +619,6 @@ func (ks *KeyStore) GetKey(a accounts.Account,  passphrase string) (*Key, error)
 	}
 	return key, nil
 }
-
 
 // GetWanAddress represents the keystore to retrieve corresponding wanchain public address for a specific ordinary account/address
 func (ks *KeyStore) GetWanAddress(account accounts.Account) (common.WAddress, error) {

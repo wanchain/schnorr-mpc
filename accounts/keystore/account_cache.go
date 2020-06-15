@@ -20,8 +20,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/wanchain/schnorr-mpc/crypto"
-	"github.com/wanchain/schnorr-mpc/storeman/shcnorrmpc"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -40,10 +38,9 @@ import (
 // not support change notifications. It also applies if the keystore directory does not
 // exist yet, the code will attempt to create a watcher at most this often.
 const (
-	minReloadInterval = 2 * time.Second
+	minReloadInterval       = 2 * time.Second
 	AwsKMSCiphertextFileExt = "-cipher"
 )
-
 
 type accountsByURL []accounts.Account
 
@@ -71,7 +68,7 @@ func (err *AmbiguousAddrError) Error() string {
 
 // accountCache is a live index of all accounts in the keystore.
 type accountCache struct {
-	keydir   string
+	keydir string
 	//watcher  *watcher
 	mu       sync.Mutex
 	all      accountsByURL
@@ -106,6 +103,10 @@ func (ac *accountCache) accounts() []accounts.Account {
 	cpy := make([]accounts.Account, len(ac.all))
 	copy(cpy, ac.all)
 	return cpy
+}
+
+func (ac *accountCache) Accounts() []accounts.Account {
+	return ac.accounts()
 }
 
 func (ac *accountCache) hasAddress(addr common.Address) bool {
@@ -317,23 +318,9 @@ func (ac *accountCache) scanAccounts() error {
 	readAccount := func(path string) *accounts.Account {
 		// add for storeman mpc account
 		if strings.LastIndex(path, AwsKMSCiphertextFileExt) == (len(path) - len(AwsKMSCiphertextFileExt)) {
-			addrBegin := strings.LastIndex(path[:len(path) - len(AwsKMSCiphertextFileExt)], "-")
+			addrBegin := strings.LastIndex(path[:len(path)-len(AwsKMSCiphertextFileExt)], "-")
 			if addrBegin != -1 {
-
-				pkStr := path[addrBegin+1:addrBegin+133]
-				log.Info("scanAccounts","pkstr",pkStr)
-
-				pk,err:= shcnorrmpc.StringtoPk(pkStr)
-				if err != nil {
-					log.Error("StringtoPk","error",err.Error())
-				}
-				pkByptes := crypto.FromECDSAPub(pk)
-				addrFromPK, err := shcnorrmpc.PkToAddress(pkByptes)
-				if err != nil {
-					log.Error("PkToAddress","error",err.Error())
-				}
-				//return &accounts.Account{Address: common.HexToAddress(path[addrBegin+1:addrBegin+41]), URL: accounts.URL{Scheme: KeyStoreScheme, Path: path}}
-				return &accounts.Account{Address: addrFromPK, URL: accounts.URL{Scheme: KeyStoreScheme, Path: path}}
+				return &accounts.Account{Address: common.HexToAddress(path[addrBegin+1 : addrBegin+41]), URL: accounts.URL{Scheme: KeyStoreScheme, Path: path}}
 			}
 		}
 
