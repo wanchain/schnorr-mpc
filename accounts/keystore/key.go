@@ -23,7 +23,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/wanchain/schnorr-mpc/storeman/shcnorrmpc"
 	"io"
 	"io/ioutil"
 	"math/big"
@@ -319,16 +318,31 @@ func storeNewKey(ks keyStore, rand io.Reader, auth string) (*Key, accounts.Accou
 	return key, a, err
 }
 
+//func storeStoremanKey(ks keyStore, pKey *ecdsa.PublicKey, pShare *big.Int, seeds []uint64, passphrase string, accType string) (*Key, accounts.Account, error) {
+//	key, err := newMpcKey(pKey, pShare, seeds, accType)
+//	if err != nil {
+//		return nil, accounts.Account{}, err
+//	}
+//
+//	a := accounts.Account{Address: key.Address,
+//	URL: accounts.URL{Scheme: KeyStoreScheme,
+//	Path: ks.JoinPath(keyFileNameWithPkString(shcnorrmpc.PkToHexString(pKey), accType))}}
+//
+//	if err := ks.StoreKey(a.URL.Path, key, passphrase); err != nil {
+//		zeroKey(key.PrivateKey)
+//		return nil, a, err
+//	}
+//
+//	return key, a, err
+//}
+
 func storeStoremanKey(ks keyStore, pKey *ecdsa.PublicKey, pShare *big.Int, seeds []uint64, passphrase string, accType string) (*Key, accounts.Account, error) {
-	key, err := newMpcKey(pKey, pShare, seeds, accType)
+	key, err := newStoremanKey(pKey, pShare, seeds, accType)
 	if err != nil {
 		return nil, accounts.Account{}, err
 	}
 
-	a := accounts.Account{Address: key.Address,
-	URL: accounts.URL{Scheme: KeyStoreScheme,
-	Path: ks.JoinPath(keyFileNameWithPkString(shcnorrmpc.PkToHexString(pKey), accType))}}
-
+	a := accounts.Account{Address: key.Address, URL: accounts.URL{Scheme: KeyStoreScheme, Path: ks.JoinPath(keyFileNameWithType(key.Address, accType))}}
 	if err := ks.StoreKey(a.URL.Path, key, passphrase); err != nil {
 		zeroKey(key.PrivateKey)
 		return nil, a, err
