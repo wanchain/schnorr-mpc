@@ -264,7 +264,7 @@ func verifySecurityInfo(node *node.Node, enableKms bool, info *storemanmpc.KmsIn
 	fmt.Println("begin verify keystore file security info...")
 	ks := node.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 	for _, acc := range accounts {
-		fmt.Println("begin verify ", acc)
+		fmt.Println("begin verify ", acc.String())
 
 		//_, status, err := storemanmpc.GetPrivateShare(ks, common.HexToAddress(acc), enableKms, info, password)
 		_, status, err := storemanmpc.GetPrivateShare(ks, acc, enableKms, info, password)
