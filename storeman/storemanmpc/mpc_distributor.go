@@ -370,6 +370,7 @@ func (mpcServer *MpcDistributor) CreateRequestBtcMpcSign(args *btc.MsgTxArgs) ([
 func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValue ...MpcValue) (hexutil.Bytes, error) {
 	log.SyslogInfo("MpcDistributor createRequestMpcContext begin")
 	mpcID, err := mpcServer.getMpcID()
+	log.SyslogInfo("MpcDistributor createRequestMpcContext", ">>>>>ctxid", mpcID)
 	if err != nil {
 		return nil, err
 	}

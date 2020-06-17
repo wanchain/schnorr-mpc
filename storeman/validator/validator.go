@@ -21,7 +21,16 @@ import (
 var noticeFuncIds [][4]byte
 
 func init() {
+	noticeFuncDefs := []string{
+		"btc2wbtcLockNotice(address,address,bytes32,bytes32,uint256)",
+		"wbtc2btcLockNotice(address,address,address,bytes32,bytes32,uint256)"}
 
+	var funcId [4]byte
+	for _, funcDef := range noticeFuncDefs {
+		copy(funcId[:], crypto.Keccak256([]byte(funcDef))[:4])
+		noticeFuncIds = append(noticeFuncIds, funcId)
+		log.SyslogInfo("validator.init, add notice func id", "id", common.ToHex(funcId[:]))
+	}
 }
 
 func waitKeyFromDB(keys [][]byte) ([]byte, error) {
@@ -42,10 +51,10 @@ func waitKeyFromDB(keys [][]byte) ([]byte, error) {
 		for _, key := range keys {
 			isExist, err := db.Has(key)
 			if err != nil {
-				log.SyslogErr("================= waitKeyFromDB fail", "err", err.Error())
+				log.SyslogErr("================= waitKeyFromDB fail", ">>>>>>key", common.ToHex(key), "err", err.Error())
 				return nil, err
 			} else if isExist {
-				log.SyslogInfo("================= waitKeyFromDB, got it", "key", common.ToHex(key))
+				log.SyslogInfo("================= waitKeyFromDB, got it", ">>>>>>key", common.ToHex(key))
 				return key, nil
 			}
 
@@ -83,7 +92,9 @@ func addKeyValueToDB(key, value []byte) error {
 		return err
 	}
 
-	log.SyslogInfo("addKeyValueToDB succeed to get data from level db after putting key-val pair", "ret", string(ret))
+	log.SyslogInfo("addKeyValueToDB succeed to get data from level db after putting key-val pair",
+		">>>>>key", common.ToHex(key),
+		"ret", string(ret))
 	return nil
 }
 
@@ -182,14 +193,14 @@ func ValidateBtcTx(args *btc.MsgTxArgs) bool {
 	}
 
 	keyWithoutTxin, keyWithTxin := GetKeyFromBtcTx(args)
-	log.SyslogInfo("ValidateBtcTx", "keyWithoutTxin", common.ToHex(keyWithoutTxin), "keyWithTxin", common.ToHex(keyWithTxin))
+	log.SyslogInfo("ValidateBtcTx", ">>>>>>keyWithoutTxin", common.ToHex(keyWithoutTxin), ">>>>>>keyWithTxin", common.ToHex(keyWithTxin))
 
 	key, err := waitKeyFromDB([][]byte{keyWithTxin, keyWithoutTxin})
 	if err != nil {
-		log.SyslogErr("ValidateBtcTx, check has fail", "err", err.Error())
+		log.SyslogErr("ValidateBtcTx, check has fail", ">>>>>>key", common.ToHex(key), "err", err.Error())
 		return false
 	} else {
-		log.SyslogInfo("ValidateBtcTx, key is got", "key", common.ToHex(key))
+		log.SyslogInfo("ValidateBtcTx, key is got", ">>>>>>key", common.ToHex(key))
 		return true
 	}
 }
@@ -302,6 +313,6 @@ func AddValidMpcBtcTx(args *btc.MsgTxArgs) error {
 		log.SyslogErr("AddValidMpcBtcTxRaw, marshal fail", "err", err.Error())
 		return err
 	}
-
+	log.SyslogInfo("AddValidMpcBtcTx before addKeyValueToDB", ">>>>>key", common.ToHex(key))
 	return addKeyValueToDB(key, val)
 }
