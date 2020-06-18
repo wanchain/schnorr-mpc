@@ -15,17 +15,10 @@ func reqSignMpc(mpcID uint64, peers []mpcprotocol.PeerInfo, peerCurCount uint16,
 	mpc := createMpcContext(mpcID, peers, result)
 
 	reqMpc := step.CreateRequestMpcStep(&mpc.peers, peerCurCount, mpcprotocol.MpcSignLeader)
-
-	_, grpIdString, err := osmconf.GetGrpId(result)
-	if err != nil {
-		log.SyslogErr("reqSignMpc", "GetGrpId error", err.Error())
-		return nil, err
-	}
-
-	threshold, _ := osmconf.GetOsmConf().GetThresholdNum(grpIdString)
-	reqMpc.SetWaiting(int(threshold))
+	reqMpc.SetWaiting(int(peerCurCount))
 
 	mpcReady := step.CreateMpcReadyStep(&mpc.peers)
+	mpcReady.SetWaiting(0)
 
 	return generateTxSignMpc(mpc, reqMpc, mpcReady, peerCurCount)
 }
@@ -37,9 +30,10 @@ func ackSignMpc(mpcID uint64, peers []mpcprotocol.PeerInfo, peerCurCount uint16,
 	mpc := createMpcContext(mpcID, peers, result)
 
 	ackMpc := step.CreateAckMpcStep(&mpc.peers, mpcprotocol.MpcSignPeer)
+	ackMpc.SetWaiting(0)
 
 	mpcReady := step.CreateGetMpcReadyStep(&mpc.peers)
-	mpcReady.SetWaiting(0)
+	mpcReady.SetWaiting(1)
 
 	return generateTxSignMpc(mpc, ackMpc, mpcReady, peerCurCount)
 }
@@ -64,20 +58,22 @@ func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStep
 	accTypeStr := ""
 
 	cmStep := step.CreateMpcPolycmStep(&mpc.peers)
-	//cmStep.SetWaiting(mpcprotocol.MpcSchnrThr)
+	cmStep.SetWaiting(int(peerCurCount))
 
 	skShare := step.CreateMpcRSKShareStep(int(degree), &mpc.peers)
-	// wait time out, in order for all node try best get most response, so each node can get the same poly value.
-	// It is not enough for node to wait only MPCDegree response, the reason is above.
+	skShare.SetWaiting(int(peerCurCount))
 
 	skJudgeStep := step.CreateMpcRSkJudgeStep(&mpc.peers)
-	skJudgeStep.SetWaiting(int(threshold))
+	// only handle the first Rsk challenge or (timeout no challenge)
+	skJudgeStep.SetWaiting(1)
 
 	// add rrcvInter step
 	rrcvInterStep := step.CreateMpcRRcvInterStep(&mpc.peers)
+	rrcvInterStep.SetWaiting(int(peerCurCount))
 
 	// add rrcvInter judge step
 	rrcvJudgeStep := step.CreateMpcRRcvJudgeStep(&mpc.peers)
+	rrcvJudgeStep.SetWaiting(int(peerCurCount))
 
 	RStep := step.CreateMpcRStep(&mpc.peers, accTypeStr)
 	RStep.SetWaiting(int(threshold))
@@ -86,10 +82,11 @@ func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStep
 	SStep.SetWaiting(int(threshold))
 
 	sshareJudgeStep := step.CreateMpcSSahreJudgeStep(&mpc.peers)
-	sshareJudgeStep.SetWaiting(int(threshold))
+	// only handle the first sshare challenge or (timeout no challenge)
+	sshareJudgeStep.SetWaiting(1)
 
 	ackRSStep := step.CreateAckMpcRSStep(&mpc.peers, accTypeStr)
-	ackRSStep.SetWaiting(int(threshold))
+	ackRSStep.SetWaiting(int(peerCurCount))
 
 	mpc.setMpcStep(firstStep,
 		readyStep,
@@ -104,7 +101,7 @@ func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStep
 		ackRSStep)
 
 	for stepId, stepItem := range mpc.MpcSteps {
-		stepItem.SetWaiting(len(mpc.peers) + 1)
+		//stepItem.SetWaiting(len(mpc.peers) + 1)
 		stepItem.SetWaitAll(false)
 		stepItem.SetStepId(stepId)
 	}

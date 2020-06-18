@@ -40,10 +40,9 @@ import (
 // not support change notifications. It also applies if the keystore directory does not
 // exist yet, the code will attempt to create a watcher at most this often.
 const (
-	minReloadInterval = 2 * time.Second
+	minReloadInterval       = 2 * time.Second
 	AwsKMSCiphertextFileExt = "-cipher"
 )
-
 
 type accountsByURL []accounts.Account
 
@@ -71,7 +70,7 @@ func (err *AmbiguousAddrError) Error() string {
 
 // accountCache is a live index of all accounts in the keystore.
 type accountCache struct {
-	keydir   string
+	keydir string
 	//watcher  *watcher
 	mu       sync.Mutex
 	all      accountsByURL
@@ -200,21 +199,14 @@ func (ac *accountCache) find(a accounts.Account) (accounts.Account, error) {
 			return accounts.Account{}, ErrNoMatch
 		}
 	}
-	fmt.Printf("len of matches = %v, %v \n", matches.Len(),len(matches))
+	fmt.Printf("len of matches = %v, %v \n", matches.Len(), len(matches))
 	lenMatches := 1
 	////switch len(matches) {
 	lenMatches = len(matches)
-	if lenMatches == 1{
-		fmt.Printf(".......Entering lenMatches == 1\n")
-	}else{
-		fmt.Printf(".......Entering lenMatches != 1\n")
-	}
 	switch lenMatches {
 	case 1:
-		fmt.Printf(".......Entering switch 1\n")
 		return matches[0], nil
 	case 0:
-		fmt.Printf(".......Entering switch 0\n")
 		return accounts.Account{}, ErrNoMatch
 	default:
 		err := &AmbiguousAddrError{Addr: a.Address, Matches: make([]accounts.Account, len(matches))}
@@ -341,20 +333,20 @@ func (ac *accountCache) scanAccounts() error {
 	readAccount := func(path string) *accounts.Account {
 		// add for storeman mpc account
 		if strings.LastIndex(path, AwsKMSCiphertextFileExt) == (len(path) - len(AwsKMSCiphertextFileExt)) {
-			addrBegin := strings.LastIndex(path[:len(path) - len(AwsKMSCiphertextFileExt)], "-")
+			addrBegin := strings.LastIndex(path[:len(path)-len(AwsKMSCiphertextFileExt)], "-")
 			if addrBegin != -1 {
 
-				pkStr := path[addrBegin+1:addrBegin+133]
-				log.Info("scanAccounts","pkstr",pkStr)
+				pkStr := path[addrBegin+1 : addrBegin+133]
+				log.Info("scanAccounts", "pkstr", pkStr)
 
-				pk,err:= schnorrmpc.StringtoPk(pkStr)
+				pk, err := schnorrmpc.StringtoPk(pkStr)
 				if err != nil {
-					log.Error("StringtoPk","error",err.Error())
+					log.Error("StringtoPk", "error", err.Error())
 				}
 				pkByptes := crypto.FromECDSAPub(pk)
 				addrFromPK, err := schnorrmpc.PkToAddress(pkByptes)
 				if err != nil {
-					log.Error("PkToAddress","error",err.Error())
+					log.Error("PkToAddress", "error", err.Error())
 				}
 				//return &accounts.Account{Address: common.HexToAddress(path[addrBegin+1:addrBegin+41]), URL: accounts.URL{Scheme: KeyStoreScheme, Path: path}}
 				return &accounts.Account{Address: addrFromPK, URL: accounts.URL{Scheme: KeyStoreScheme, Path: path}}

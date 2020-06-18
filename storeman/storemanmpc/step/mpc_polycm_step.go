@@ -90,8 +90,8 @@ func (req *MpcPolycmStep) InitStep(result mpcprotocol.MpcResultInterface) error 
 func (req *MpcPolycmStep) CreateMessage() []mpcprotocol.StepMessage {
 	// broadcast self polynomialG
 	// grpId + threshold G + R + S
-	log.SyslogInfo("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@MpcPolycmStep.CreateMessage.....")
-	log.Info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@MpcPolycmStep", "CreateMessage peers", *req.peers)
+	log.Info("MpcPolycmStep.CreateMessage.....")
+	log.Info("MpcPolycmStep", "CreateMessage peers", *req.peers)
 	msg := mpcprotocol.StepMessage{
 		MsgCode:   mpcprotocol.MPCMessage,
 		PeerID:    nil,

@@ -3,6 +3,7 @@ package step
 import (
 	"bytes"
 	"crypto/sha256"
+	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
@@ -91,6 +92,11 @@ func (ptStep *MpcRRcvInterStep) HandleMessage(msg *mpcprotocol.StepMessage) bool
 	if bVerifySig {
 		log.SyslogInfo("MpcRRcvInterStep::HandleMessage check sig success")
 		ptStep.rcvColMap[msg.PeerID] = &msg.Data[0]
+
+		log.SyslogInfo("........................collection information",
+			"self collection", hexutil.Encode(ptStep.rcvCol.Bytes()),
+			"peerId", msg.PeerID.String(),
+			"peers collection", hexutil.Encode(ptStep.rcvColMap[msg.PeerID].Bytes()))
 	} else {
 		log.SyslogErr("......MpcRRcvInterStep::HandleMessage check sig fail")
 	}
@@ -125,7 +131,8 @@ func (ptStep *MpcRRcvInterStep) FinishStep(result mpcprotocol.MpcResultInterface
 		log.SyslogErr("FinishStep", "SetValue error", err.Error())
 		return err
 	}
+	log.SyslogInfo("........................Intersection collection information",
+		" self Intersection collection", hexutil.Encode(bigInter.Bytes()))
 	log.SyslogInfo("MpcRRcvInterStep.FinishStep succeed")
-
 	return nil
 }

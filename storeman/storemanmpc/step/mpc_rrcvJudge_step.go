@@ -100,7 +100,14 @@ func (ptStep *MpcRRcvJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool
 	} else {
 		log.SyslogErr("......MpcRRcvInterStep::HandleMessage check sig fail")
 	}
+
+	log.SyslogInfo("........................Intersection collection information",
+		" self Intersection collection", hexutil.Encode(ptStep.rcvColInter.Bytes()),
+		"peerID", msg.PeerID.String(),
+		"peers intersection collection", hexutil.Encode(msg.Data[0].Bytes()))
+
 	log.SyslogInfo("MpcRRcvJudgeStep.HandleMessage end")
+
 	return true
 }
 
@@ -136,7 +143,7 @@ func (ptStep *MpcRRcvJudgeStep) FinishStep(result mpcprotocol.MpcResultInterface
 	// 2. others' inter collection should be equal to self's inter collection
 	for _, rcvCol := range ptStep.rcvColInterMap {
 		if ptStep.rcvColInter.Cmp(rcvCol) != 0 {
-			log.SyslogErr("......MpcRRcvJudgeStep received colInter not equal to self's",
+			log.SyslogErr("........................MpcRRcvJudgeStep received colInter not equal to self's",
 				"received", hexutil.Encode(rcvCol.Bytes()),
 				"self", hexutil.Encode(ptStep.rcvColInter.Bytes()))
 

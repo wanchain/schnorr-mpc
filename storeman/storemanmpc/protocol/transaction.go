@@ -7,18 +7,14 @@ import (
 
 type SendData struct {
 	PKBytes hexutil.Bytes `json:"pk"`
-	//Data    []byte        `json:"data"`
-	//Data   string `json:"data"`
-	Data   hexutil.Bytes `json:"data"`
-	Extern string        `json:extern`
+	Data    hexutil.Bytes `json:"data"`
+	Extern  string        `json:extern`
 }
 
 func (d *SendData) String() string {
 	return fmt.Sprintf(
 		"From:%s", hexutil.Encode([]byte(d.Data[:])))
 }
-
-
 
 type SignedResult struct {
 	R hexutil.Bytes `json:"R"`
@@ -32,13 +28,12 @@ type SignedResult struct {
 	// 4. sSlsh
 
 	ResultType uint8
-	GrpId	hexutil.Bytes `json:"GrpId"`
+	GrpId      hexutil.Bytes `json:"GrpId"`
 
 	// uint256, one bit, one sm index
-	IncntData	hexutil.Bytes	`json:"IncntData"`
-	RNW			hexutil.Bytes	`json:"RNW"`
-	SNW			hexutil.Bytes	`json:"SNW"`
-	RSlsh		[]RSlshPrf		`json:"RSlsh"`
-	SSlsh   	[]SSlshPrf		`json:"SSlsh"`
-
+	IncntData hexutil.Bytes `json:"IncntData"`
+	RNW       hexutil.Bytes `json:"RNW"`
+	SNW       hexutil.Bytes `json:"SNW"`
+	RSlsh     []RSlshPrf    `json:"RSlsh"`
+	SSlsh     []SSlshPrf    `json:"SSlsh"`
 }
