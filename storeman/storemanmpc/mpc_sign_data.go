@@ -9,12 +9,12 @@ import (
 )
 
 //send create LockAccount from leader
-func reqSignMpc(mpcID uint64, peers []mpcprotocol.PeerInfo, preSetValue ...MpcValue) (*MpcContext, error) {
+func reqSignMpc(mpcID uint64, peers []mpcprotocol.PeerInfo, peerCurCount uint16, preSetValue ...MpcValue) (*MpcContext, error) {
 	result := createMpcBaseMpcResult()
 	result.InitializeValue(preSetValue...)
 	mpc := createMpcContext(mpcID, peers, result)
 
-	reqMpc := step.CreateRequestMpcStep(&mpc.peers, mpcprotocol.MpcSignLeader)
+	reqMpc := step.CreateRequestMpcStep(&mpc.peers, peerCurCount, mpcprotocol.MpcSignLeader)
 
 	_, grpIdString, err := osmconf.GetGrpId(result)
 	if err != nil {
@@ -27,11 +27,11 @@ func reqSignMpc(mpcID uint64, peers []mpcprotocol.PeerInfo, preSetValue ...MpcVa
 
 	mpcReady := step.CreateMpcReadyStep(&mpc.peers)
 
-	return generateTxSignMpc(mpc, reqMpc, mpcReady)
+	return generateTxSignMpc(mpc, reqMpc, mpcReady, peerCurCount)
 }
 
 //get message from leader and create Context
-func ackSignMpc(mpcID uint64, peers []mpcprotocol.PeerInfo, preSetValue ...MpcValue) (*MpcContext, error) {
+func ackSignMpc(mpcID uint64, peers []mpcprotocol.PeerInfo, peerCurCount uint16, preSetValue ...MpcValue) (*MpcContext, error) {
 	result := createMpcBaseMpcResult()
 	result.InitializeValue(preSetValue...)
 	mpc := createMpcContext(mpcID, peers, result)
@@ -41,10 +41,10 @@ func ackSignMpc(mpcID uint64, peers []mpcprotocol.PeerInfo, preSetValue ...MpcVa
 	mpcReady := step.CreateGetMpcReadyStep(&mpc.peers)
 	mpcReady.SetWaiting(0)
 
-	return generateTxSignMpc(mpc, ackMpc, mpcReady)
+	return generateTxSignMpc(mpc, ackMpc, mpcReady, peerCurCount)
 }
 
-func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStepFunc) (*MpcContext, error) {
+func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStepFunc, peerCurCount uint16) (*MpcContext, error) {
 	log.SyslogInfo("generateTxSignMpc begin")
 
 	result := mpc.mpcResult

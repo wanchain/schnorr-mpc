@@ -11,20 +11,22 @@ import (
 
 type RequestMpcStep struct {
 	BaseStep
-	messageType int64
+	messageType      int64
 	mpcSignByApprove []big.Int
-	address     []byte
-	mpcM        []byte
-	mpcExt      []byte
-	message     map[discover.NodeID]bool
+	address          []byte
+	mpcM             []byte
+	mpcExt           []byte
+	message          map[discover.NodeID]bool
+	peerCount        uint16
 }
 
-func CreateRequestMpcStep(peers *[]mpcprotocol.PeerInfo, messageType int64) *RequestMpcStep {
+func CreateRequestMpcStep(peers *[]mpcprotocol.PeerInfo, pc uint16, messageType int64) *RequestMpcStep {
 
 	return &RequestMpcStep{
 		BaseStep:    *CreateBaseStep(peers, len(*peers)-1),
 		messageType: messageType,
-		message:     make(map[discover.NodeID]bool)}
+		message:     make(map[discover.NodeID]bool),
+		peerCount:   pc}
 }
 
 func (req *RequestMpcStep) InitStep(result mpcprotocol.MpcResultInterface) error {
@@ -76,7 +78,6 @@ func (req *RequestMpcStep) InitStep(result mpcprotocol.MpcResultInterface) error
 			return err
 		}
 
-
 	}
 
 	return nil
@@ -84,7 +85,7 @@ func (req *RequestMpcStep) InitStep(result mpcprotocol.MpcResultInterface) error
 
 func (req *RequestMpcStep) CreateMessage() []mpcprotocol.StepMessage {
 	log.SyslogInfo("RequestMpcStep.CreateMessage.....")
-	log.Info("RequestMpcStep","CreateMessage peers",*req.peers)
+	log.Info("RequestMpcStep", "CreateMessage peers", *req.peers)
 	msg := mpcprotocol.StepMessage{
 		MsgCode:   mpcprotocol.RequestMPC,
 		PeerID:    nil,
@@ -92,11 +93,12 @@ func (req *RequestMpcStep) CreateMessage() []mpcprotocol.StepMessage {
 		Data:      nil,
 		BytesData: nil}
 
-	msg.Data = make([]big.Int, 2)
+	msg.Data = make([]big.Int, 3)
 	msg.Data[0].SetInt64(req.messageType)
 	if req.messageType == mpcprotocol.MpcSignLeader {
 
 		msg.Data[1] = req.mpcSignByApprove[0]
+		msg.Data[2] = *big.NewInt(0).SetUint64(uint64(req.peerCount))
 
 		msg.BytesData = make([][]byte, 3)
 		msg.BytesData[0] = req.mpcM
@@ -122,10 +124,10 @@ func (req *RequestMpcStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc
 }
 
 func (req *RequestMpcStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
-	log.SyslogInfo("RequestMpcStep::HandleMessage","RequestMpcStep.HandleMessage begin, peerID", msg.PeerID.String())
+	log.SyslogInfo("RequestMpcStep::HandleMessage", "RequestMpcStep.HandleMessage begin, peerID", msg.PeerID.String())
 	_, exist := req.message[*msg.PeerID]
 	if exist {
-		log.SyslogErr("RequestMpcStep::HandleMessage","RequestMpcStep.HandleMessage, get message from peerID fail. peer",
+		log.SyslogErr("RequestMpcStep::HandleMessage", "RequestMpcStep.HandleMessage, get message from peerID fail. peer",
 			msg.PeerID.String())
 		return false
 	}

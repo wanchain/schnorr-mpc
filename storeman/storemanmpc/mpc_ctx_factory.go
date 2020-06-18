@@ -12,6 +12,7 @@ type MpcCtxFactory struct {
 func (*MpcCtxFactory) CreateContext(ctxType int,
 	mpcID uint64,
 	peers []mpcprotocol.PeerInfo,
+	peerCurCount uint16,
 	preSetValue ...MpcValue) (MpcInterface, error) {
 
 	log.SyslogInfo("============================ CreateContext=====================")
@@ -37,9 +38,9 @@ func (*MpcCtxFactory) CreateContext(ctxType int,
 	//	return ackGPKMpc(mpcID, peers, preSetValue...)
 
 	case mpcprotocol.MpcSignLeader:
-		return reqSignMpc(mpcID, peers, preSetValue...)
+		return reqSignMpc(mpcID, peers, peerCurCount, preSetValue...)
 	case mpcprotocol.MpcSignPeer:
-		return ackSignMpc(mpcID, peers, preSetValue...)
+		return ackSignMpc(mpcID, peers, peerCurCount, preSetValue...)
 	}
 
 	return nil, mpcprotocol.ErrContextType

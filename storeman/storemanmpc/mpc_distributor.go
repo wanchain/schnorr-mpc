@@ -23,7 +23,7 @@ import (
 )
 
 type MpcContextCreater interface {
-	CreateContext(int, uint64, []mpcprotocol.PeerInfo, ...MpcValue) (MpcInterface, error) //createContext
+	CreateContext(int, uint64, []mpcprotocol.PeerInfo, uint16, ...MpcValue) (MpcInterface, error) //createContext
 }
 
 type MpcValue struct {
@@ -84,6 +84,7 @@ type MpcDistributor struct {
 	enableAwsKms   bool
 	kmsInfo        KmsInfo
 	password       string
+	peerCount      uint16
 }
 
 func CreateMpcDistributor(accountManager *accounts.Manager,
@@ -104,6 +105,7 @@ func CreateMpcDistributor(accountManager *accounts.Manager,
 		kmsInfo:        kmsInfo,
 		password:       password,
 		P2pMessager:    msger,
+		peerCount:      uint16(0),
 	}
 
 	mpc.enableAwsKms = (aKID != "") && (secretKey != "") && (region != "")
@@ -242,6 +244,13 @@ func (mpcServer *MpcDistributor) CreateRequestGPK() (interface{}, error) {
 	}
 }
 
+func (mpcServer *MpcDistributor) CurPeerCount() uint16 {
+	return mpcServer.peerCount
+}
+func (mpcServer *MpcDistributor) SetCurPeerCount(peerCount uint16) {
+	mpcServer.peerCount = peerCount
+}
+
 func (mpcServer *MpcDistributor) CreateReqMpcSign(data []byte, extern []byte, pkBytes []byte, byApprove int64) (interface{}, error) {
 
 	log.SyslogInfo("CreateReqMpcSign begin")
@@ -323,6 +332,7 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 	mpc, err := mpcServer.mpcCreater.CreateContext(ctxType,
 		mpcID,
 		peers,
+		mpcServer.peerCount,
 		preSetValue...)
 	if err != nil {
 		log.SyslogErr("MpcDistributor createRequestMpcContext, CreateContext fail", "err", err.Error())
@@ -411,6 +421,7 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 	var ctxType int
 	nType := mpcMessage.Data[0].Int64()
 	nByApprove := mpcMessage.Data[1].Int64()
+	curPeerCount := uint16(mpcMessage.Data[2].Int64())
 	if nType == mpcprotocol.MpcGPKLeader {
 		ctxType = mpcprotocol.MpcGPKPeer
 	} else {
@@ -528,6 +539,7 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 	mpc, err := mpcServer.mpcCreater.CreateContext(ctxType,
 		mpcMessage.ContextID,
 		msgPeers,
+		curPeerCount,
 		preSetValue...)
 
 	if err != nil {
