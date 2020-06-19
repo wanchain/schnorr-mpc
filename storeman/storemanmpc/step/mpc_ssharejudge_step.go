@@ -68,14 +68,15 @@ func (ssj *MpcSSahreJudgeStep) CreateMessage() []mpcprotocol.StepMessage {
 }
 
 func (ssj *MpcSSahreJudgeStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mpcprotocol.StoremanManager) error {
-	err := ssj.saveSlshCount(int(ssj.SSlshCount))
+
+	err := ssj.BaseStep.FinishStep()
 	if err != nil {
-		log.SyslogErr("MpcSSahreJudgeStep", "FinishStep err", err.Error())
 		return err
 	}
 
-	err = ssj.BaseStep.FinishStep()
+	err = ssj.saveSlshCount(int(ssj.SSlshCount))
 	if err != nil {
+		log.SyslogErr("MpcSSahreJudgeStep", "FinishStep err", err.Error())
 		return err
 	}
 
@@ -209,7 +210,7 @@ func (ssj *MpcSSahreJudgeStep) saveSlshCount(slshCount int) error {
 	sslshValue := make([]big.Int, 1)
 	sslshValue[0] = *big.NewInt(0).SetInt64(int64(ssj.SSlshCount))
 
-	key := mpcprotocol.MPCSSlshProofNum + strconv.Itoa(int(ssj.SSlshCount))
+	key := mpcprotocol.MPCSSlshProofNum
 	err := ssj.mpcResult.SetValue(key, sslshValue)
 	if err != nil {
 		log.SyslogErr("MpcSSahreJudgeStep", "saveSlshCount", err.Error())

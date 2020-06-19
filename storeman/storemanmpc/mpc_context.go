@@ -94,14 +94,18 @@ func (mpcCtx *MpcContext) getMpcResult(err error) (interface{}, error) {
 		//build R slash proof
 		sr.ResultType = rSlsh
 
-		keyErrNum := mpcprotocol.RSkErrNum
-		errNum, _ := mpcResult.GetValue(keyErrNum)
+		keyErrNum := mpcprotocol.RSlshProofNum
+		errNum, err := mpcResult.GetValue(keyErrNum)
+		if err != nil {
+			log.SyslogErr("getMpcResult", "RSlshProofNum mpcResult.GetValue error:", err.Error(), "key", keyErrNum)
+			return nil, err
+		}
 		errNumInt64 := errNum[0].Int64()
 		for i := 0; i < int(errNumInt64); i++ {
 			key := mpcprotocol.RSlshProof + strconv.Itoa(int(i))
 			rslshValue, err := mpcResult.GetValue(key)
 			if err != nil {
-				log.SyslogErr("getMpcResult", "mpcResult.GetValue error:", err.Error())
+				log.SyslogErr("getMpcResult", "RSlshProof mpcResult.GetValue error:", err.Error())
 				return nil, err
 			}
 
@@ -230,7 +234,7 @@ func (mpcCtx *MpcContext) getMpcResult(err error) (interface{}, error) {
 func (mpcCtx *MpcContext) getMessage(PeerID *discover.NodeID,
 	msg *mpcprotocol.MpcMessage,
 	peers *[]mpcprotocol.PeerInfo) error {
-
+	log.SyslogInfo(".....Entering MpcContext.getMessage", "peerId", PeerID.String())
 	mpcCtx.MapStepChan[msg.StepID] <- &mpcprotocol.StepMessage{MsgCode: 0,
 		PeerID:    PeerID,
 		Peers:     peers,

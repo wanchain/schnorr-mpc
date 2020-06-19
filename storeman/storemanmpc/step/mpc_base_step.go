@@ -8,14 +8,14 @@ import (
 )
 
 type BaseStep struct {
-	peers   *[]mpcprotocol.PeerInfo
-	msgChan chan *mpcprotocol.StepMessage
-	finish  chan error
-	waiting int
-	waitAll bool // true: wait all
-	stepId  int
+	peers        *[]mpcprotocol.PeerInfo
+	msgChan      chan *mpcprotocol.StepMessage
+	finish       chan error
+	waiting      int
+	waitAll      bool // true: wait all
+	stepId       int
 	notRecvPeers map[discover.NodeID]*discover.NodeID
-	mpcResult mpcprotocol.MpcResultInterface
+	mpcResult    mpcprotocol.MpcResultInterface
 }
 
 func (step *BaseStep) InitStep(mpcResult mpcprotocol.MpcResultInterface) error {
@@ -56,7 +56,7 @@ func (step *BaseStep) InitMessageLoop(msger mpcprotocol.GetMessageInterface) err
 				err := step.HandleMessage(msger)
 				if err != nil {
 					if err != mpcprotocol.ErrQuit {
-						log.SyslogErr("BaseStep::InitMessageLoop","InitMessageLoop fail, get message err, err", err.Error())
+						log.SyslogErr("BaseStep::InitMessageLoop", "InitMessageLoop fail, get message err, err", err.Error())
 					}
 
 					break
@@ -77,7 +77,7 @@ func (step *BaseStep) FinishStep() error {
 	select {
 	case err := <-step.finish:
 		if err != nil {
-			log.SyslogErr("BaseStep::FinishStep"," get a step finish error. err", err.Error())
+			log.SyslogErr("BaseStep::FinishStep", " get a step finish error. err", err.Error())
 		}
 
 		step.msgChan <- nil
@@ -104,6 +104,8 @@ func (step *BaseStep) HandleMessage(msger mpcprotocol.GetMessageInterface) error
 		if msg == nil {
 			log.SyslogInfo("BaseStep get a quit msg")
 			return mpcprotocol.ErrQuit
+		} else {
+			log.SyslogInfo("BaseStep HandleMessage", "msg get from step.msgChan", msg)
 		}
 
 		if msg.StepId != step.GetStepId() {

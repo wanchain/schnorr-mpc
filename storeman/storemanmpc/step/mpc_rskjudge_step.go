@@ -28,10 +28,15 @@ func (rsj *MpcRSkJudgeStep) InitStep(result mpcprotocol.MpcResultInterface) erro
 }
 
 func (rsj *MpcRSkJudgeStep) CreateMessage() []mpcprotocol.StepMessage {
+	log.SyslogInfo("Entering MpcRSkJudgeStep CreateMessage")
 	keyErrNum := mpcprotocol.RSkErrNum
-	errNum, _ := rsj.mpcResult.GetValue(keyErrNum)
+	errNum, err := rsj.mpcResult.GetValue(keyErrNum)
+	if err != nil {
+		log.SyslogErr("rsj.mpcResult.GetValue", "key", keyErrNum, "err", err.Error())
+		return nil
+	}
 	errNumInt64 := errNum[0].Int64()
-
+	log.SyslogInfo("MpcRSkJudgeStep CreateMessage", "errNumInt64", errNumInt64)
 	_, grpIdString, _ := osmconf.GetGrpId(rsj.mpcResult)
 
 	var ret []mpcprotocol.StepMessage
@@ -44,11 +49,14 @@ func (rsj *MpcRSkJudgeStep) CreateMessage() []mpcprotocol.StepMessage {
 		for i := 0; i < int(errNumInt64); i++ {
 			ret = make([]mpcprotocol.StepMessage, int(errNumInt64))
 			keyErrInfo := mpcprotocol.RSkErrInfos + strconv.Itoa(int(i))
-			errInfo, _ := rsj.mpcResult.GetValue(keyErrInfo)
-
+			errInfo, err := rsj.mpcResult.GetValue(keyErrInfo)
+			if err != nil {
+				log.SyslogErr("MpcRSkJudgeStep.CreateMessage", "key", keyErrInfo, "GetValue(keyErrInfo) error", err.Error())
+				continue
+			}
 			data := make([]big.Int, 5)
 			for j := 0; j < 5; j++ {
-				data[i] = errInfo[i]
+				data[j] = errInfo[j]
 			}
 
 			// send multi judge message to leader,since there are more than one error.
@@ -66,15 +74,15 @@ func (rsj *MpcRSkJudgeStep) CreateMessage() []mpcprotocol.StepMessage {
 }
 
 func (rsj *MpcRSkJudgeStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mpcprotocol.StoremanManager) error {
-
-	err := rsj.saveSlshCount(int(rsj.RSlshCount))
+	log.SyslogInfo("Entering MpcRSkJudgeStep.FinishStep", "rsj.RSlshCount", rsj.RSlshCount)
+	err := rsj.BaseStep.FinishStep()
 	if err != nil {
-		log.SyslogErr("MpcRSkJudgeStep", "FinishStep err ", err.Error())
 		return err
 	}
 
-	err = rsj.BaseStep.FinishStep()
+	err = rsj.saveSlshCount(int(rsj.RSlshCount))
 	if err != nil {
+		log.SyslogErr("MpcRSkJudgeStep", "FinishStep err ", err.Error())
 		return err
 	}
 
@@ -85,7 +93,7 @@ func (rsj *MpcRSkJudgeStep) FinishStep(result mpcprotocol.MpcResultInterface, mp
 }
 
 func (rsj *MpcRSkJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
-
+	log.SyslogInfo("......Entering MpcRSkJudgeStep.HandleMessage")
 	senderIndex := int(msg.Data[0].Int64())
 	rcvIndex := int(msg.Data[1].Int64())
 	sij := msg.Data[2]
@@ -137,29 +145,32 @@ func (rsj *MpcRSkJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	}
 
 	if !bContentCheck || !bVerifySig {
-		rsj.RSlshCount += 1
+		rsj.RSlshCount++
+		log.SyslogErr("MpcRSkJudgeStep", "bContentCheck", bContentCheck, "bVerifySig", bVerifySig, "rsj.RSlshCount", rsj.RSlshCount)
 		rsj.saveSlshProof(bSnderWrong, &sigs[0], &sigs[1], &sij, &r, &s, senderIndex, rcvIndex, int(rsj.RSlshCount), grpId, pgBytes, uint16(len(pks)))
 	}
 
 	return true
 }
 
-func (ssj *MpcRSkJudgeStep) saveSlshCount(slshCount int) error {
-
+func (rsj *MpcRSkJudgeStep) saveSlshCount(slshCount int) error {
+	log.SyslogErr("MpcRSkJudgeStep saveSlshCount", "count", slshCount, "rsj.RSlshCount", rsj.RSlshCount)
 	sslshValue := make([]big.Int, 1)
-	sslshValue[0] = *big.NewInt(0).SetInt64(int64(ssj.RSlshCount))
+	sslshValue[0] = *big.NewInt(0).SetInt64(int64(rsj.RSlshCount))
 
-	key := mpcprotocol.RSlshProofNum + strconv.Itoa(int(ssj.RSlshCount))
-	err := ssj.mpcResult.SetValue(key, sslshValue)
+	key := mpcprotocol.RSlshProofNum
+	err := rsj.mpcResult.SetValue(key, sslshValue)
 	if err != nil {
-		log.SyslogErr("MpcRSkJudgeStep", "saveSlshCount err ", err.Error())
+		log.SyslogErr("MpcRSkJudgeStep save RSlshProofNum fail ", "err ", err.Error(), "key", key, "value", sslshValue)
 		return err
+	} else {
+		log.SyslogErr("MpcRSkJudgeStep save RSlshProofNum success", "key", key, "value", sslshValue)
 	}
 
 	return nil
 }
 
-func (ssj *MpcRSkJudgeStep) saveSlshProof(isSnder bool,
+func (rsj *MpcRSkJudgeStep) saveSlshProof(isSnder bool,
 	polyR, polyS, sij, r, s *big.Int,
 	sndrIndex, rcvrIndex, slshCount int,
 	grp []byte, polyCM []byte, polyCMLen uint16) error {
@@ -184,16 +195,20 @@ func (ssj *MpcRSkJudgeStep) saveSlshProof(isSnder bool,
 	sslshByte.Write(polyCM[:])
 	sslshByte.Write(grp[:])
 
-	key1 := mpcprotocol.RSlshProof + strconv.Itoa(int(slshCount))
-	err := ssj.mpcResult.SetValue(key1, sslshValue)
+	key1 := mpcprotocol.RSlshProof + strconv.Itoa(int(slshCount-1))
+	err := rsj.mpcResult.SetValue(key1, sslshValue)
 	if err != nil {
-		log.SyslogErr("MpcRSkJudgeStep", "saveSlshProof.SetValue", err.Error())
+		log.SyslogErr("MpcRSkJudgeStep", "saveSlshProof.SetValue", err.Error(), "key", key1)
 		return err
+	} else {
+		log.SyslogErr("MpcRSkJudgeStep saveSlshProof.SetValue success", "key", key1)
 	}
-	err = ssj.mpcResult.SetByteValue(key1, sslshByte.Bytes())
+	err = rsj.mpcResult.SetByteValue(key1, sslshByte.Bytes())
 	if err != nil {
-		log.SyslogErr("MpcRSkJudgeStep", "saveSlshProof.SetByteValue", err.Error())
+		log.SyslogErr("MpcRSkJudgeStep", "saveSlshProof.SetByteValue", err.Error(), "key", key1)
 		return err
+	} else {
+		log.SyslogErr("MpcRSkJudgeStep saveSlshProof.SetByteValue success", "key", key1)
 	}
 	return nil
 }

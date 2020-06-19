@@ -573,7 +573,7 @@ func (mpcServer *MpcDistributor) removeMpcContext(mpcID uint64) {
 }
 
 func (mpcServer *MpcDistributor) getMpcMessage(PeerID *discover.NodeID, mpcMessage *mpcprotocol.MpcMessage) error {
-	log.SyslogInfo("getMpcMessage",
+	log.SyslogInfo("......getMpcMessage",
 		"peerid", PeerID.String(),
 		"ctxId", mpcMessage.ContextID,
 		"stepID", mpcMessage.StepID)
@@ -590,6 +590,7 @@ func (mpcServer *MpcDistributor) getMpcMessage(PeerID *discover.NodeID, mpcMessa
 }
 
 func (mpcServer *MpcDistributor) getOwnerP2pMessage(PeerID *discover.NodeID, code uint64, msg interface{}) error {
+	log.SyslogInfo(".....Entering MpcDistributor.getOwnerP2pMessage", "peerId", PeerID.String())
 	switch code {
 	case mpcprotocol.MPCMessage:
 		mpcMessage := msg.(*mpcprotocol.MpcMessage)

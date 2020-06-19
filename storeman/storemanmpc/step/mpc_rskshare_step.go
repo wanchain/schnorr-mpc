@@ -37,6 +37,7 @@ func (rss *MpcRSKShare_Step) CreateMessage() []mpcprotocol.StepMessage {
 		// add sig for s[i][j]
 		message[i].Data[1] = *skpv.polyValueSigR[i]
 		message[i].Data[2] = *skpv.polyValueSigS[i]
+		//message[i].Data[2] = *schnorrmpc.BigOne		// used to simulate R stage malice
 
 	}
 
@@ -200,7 +201,7 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		// 3.1 write error count
 		// 3.2 write error info
 		log.SyslogInfo("RSkErr Info", "ErrNum", rss.RSkErrNum)
-		if rss.RSkErrNum > 1 {
+		if rss.RSkErrNum >= 1 {
 			rskErrInfo := make([]big.Int, 5)
 			// sendIndex, rvcIndex, s[i][j], r, s
 			rskErrInfo[0] = *big.NewInt(0).SetInt64(int64(senderIndex))
@@ -210,7 +211,13 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 			rskErrInfo[4] = s
 
 			keyErrInfo := mpcprotocol.RSkErrInfos + strconv.Itoa(int(rss.RSkErrNum)-1)
-			rss.mpcResult.SetValue(keyErrInfo, rskErrInfo)
+			log.SyslogErr("RSkErr Info", "key", keyErrInfo, "error info", rskErrInfo)
+			err := rss.mpcResult.SetValue(keyErrInfo, rskErrInfo)
+			if err != nil {
+				log.SyslogErr("RSkErr Info SetValue Failed", "key", keyErrInfo, "error", err.Error())
+			} else {
+				log.SyslogErr("RSkErr Info SetValue success", "key", keyErrInfo)
+			}
 		}
 	}
 
