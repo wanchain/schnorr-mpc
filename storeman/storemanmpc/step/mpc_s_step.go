@@ -122,6 +122,8 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 
 		if bContentCheck {
 			log.SyslogInfo("check content of sshare successfully", " senderIndex", senderIndex)
+		} else {
+			log.SyslogErr("check content of sshare fail", " senderIndex", senderIndex)
 		}
 
 		// 3. write error sshare
@@ -142,20 +144,30 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 
 			// save error info
 			keyErrInfo := mpcprotocol.SShareErrInfos + strconv.Itoa(int(msStep.SShareErrNum)-1)
-			msStep.mpcResult.SetValue(keyErrInfo, sshareErrInfo)
+			err := msStep.mpcResult.SetValue(keyErrInfo, sshareErrInfo)
+			if err != nil {
+				log.SyslogErr("@@@@@msStep.mpcResult.SetValue save fail", " err", err.Error(), "key", keyErrInfo)
+			} else {
+				log.SyslogInfo("@@@@@msStep.mpcResult.SetValue save success", "key", keyErrInfo)
+			}
 
 		} else {
 			log.SyslogInfo("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@check sshare successfully", " senderIndex", senderIndex)
 			msStep.sshareOKIndex = append(msStep.sshareOKIndex, senderIndex)
 
-			pointer.message[*msg.PeerID] = sshare
 		}
+		pointer.message[*msg.PeerID] = sshare
 
 		// save error number errNum=0:no error.
 		keyErrNum := mpcprotocol.SShareErrNum
 		rskErrInfoNum := make([]big.Int, 1)
 		rskErrInfoNum[0] = *big.NewInt(0).SetInt64(int64(msStep.SShareErrNum))
-		msStep.mpcResult.SetValue(keyErrNum, rskErrInfoNum)
+		err = msStep.mpcResult.SetValue(keyErrNum, rskErrInfoNum)
+		if err != nil {
+			log.SyslogErr("@@@@@msStep.mpcResult.SetValue save fail", " err", err.Error(), "key", keyErrNum, "value", rskErrInfoNum)
+		} else {
+			log.SyslogInfo("@@@@@msStep.mpcResult.SetValue save success", "key", keyErrNum, "value", rskErrInfoNum)
+		}
 	}
 
 	return true

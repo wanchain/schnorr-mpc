@@ -31,7 +31,12 @@ func (ssj *MpcSSahreJudgeStep) InitStep(result mpcprotocol.MpcResultInterface) e
 
 func (ssj *MpcSSahreJudgeStep) CreateMessage() []mpcprotocol.StepMessage {
 	keyErrNum := mpcprotocol.SShareErrNum
-	errNum, _ := ssj.mpcResult.GetValue(keyErrNum)
+	errNum, err := ssj.mpcResult.GetValue(keyErrNum)
+	if err != nil {
+		log.SyslogErr("MpcSSahreJudgeStep CreateMessage get SShareErrNum fail", "key", keyErrNum)
+	} else {
+		log.SyslogInfo("MpcSSahreJudgeStep CreateMessage get SShareErrNum success", "key", keyErrNum, "value", errNum[0].Int64())
+	}
 	errNumInt64 := errNum[0].Int64()
 
 	_, grpIdString, _ := osmconf.GetGrpId(ssj.mpcResult)
@@ -46,11 +51,16 @@ func (ssj *MpcSSahreJudgeStep) CreateMessage() []mpcprotocol.StepMessage {
 		for i := 0; i < int(errNumInt64); i++ {
 			ret = make([]mpcprotocol.StepMessage, int(errNumInt64))
 			keyErrInfo := mpcprotocol.SShareErrInfos + strconv.Itoa(int(i))
-			errInfo, _ := ssj.mpcResult.GetValue(keyErrInfo)
+			errInfo, err := ssj.mpcResult.GetValue(keyErrInfo)
+			if err != nil {
+				log.SyslogErr("MpcSSahreJudgeStep CreateMessage get SShareErrInfos fail", "key", keyErrInfo)
+			} else {
+				log.SyslogInfo("MpcSSahreJudgeStep CreateMessage get SShareErrInfos success", "key", keyErrInfo, "value", errInfo)
+			}
 
 			data := make([]big.Int, 5)
 			for j := 0; j < 5; j++ {
-				data[i] = errInfo[i]
+				data[j] = errInfo[j]
 			}
 
 			// send multi judge message to leader,since there are more than one error.
@@ -213,8 +223,10 @@ func (ssj *MpcSSahreJudgeStep) saveSlshCount(slshCount int) error {
 	key := mpcprotocol.MPCSSlshProofNum
 	err := ssj.mpcResult.SetValue(key, sslshValue)
 	if err != nil {
-		log.SyslogErr("MpcSSahreJudgeStep", "saveSlshCount", err.Error())
+		log.SyslogErr("MpcSSahreJudgeStep", "save MPCSSlshProofNum", err.Error(), "key", key)
 		return err
+	} else {
+		log.SyslogErr("MpcSSahreJudgeStep", "save MPCSSlshProofNum success key", key)
 	}
 
 	return nil
@@ -245,16 +257,20 @@ func (ssj *MpcSSahreJudgeStep) saveSlshProof(isSnder bool,
 	sslshByte.Write(crypto.FromECDSAPub(gpkShare))
 	sslshByte.Write(grp[:])
 
-	key1 := mpcprotocol.SSlshProof + strconv.Itoa(int(slshCount))
+	key1 := mpcprotocol.SSlshProof + strconv.Itoa(int(slshCount-1))
 	err := ssj.mpcResult.SetValue(key1, sslshValue)
 	if err != nil {
-		log.SyslogErr("MpcSSahreJudgeStep", "saveSlshProof.SetValue err ", err.Error())
+		log.SyslogErr("MpcSSahreJudgeStep", "save SlshProof.SetValue err ", err.Error(), "key", key1)
 		return err
+	} else {
+		log.SyslogErr("MpcSSahreJudgeStep", "save SlshProof.SetValue success ", "key", key1)
 	}
 	err = ssj.mpcResult.SetByteValue(key1, sslshByte.Bytes())
 	if err != nil {
-		log.SyslogErr("MpcSSahreJudgeStep", "saveSlshProof.SetByteValue err ", err.Error())
+		log.SyslogErr("MpcSSahreJudgeStep", "saveSlshProof.SetByteValue err ", err.Error(), "key", key1)
 		return err
+	} else {
+		log.SyslogErr("MpcSSahreJudgeStep", "save SlshProof.SetByteValue success ", "key", key1)
 	}
 
 	return nil

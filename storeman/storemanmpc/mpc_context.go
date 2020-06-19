@@ -1,6 +1,7 @@
 package storemanmpc
 
 import (
+	"fmt"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
@@ -142,20 +143,20 @@ func (mpcCtx *MpcContext) getMpcResult(err error) (interface{}, error) {
 			}
 
 		}
-		return sr, err
+		return sr, nil
 	}
 	if err == mpcprotocol.ErrSSlsh {
 		// build S slash proof
 		sr.ResultType = sSlsh
 
-		keyErrNum := mpcprotocol.SShareErrNum
+		keyErrNum := mpcprotocol.MPCSSlshProofNum
 		errNum, _ := mpcResult.GetValue(keyErrNum)
 		errNumInt64 := errNum[0].Int64()
 		for i := 0; i < int(errNumInt64); i++ {
 			key := mpcprotocol.SSlshProof + strconv.Itoa(int(i))
 			sslshValue, _ := mpcResult.GetValue(key)
 
-			if len(sslshValue) != 8 {
+			if len(sslshValue) != 7 {
 				log.SyslogErr("getMpcResult sslsh format error.", "len(sslshValue)", len(sslshValue))
 				return nil, err
 			} else {
@@ -174,7 +175,7 @@ func (mpcCtx *MpcContext) getMpcResult(err error) (interface{}, error) {
 					oneRPrf.BecauseSndr = true
 				}
 
-				rslshBytes, _ := mpcResult.GetByteValue(key)
+				rslshBytes, err := mpcResult.GetByteValue(key)
 				if err != nil {
 					log.SyslogErr("getMpcResult", "GetByteValue error,key", key, "error", err.Error())
 					return nil, err
@@ -185,10 +186,14 @@ func (mpcCtx *MpcContext) getMpcResult(err error) (interface{}, error) {
 				sr.GrpId = rslshBytes[65*2:]
 
 				sr.SSlsh = append(sr.SSlsh, oneRPrf)
+
+				log.SyslogInfo("...........................................getMpcResult", "oneSPrf", oneRPrf)
 			}
 
 		}
-		return sr, err
+		fmt.Printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^getMpcResult%#v", sr)
+		log.SyslogInfo("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^getMpcResult", " sr", sr)
+		return sr, nil
 	}
 
 	if err == mpcprotocol.ErrRNW {

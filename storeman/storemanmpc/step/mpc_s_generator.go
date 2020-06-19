@@ -71,6 +71,10 @@ func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcpr
 		log.SyslogErr("mpcSGenerator.initialize get MpcPrivateShare fail")
 		return err
 	}
+	// malice code begin (just for test)
+	// gskShare[0] = *schnorrmpc.BigOne
+	// malice code end  (just for test)
+
 	sigShare := schnorrmpc.SchnorrSign(gskShare[0], rskShare[0], *m)
 	msg.seed = sigShare
 
