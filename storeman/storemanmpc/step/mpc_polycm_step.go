@@ -79,9 +79,9 @@ func (req *MpcPolycmStep) InitStep(result mpcprotocol.MpcResultInterface) error 
 	req.polycmGMap[selfIndex] = pg
 
 	for key, value := range req.polycmGMap {
-		log.SyslogInfo("-----------------key", key)
+		log.SyslogDebug("-----------------key", "key index", key)
 		for index, pk := range value {
-			log.SyslogInfo("-----------------G", "index", index, "G", hexutil.Encode(crypto.FromECDSAPub(&pk)))
+			log.SyslogDebug("-----------------G", "index", index, "G", hexutil.Encode(crypto.FromECDSAPub(&pk)))
 		}
 	}
 	return nil
@@ -256,10 +256,10 @@ func (req *MpcPolycmStep) fillCmIntoMap(msg *mpcprotocol.StepMessage) bool {
 	// build polycmG
 	pg := make(schnorrmpc.PolynomialG, threshold)
 
-	log.SyslogInfo("fillCmIntoMap", "map key", inx, "group", grpIdString, "threshold", threshold, "len(msg.BytesData)", len(msg.BytesData))
+	log.SyslogDebug("fillCmIntoMap", "map key", inx, "group", grpIdString, "threshold", threshold, "len(msg.BytesData)", len(msg.BytesData))
 	for i := 0; i < len(msg.BytesData); i++ {
 		pk := crypto.ToECDSAPub(msg.BytesData[i][:])
-		log.SyslogInfo("		fillCmIntoMap", "item index", i, "one poly commit item G", hexutil.Encode(msg.BytesData[i][:]))
+		log.SyslogDebug("		fillCmIntoMap", "item index", i, "one poly commit item G", hexutil.Encode(msg.BytesData[i][:]))
 		pg[i] = *pk
 	}
 	req.polycmGMap[inx] = pg

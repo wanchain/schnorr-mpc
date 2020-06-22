@@ -1,5 +1,6 @@
 package step
 
+/*
 import (
 	"bytes"
 	"crypto/sha256"
@@ -170,3 +171,4 @@ func (ptStep *MpcPointStep) FinishStep(result mpcprotocol.MpcResultInterface, mp
 	log.SyslogInfo("MpcPointStep.FinishStep succeed")
 	return nil
 }
+*/

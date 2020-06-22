@@ -58,10 +58,10 @@ func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStep
 	accTypeStr := ""
 
 	cmStep := step.CreateMpcPolycmStep(&mpc.peers)
-	cmStep.SetWaiting(int(peerCurCount))
+	cmStep.SetWaiting(int(peerCurCount + 1))
 
 	skShare := step.CreateMpcRSKShareStep(int(degree), &mpc.peers)
-	skShare.SetWaiting(int(peerCurCount))
+	skShare.SetWaiting(int(peerCurCount)) // not broadcast, only need receive peerCurCount data.
 
 	skJudgeStep := step.CreateMpcRSkJudgeStep(&mpc.peers)
 	// only handle the first Rsk challenge or (timeout no challenge)
@@ -69,11 +69,11 @@ func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStep
 
 	// add rrcvInter step
 	rrcvInterStep := step.CreateMpcRRcvInterStep(&mpc.peers)
-	rrcvInterStep.SetWaiting(int(peerCurCount))
+	rrcvInterStep.SetWaiting(int(peerCurCount + 1))
 
 	// add rrcvInter judge step
 	rrcvJudgeStep := step.CreateMpcRRcvJudgeStep(&mpc.peers)
-	rrcvJudgeStep.SetWaiting(int(peerCurCount))
+	rrcvJudgeStep.SetWaiting(int(peerCurCount + 1))
 
 	RStep := step.CreateMpcRStep(&mpc.peers, accTypeStr)
 	RStep.SetWaiting(int(threshold))
@@ -86,7 +86,7 @@ func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStep
 	sshareJudgeStep.SetWaiting(1)
 
 	ackRSStep := step.CreateAckMpcRSStep(&mpc.peers, accTypeStr)
-	ackRSStep.SetWaiting(int(peerCurCount))
+	ackRSStep.SetWaiting(int(peerCurCount + 1))
 
 	mpc.setMpcStep(firstStep,
 		readyStep,

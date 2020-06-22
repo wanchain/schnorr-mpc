@@ -66,7 +66,8 @@ func (mpcCtx *MpcContext) getMpcResult(err error) (interface{}, error) {
 
 		okIndexes, _ := mpcResult.GetValue(mpcprotocol.SOKIndex)
 
-		log.SyslogInfo("getMpcResult", "okIndexes", okIndexes)
+		OkIndexesStr, _ := osmconf.BuildStrByIndexes(&okIndexes)
+		log.SyslogInfo("getMpcResult", "okIndexes", OkIndexesStr)
 
 		retBig, _ := osmconf.BuildDataByIndexes(&okIndexes)
 		sr.IncntData = retBig.Bytes()
@@ -323,7 +324,7 @@ func (mpcCtx *MpcContext) mainMPCProcess(StoremanManager mpcprotocol.StoremanMan
 				break
 			}
 			log.Info("\n")
-			log.SyslogInfo("===============================Start============================================", "stepId", i, "ctxid", mpcCtx.ContextID)
+			log.SyslogInfo("------------------------------Start------------------------------", "stepId", i, "ctxid", mpcCtx.ContextID)
 			log.Info("\n")
 
 			msg := mpcCtx.MpcSteps[i].CreateMessage()
@@ -336,7 +337,7 @@ func (mpcCtx *MpcContext) mainMPCProcess(StoremanManager mpcprotocol.StoremanMan
 					//StoremanManager.SetMessagePeers(mpcMsg, item.Peers)
 					if item.PeerID != nil {
 						StoremanManager.P2pMessage(item.PeerID, item.MsgCode, mpcMsg)
-						log.SyslogInfo("step send a p2p msg", "ctxid", mpcCtx.ContextID, "stepId", i)
+						log.SyslogDebug("step send a p2p msg", "ctxid", mpcCtx.ContextID, "stepId", i)
 					} else {
 
 						for _, item := range peerIDs {
@@ -357,7 +358,7 @@ func (mpcCtx *MpcContext) mainMPCProcess(StoremanManager mpcprotocol.StoremanMan
 			}
 
 			log.Info("\n")
-			log.SyslogInfo("==============================End=============================================", "stepId", i, "ctxid", mpcCtx.ContextID)
+			log.SyslogInfo("------------------------------End------------------------------", "stepId", i, "ctxid", mpcCtx.ContextID)
 			log.Info("\n")
 		}
 	}

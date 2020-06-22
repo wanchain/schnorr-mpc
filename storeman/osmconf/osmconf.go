@@ -764,6 +764,21 @@ func BuildDataByIndexes(indexes *[]big.Int) (*big.Int, error) {
 	return ret, nil
 }
 
+func BuildStrByIndexes(indexes *[]big.Int) (string, error) {
+
+	if indexes == nil {
+		log.SyslogErr("BuildStringByIndexes indexes is null")
+		return "", errors.New("invalid point")
+	}
+
+	var buf bytes.Buffer
+
+	for _, indexBig := range *indexes {
+		buf.WriteString(hexutil.Encode(indexBig.Bytes()))
+	}
+	return buf.String(), nil
+}
+
 func InterSecByIndexes(indexes *[]big.Int) (*big.Int, error) {
 	if indexes == nil {
 		log.SyslogErr("BuildDataByIndexes indexes is null")

@@ -15,8 +15,9 @@ func (*MpcCtxFactory) CreateContext(ctxType int,
 	peerCurCount uint16,
 	preSetValue ...MpcValue) (MpcInterface, error) {
 
-	log.SyslogInfo("~~~~~~~~~~~~~~~~~~~~~~~~ CreateContext~~~~~~~~~~~~~~~~~~~~~~~~")
-	log.SyslogInfo("CreateContext", "ctxType", ctxType)
+	log.Info("\n\n\n")
+	log.SyslogInfo("===================================== CreateContext=====================================")
+	log.SyslogInfo("CreateContext", "ctxType", ctxType, "peerCurCount", peerCurCount)
 	for i := 0; i < len(preSetValue); i++ {
 		if preSetValue[i].Key != mpcprotocol.MpcPrivateShare {
 			if preSetValue[i].Value != nil {
@@ -29,7 +30,8 @@ func (*MpcCtxFactory) CreateContext(ctxType int,
 		}
 
 	}
-	log.SyslogInfo("~~~~~~~~~~~~~~~~~~~~~~~~ CreateContext~~~~~~~~~~~~~~~~~~~~~~~~")
+	log.SyslogInfo("===================================== CreateContext=====================================")
+	log.Info("\n\n\n")
 
 	switch ctxType {
 	//case mpcprotocol.MpcGPKLeader:

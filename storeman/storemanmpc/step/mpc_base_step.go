@@ -105,7 +105,7 @@ func (step *BaseStep) HandleMessage(msger mpcprotocol.GetMessageInterface) error
 			log.SyslogInfo("BaseStep get a quit msg")
 			return mpcprotocol.ErrQuit
 		} else {
-			log.SyslogInfo("BaseStep HandleMessage", "msg get from step.msgChan", msg)
+			log.SyslogDebug("BaseStep HandleMessage", "msg get from step.msgChan", msg)
 		}
 
 		if msg.StepId != step.GetStepId() {
