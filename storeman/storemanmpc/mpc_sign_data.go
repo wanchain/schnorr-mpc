@@ -61,7 +61,7 @@ func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStep
 	cmStep.SetWaiting(int(peerCurCount + 1))
 
 	skShare := step.CreateMpcRSKShareStep(int(degree), &mpc.peers)
-	skShare.SetWaiting(int(peerCurCount)) // not broadcast, only need receive peerCurCount data.
+	skShare.SetWaiting(int(peerCurCount + 1)) // not broadcast, only need receive peerCurCount data.
 
 	skJudgeStep := step.CreateMpcRSkJudgeStep(&mpc.peers)
 	// only handle the first Rsk challenge or (timeout no challenge)
