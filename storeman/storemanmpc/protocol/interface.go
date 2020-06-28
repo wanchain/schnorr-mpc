@@ -1,7 +1,6 @@
 package protocol
 
 import (
-	"crypto/ecdsa"
 	"math/big"
 )
 
@@ -13,7 +12,8 @@ var BigOne = big.NewInt(1)
 type Polynomial []big.Int
 
 // polynomial commit
-type PolynomialG []ecdsa.PublicKey
+//type PolynomialG []ecdsa.PublicKey
+type PolynomialG []CurvePointer
 type PolynomialGSig []big.Int
 
 // key: 	smIndex
@@ -49,6 +49,7 @@ type SchnorrMPCer interface {
 	UnMarshPt(b []byte) (CurvePointer, error)
 	PtToHexString(CurvePointer) string
 	StringToPt(string) (CurvePointer, error)
+	PtByteLen() int
 }
 
 type MpcContexter interface {

@@ -139,6 +139,10 @@ func (ssm *SkSchnorrMpc) PtToHexString(pt mpcprotocol.CurvePointer) string {
 	}
 }
 
+func (ssm *SkSchnorrMpc) PtByteLen() int {
+	return PkLength
+}
+
 func (ssm *SkSchnorrMpc) StringToPt(str string) (mpcprotocol.CurvePointer, error) {
 	return StringtoPk(str)
 }

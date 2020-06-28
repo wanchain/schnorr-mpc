@@ -449,6 +449,7 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 		mpcM := mpcMessage.BytesData[0]
 		address := mpcMessage.BytesData[1]
 		mpcExt := mpcMessage.BytesData[2]
+		curveTypeBytes := mpcMessage.BytesData[3]
 
 		//add := common.Address{}
 		//copy(add[:], address)
@@ -484,9 +485,11 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 		preSetValue = append(preSetValue, MpcValue{mpcprotocol.MpcGpkBytes, nil, address})
 		preSetValue = append(preSetValue, MpcValue{mpcprotocol.MpcM, nil, mpcM})
 		preSetValue = append(preSetValue, MpcValue{mpcprotocol.MpcExt, nil, mpcExt})
+		preSetValue = append(preSetValue, MpcValue{mpcprotocol.MpcCurve, nil, curveTypeBytes})
 		preSetValue = append(preSetValue, *MpcPrivateShare)
 
-		receivedData := &mpcprotocol.SendData{PKBytes: address, Data: mpcM[:], Extern: string(mpcExt[:])}
+		//receivedData := &mpcprotocol.SendData{PKBytes: address, Data: mpcM[:], Extern: string(mpcExt[:])}
+		receivedData := &mpcprotocol.SendData{PKBytes: address, Data: mpcM[:], Curve: curveTypeBytes, Extern: string(mpcExt[:])}
 
 		if nByApprove != 0 {
 			addApprovingResult := validator.AddApprovingData(receivedData)

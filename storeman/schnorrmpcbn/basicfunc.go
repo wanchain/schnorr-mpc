@@ -65,6 +65,10 @@ func (bsm *BnSchnorrMpc) StringToPt(str string) (mpcprotocol.CurvePointer, error
 	return nil, nil
 }
 
+func (bsm *BnSchnorrMpc) PtByteLen() int {
+	return 64
+}
+
 // Generate a random polynomial, its constant item is nominated
 func RandPoly(degree int, constant big.Int) mpcprotocol.Polynomial {
 
