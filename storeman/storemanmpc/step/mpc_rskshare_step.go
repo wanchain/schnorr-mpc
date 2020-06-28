@@ -1,7 +1,6 @@
 package step
 
 import (
-	"crypto/ecdsa"
 	"crypto/sha256"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/crypto"
@@ -20,7 +19,7 @@ type MpcRSKShare_Step struct {
 
 func CreateMpcRSKShareStep(degree int, peers *[]mpcprotocol.PeerInfo) *MpcRSKShare_Step {
 	mpc := &MpcRSKShare_Step{*CreateBaseMpcStep(peers, 1), 0}
-	mpc.messages[0] = createSkPolyGen(degree, len(*peers))
+	mpc.messages[0] = createSkPolyGen(degree, len(*peers), mpc.schnorrMpcer)
 	return mpc
 }
 
@@ -57,9 +56,13 @@ func (rss *MpcRSKShare_Step) FinishStep(result mpcprotocol.MpcResultInterface, m
 		return err
 	}
 	// rpkShare
-	rpkShare := new(ecdsa.PublicKey)
-	rpkShare.Curve = crypto.S256()
-	rpkShare.X, rpkShare.Y = crypto.S256().ScalarBaseMult((*skpv.result).Bytes())
+	//rpkShare := new(ecdsa.PublicKey)
+	//rpkShare.Curve = crypto.S256()
+	//rpkShare.X, rpkShare.Y = crypto.S256().ScalarBaseMult((*skpv.result).Bytes())
+	rpkShare, err := rss.schnorrMpcer.SkG(skpv.result)
+	if err != nil {
+		log.SyslogErr("MpcRSKShare_Step", "SkG err", err.Error())
+	}
 
 	// RPkShare + selfIndex
 
@@ -72,14 +75,19 @@ func (rss *MpcRSKShare_Step) FinishStep(result mpcprotocol.MpcResultInterface, m
 	}
 	key := mpcprotocol.RPkShare + strconv.Itoa(int(selfIndex))
 
-	//err = result.SetByteValue(mpcprotocol.RPkShare, crypto.FromECDSAPub(rpkShare))
-	err = result.SetByteValue(key, crypto.FromECDSAPub(rpkShare))
+	//err = result.SetByteValue(key, crypto.FromECDSAPub(rpkShare))
+	rpkShareBytes, err := rss.schnorrMpcer.MarshPt(rpkShare)
+	if err != nil {
+		log.SyslogErr("MpcRSKShare_Step", "MarshPt", err.Error())
+		return err
+	}
+	err = result.SetByteValue(key, rpkShareBytes)
 	if err != nil {
 		return err
 	}
 
 	log.SyslogInfo("@@@@@@@@@@@@@@@@@@@MpcRSKShare_Step",
-		"rpkShare", hexutil.Encode(crypto.FromECDSAPub(rpkShare)),
+		"rpkShare", hexutil.Encode(rpkShareBytes),
 		"rskShare", hexutil.Encode((*skpv.result).Bytes()))
 
 	rcvCollection, err := rss.buildRcvedCollection()
@@ -161,7 +169,8 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	pgBytes, _ := rss.mpcResult.GetByteValue(keyPolyCMG)
 
 	//split the pk list
-	pks, err := schnorrmpc.SplitPksFromBytes(pgBytes[:])
+	//pks, err := schnorrmpc.SplitPksFromBytes(pgBytes[:])
+	pks, err := rss.schnorrMpcer.SplitPksFromBytes(pgBytes[:])
 	if err != nil {
 		log.SyslogErr("MpcRSKShare_Step::HandleMessage",
 			" polyCMG GetBytevalue error", err.Error())
@@ -178,14 +187,20 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		log.SyslogErr("before evalByPolyG", "len(pks)", len(pks), "threshold", threshold)
 		return true
 	}
-	sijgEval, err := schnorrmpc.EvalByPolyG(pks, uint16(len(pks)-1), xValue)
+	//sijgEval, err := schnorrmpc.EvalByPolyG(pks, uint16(len(pks)-1), xValue)
+	sijgEval, err := rss.schnorrMpcer.EvalByPolyG(pks, uint16(len(pks)-1), xValue)
 	if err != nil {
 		log.SyslogErr("schnorrmpc.EvalByPolyG", "error", err.Error())
 		return true
 	}
 
-	sijg, _ := schnorrmpc.SkG(&sij)
-	if ok, _ := schnorrmpc.PkEqual(sijg, sijgEval); !ok {
+	//sijg, _ := schnorrmpc.SkG(&sij)
+	//if ok, _ := schnorrmpc.PkEqual(sijg, sijgEval); !ok {
+	//	bContent = false
+	//}
+
+	sijg, _ := rss.schnorrMpcer.SkG(&sij)
+	if !rss.schnorrMpcer.Equal(sijg, sijgEval) {
 		bContent = false
 	}
 

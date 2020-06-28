@@ -42,7 +42,7 @@ func (mars *MpcAckRSStep) InitStep(result mpcprotocol.MpcResultInterface) error 
 	rpk := crypto.ToECDSAPub(rpkBytes[:])
 
 	if err != nil {
-		log.SyslogErr("MpcAckRSStep::InitStep","ack mpc account step, init fail. err", err.Error())
+		log.SyslogErr("MpcAckRSStep::InitStep", "ack mpc account step, init fail. err", err.Error())
 		return err
 	}
 	//mars.mpcR[0], mars.mpcR[1] = value[0], value[1]
@@ -50,7 +50,7 @@ func (mars *MpcAckRSStep) InitStep(result mpcprotocol.MpcResultInterface) error 
 
 	sValue, err := result.GetValue(mpcprotocol.MpcS)
 	if err != nil {
-		log.SyslogErr("MpcAckRSStep::InitStep","ack mpc account step, init fail. err", err.Error())
+		log.SyslogErr("MpcAckRSStep::InitStep", "ack mpc account step, init fail. err", err.Error())
 		return err
 	}
 	mars.mpcS = sValue[0]
@@ -96,7 +96,7 @@ func (mars *MpcAckRSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	log.SyslogInfo("MpcAckRSStep.HandleMessage begin")
 	_, exist := mars.message[*msg.PeerID]
 	if exist {
-		log.SyslogErr("MpcAckRSStep::HandleMessage","MpcAckRSStep.HandleMessage fail. peer doesn't exist in task peer group. peerID",
+		log.SyslogErr("MpcAckRSStep::HandleMessage", "MpcAckRSStep.HandleMessage fail. peer doesn't exist in task peer group. peerID",
 			msg.PeerID.String())
 		return false
 	}
@@ -131,7 +131,7 @@ func (mars *MpcAckRSStep) verifyRS(result mpcprotocol.MpcResultInterface) error 
 	// check signVerify
 	M, err := result.GetByteValue(mpcprotocol.MpcM)
 	if err != nil {
-		log.SyslogErr("MpcAckRSStep::verifyRS","ack MpcAckRSStep get MpcM . err", err.Error())
+		log.SyslogErr("MpcAckRSStep::verifyRS", "ack MpcAckRSStep get MpcM . err", err.Error())
 		return err
 	}
 
@@ -141,13 +141,20 @@ func (mars *MpcAckRSStep) verifyRS(result mpcprotocol.MpcResultInterface) error 
 	// gpk
 	gpkItem, err := result.GetByteValue(mpcprotocol.MpcGpkBytes)
 	if err != nil {
-		log.SyslogErr("MpcAckRSStep::verifyRS","ack MpcAckRSStep get PublicKeyResult . err", err.Error())
+		log.SyslogErr("MpcAckRSStep::verifyRS", "ack MpcAckRSStep get PublicKeyResult . err", err.Error())
 		return err
 	}
+
+	smpcer := mars.schnorrMpcer
 	//gpk := new(ecdsa.PublicKey)
 	//gpk.Curve = crypto.S256()
 	//gpk.X, gpk.Y = &gpkItem[0], &gpkItem[1]
-	gpk := crypto.ToECDSAPub(gpkItem[:])
+	//gpk := crypto.ToECDSAPub(gpkItem[:])
+	gpk, err := smpcer.UnMarshPt(gpkItem[:])
+	if err != nil {
+		log.SyslogErr("MpcAckRSStep::verifyRS", "UnMarshPt err", err.Error())
+		return err
+	}
 
 	// rpk : R
 	rpk := new(ecdsa.PublicKey)
@@ -165,36 +172,60 @@ func (mars *MpcAckRSStep) verifyRS(result mpcprotocol.MpcResultInterface) error 
 	m := new(big.Int).SetBytes(mTemp[:])
 
 	// check ssG = rpk + m*gpk
-	ssG := new(ecdsa.PublicKey)
-	ssG.Curve = crypto.S256()
-	ssG.X, ssG.Y = crypto.S256().ScalarBaseMult(mars.mpcS.Bytes())
+	//ssG := new(ecdsa.PublicKey)
+	//ssG.Curve = crypto.S256()
+	//ssG.X, ssG.Y = crypto.S256().ScalarBaseMult(mars.mpcS.Bytes())
 
+	ssG, err := smpcer.SkG(&mars.mpcS)
+	if err != nil {
+		log.SyslogErr("MpcAckRSStep::verifyRS", "SkG err", err.Error())
+		return err
+	}
 	// m*gpk
-	mgpk := new(ecdsa.PublicKey)
-	mgpk.Curve = crypto.S256()
-	mgpk.X, mgpk.Y = crypto.S256().ScalarMult(gpk.X, gpk.Y, m.Bytes())
+	//mgpk := new(ecdsa.PublicKey)
+	//mgpk.Curve = crypto.S256()
+	//mgpk.X, mgpk.Y = crypto.S256().ScalarMult(gpk.X, gpk.Y, m.Bytes())
+	//
 
-	// rpk + m*gpk
-	temp := new(ecdsa.PublicKey)
-	temp.Curve = crypto.S256()
+	mgpk, err := smpcer.MulPK(m, gpk)
+	if err != nil {
+		log.SyslogErr("MpcAckRSStep::verifyRS", "MulPK err", err.Error())
+		return err
+	}
+	//// rpk + m*gpk
+	//temp := new(ecdsa.PublicKey)
+	//temp.Curve = crypto.S256()
+	//
+	//temp.X, temp.Y = crypto.S256().Add(mgpk.X, mgpk.Y, rpk.X, rpk.Y)
 
-	temp.X, temp.Y = crypto.S256().Add(mgpk.X, mgpk.Y, rpk.X, rpk.Y)
-
+	temp, err := smpcer.Add(mgpk, rpk)
+	if err != nil {
+		log.SyslogErr("MpcAckRSStep::verifyRS", "Add err", err.Error())
+		return err
+	}
 	log.Info("@@@@@@@@@@@@@@verifyRS@@@@@@@@@@@@@@",
 		"M", hexutil.Encode(M[:]),
 		"hash(M)", hexutil.Encode(hashMBytes[:]),
 		"m", hexutil.Encode(m.Bytes()),
 		"R", hexutil.Encode(crypto.FromECDSAPub(rpk)),
-		"rpk+m*gpk", hexutil.Encode(crypto.FromECDSAPub(temp)),
-		"sG", hexutil.Encode(crypto.FromECDSAPub(ssG)),
+		"rpk+m*gpk", smpcer.PtToHexString(temp),
+		"sG", smpcer.PtToHexString(ssG),
 		"s", hexutil.Encode(mars.mpcS.Bytes()),
-		"gpk", hexutil.Encode(crypto.FromECDSAPub(gpk)))
+		"gpk", smpcer.PtToHexString(gpk))
 
-	if ssG.X.Cmp(temp.X) == 0 && ssG.Y.Cmp(temp.Y) == 0 {
+	//if ssG.X.Cmp(temp.X) == 0 && ssG.Y.Cmp(temp.Y) == 0 {
+	//	log.SyslogInfo("Verification success")
+	//} else {
+	//	log.SyslogErr("Verification failed")
+	//	return mpcprotocol.ErrVerifyFailed
+	//}
+
+	if smpcer.Equal(ssG, temp) {
 		log.SyslogInfo("Verification success")
 	} else {
 		log.SyslogErr("Verification failed")
 		return mpcprotocol.ErrVerifyFailed
 	}
+
 	return nil
 }

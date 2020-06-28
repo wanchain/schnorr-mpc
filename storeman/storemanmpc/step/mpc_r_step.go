@@ -84,9 +84,9 @@ func (addStep *MpcRStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	_, grpIdString, _ := osmconf.GetGrpId(addStep.mpcResult)
 
 	senderPk, _ := osmconf.GetOsmConf().GetPKByNodeId(grpIdString, msg.PeerID)
-	err := schnorrmpc.CheckPK(senderPk)
-	if err != nil {
-		log.SyslogErr("MpcPointStep", "HandleMessage", err.Error())
+
+	if !addStep.schnorrMpcer.IsOnCurve(senderPk) {
+		log.SyslogErr("MpcPointStep IsOnCurve", "senderPk", addStep.schnorrMpcer.PtToHexString(senderPk))
 	}
 
 	senderIndex, _ := osmconf.GetOsmConf().GetInxByNodeId(grpIdString, msg.PeerID)

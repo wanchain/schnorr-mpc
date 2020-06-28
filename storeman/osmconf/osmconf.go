@@ -29,11 +29,12 @@ const EmptyString = ""
 var osmConf *OsmConf
 
 type GrpElem struct {
-	Inx       uint16
-	WorkingPk *ecdsa.PublicKey
-	NodeId    *discover.NodeID
-	PkShare   *ecdsa.PublicKey
-	XValue    *big.Int
+	Inx          uint16
+	WorkingPk    *ecdsa.PublicKey
+	NodeId       *discover.NodeID
+	PkShare      *ecdsa.PublicKey
+	PkShareBytes hexutil.Bytes
+	XValue       *big.Int
 }
 
 type ArrayGrpElem []GrpElem
@@ -146,6 +147,7 @@ func (cnf *OsmConf) LoadCnf(confPath string) error {
 			Inx, _ := strconv.Atoi(ge.Inx)
 			gii.ArrGrpElems[i].Inx = uint16(Inx)
 			gii.ArrGrpElems[i].PkShare = crypto.ToECDSAPub(ge.PkShare)
+			gii.ArrGrpElems[i].PkShareBytes = ge.PkShare
 			log.SyslogInfo("LoadCnf", "ge.WorkingPk", ge.WorkingPk)
 			log.SyslogInfo("LoadCnf", "ge.PkShare", ge.PkShare)
 
@@ -249,6 +251,23 @@ func (cnf *OsmConf) GetPKShare(grpId string, smInx uint16) (*ecdsa.PublicKey, er
 	for _, value := range arrGrpElem {
 		if value.Inx == smInx {
 			return value.PkShare, nil
+		}
+	}
+
+	panic(fmt.Sprintf("GetPKShare:Not find storeman, smInx %v", smInx))
+}
+
+// get gpk share (public share)
+func (cnf *OsmConf) GetPKShareBytes(grpId string, smInx uint16) ([]byte, error) {
+	defer cnf.wrLock.RUnlock()
+
+	cnf.wrLock.RLock()
+
+	cnf.checkGrpId(grpId)
+	arrGrpElem := cnf.GrpInfoMap[grpId].ArrGrpElems
+	for _, value := range arrGrpElem {
+		if value.Inx == smInx {
+			return value.PkShareBytes, nil
 		}
 	}
 

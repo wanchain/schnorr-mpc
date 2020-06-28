@@ -22,15 +22,17 @@ type RandomPolynomialGen struct {
 	polyValueSigR   []*big.Int
 	polyValueSigS   []*big.Int
 	result          *big.Int
+	smpcer          mpcprotocol.SchnorrMPCer
 }
 
-func createSkPolyGen(degree int, peerNum int) *RandomPolynomialGen {
+func createSkPolyGen(degree int, peerNum int, smpcer mpcprotocol.SchnorrMPCer) *RandomPolynomialGen {
 	return &RandomPolynomialGen{make([]big.Int, degree+1),
 		make(map[discover.NodeID]big.Int),
 		make([]big.Int, peerNum),
 		make([]*big.Int, peerNum),
 		make([]*big.Int, peerNum),
-		nil}
+		nil,
+		smpcer}
 }
 
 func (poly *RandomPolynomialGen) initialize(peers *[]mpcprotocol.PeerInfo,
@@ -71,7 +73,10 @@ func (poly *RandomPolynomialGen) initialize(peers *[]mpcprotocol.PeerInfo,
 			"poly x seed", xValue,
 			"degree", degree)
 
-		poly.polyValue[i] = schnorrmpc.EvaluatePoly(poly.randCoefficient,
+		//poly.polyValue[i] = schnorrmpc.EvaluatePoly(poly.randCoefficient,
+		//	xValue,
+		//	degree)
+		poly.polyValue[i] = poly.smpcer.EvaluatePoly(poly.randCoefficient,
 			xValue,
 			degree)
 
@@ -103,7 +108,8 @@ func (poly *RandomPolynomialGen) calculateResult() error {
 	log.Info("RandomPolynomialGen::calculateResult ", "len of recieved message", len(poly.message))
 	for _, value := range poly.message {
 		poly.result.Add(poly.result, &value)
-		poly.result.Mod(poly.result, crypto.S256().Params().N)
+		//poly.result.Mod(poly.result, crypto.S256().Params().N)
+		poly.result.Mod(poly.result, poly.smpcer.GetMod())
 	}
 
 	return nil

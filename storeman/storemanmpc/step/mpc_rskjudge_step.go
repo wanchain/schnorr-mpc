@@ -130,12 +130,17 @@ func (rsj *MpcRSkJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	}
 
 	//split the pk list
-	pks, _ := schnorrmpc.SplitPksFromBytes(pgBytes[:])
-	sijgEval, _ := schnorrmpc.EvalByPolyG(pks, uint16(len(pks)-1), xValue)
-	sijg, _ := schnorrmpc.SkG(&sij)
+	//pks, _ := schnorrmpc.SplitPksFromBytes(pgBytes[:])
+	//sijgEval, _ := schnorrmpc.EvalByPolyG(pks, uint16(len(pks)-1), xValue)
+	//sijg, _ := schnorrmpc.SkG(&sij)
+
+	pks, _ := rsj.schnorrMpcer.SplitPksFromBytes(pgBytes[:])
+	sijgEval, _ := rsj.schnorrMpcer.EvalByPolyG(pks, uint16(len(pks)-1), xValue)
+	sijg, _ := rsj.schnorrMpcer.SkG(&sij)
 
 	bContentCheck := true
-	if ok, _ := schnorrmpc.PkEqual(sijg, sijgEval); !ok {
+
+	if !rsj.schnorrMpcer.Equal(sijg, sijgEval) {
 		log.SyslogErr("MpcRSkJudgeStep", "bSnderWrong", bSnderWrong, "bContentCheck", bContentCheck)
 		bSnderWrong = true
 		bContentCheck = false

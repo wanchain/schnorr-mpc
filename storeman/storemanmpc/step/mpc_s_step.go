@@ -2,11 +2,9 @@ package step
 
 import (
 	"bytes"
-	"crypto/ecdsa"
 	"crypto/sha256"
 	"errors"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
-	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
 	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
@@ -85,6 +83,7 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		_, grpIdString, _ := osmconf.GetGrpId(msStep.mpcResult)
 
 		senderPk, _ := osmconf.GetOsmConf().GetPKByNodeId(grpIdString, msg.PeerID)
+
 		err := schnorrmpc.CheckPK(senderPk)
 		if err != nil {
 			log.SyslogErr("MpcSStep", "HandleMessage", err.Error())
@@ -229,27 +228,50 @@ func (msStep *MpcSStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mp
 	return nil
 }
 
-func (msStep *MpcSStep) checkContent(sshare, m *big.Int, rpkShare, gpkShare *ecdsa.PublicKey) (bool, error) {
+//func (msStep *MpcSStep) checkContent(sshare, m *big.Int, rpkShare, gpkShare *ecdsa.PublicKey) (bool, error) {
+//	if sshare == nil || m == nil {
+//		return false, errors.New("sshare is nil or m is nil")
+//	}
+//	if schnorrmpc.CheckPK(rpkShare) != nil || schnorrmpc.CheckPK(gpkShare) != nil {
+//		return false, errors.New("rpkShare is invalid pk or gpkShare is invalid pk")
+//	}
+//	sshareG, _ := schnorrmpc.SkG(sshare)
+//	mPkShare, _ := schnorrmpc.SkMul(gpkShare, m)
+//
+//	pkTemp := new(ecdsa.PublicKey)
+//	pkTemp.Curve = crypto.S256()
+//	pkTemp.X, pkTemp.Y = rpkShare.X, rpkShare.Y
+//	pkTemp.X, pkTemp.Y = crypto.S256().Add(pkTemp.X, pkTemp.Y, mPkShare.X, mPkShare.Y)
+//
+//	left := sshareG
+//	right := pkTemp
+//	return schnorrmpc.PkEqual(left, right)
+//}
+
+func (msStep *MpcSStep) checkContent(sshare, m *big.Int, rpkShare, gpkShare mpcprotocol.CurvePointer) (bool, error) {
 	if sshare == nil || m == nil {
 		return false, errors.New("sshare is nil or m is nil")
 	}
-	if schnorrmpc.CheckPK(rpkShare) != nil || schnorrmpc.CheckPK(gpkShare) != nil {
+
+	smpcer := msStep.schnorrMpcer
+
+	if !smpcer.IsOnCurve(rpkShare) || !smpcer.IsOnCurve(gpkShare) {
 		return false, errors.New("rpkShare is invalid pk or gpkShare is invalid pk")
 	}
-	sshareG, _ := schnorrmpc.SkG(sshare)
-	mPkShare, _ := schnorrmpc.SkMul(gpkShare, m)
+	sshareG, _ := smpcer.SkG(sshare)
+	mPkShare, _ := smpcer.MulPK(m, gpkShare)
 
-	pkTemp := new(ecdsa.PublicKey)
-	pkTemp.Curve = crypto.S256()
-	pkTemp.X, pkTemp.Y = rpkShare.X, rpkShare.Y
-	pkTemp.X, pkTemp.Y = crypto.S256().Add(pkTemp.X, pkTemp.Y, mPkShare.X, mPkShare.Y)
-
+	pkTemp, err := smpcer.Add(rpkShare, mPkShare)
+	if err != nil {
+		return false, errors.New("add rpkShare mPkShare error")
+	}
 	left := sshareG
 	right := pkTemp
-	return schnorrmpc.PkEqual(left, right)
+
+	return smpcer.Equal(left, right), nil
 }
 
-func (msStep *MpcSStep) getRPkShare(index uint16) (*ecdsa.PublicKey, error) {
+func (msStep *MpcSStep) getRPkShare(index uint16) (mpcprotocol.CurvePointer, error) {
 
 	key := mpcprotocol.RPkShare + strconv.Itoa(int(index))
 
@@ -259,7 +281,7 @@ func (msStep *MpcSStep) getRPkShare(index uint16) (*ecdsa.PublicKey, error) {
 		log.SyslogErr("getRPkShare", "err", err.Error())
 	}
 
-	return crypto.ToECDSAPub(pkBytes), nil
+	return msStep.schnorrMpcer.UnMarshPt(pkBytes)
 }
 
 func (msStep *MpcSStep) getm() (*big.Int, error) {
@@ -287,7 +309,7 @@ func (msStep *MpcSStep) getm() (*big.Int, error) {
 	return m, nil
 }
 
-func (msStep *MpcSStep) getGPKShare(index uint16) (*ecdsa.PublicKey, error) {
+func (msStep *MpcSStep) getGPKShare(index uint16) (mpcprotocol.CurvePointer, error) {
 	//
 
 	_, grpIdString, err := osmconf.GetGrpId(msStep.mpcResult)
@@ -295,10 +317,14 @@ func (msStep *MpcSStep) getGPKShare(index uint16) (*ecdsa.PublicKey, error) {
 		return nil, err
 	}
 
-	gpkShare, err := osmconf.GetOsmConf().GetPKShare(grpIdString, index)
+	//gpkShare, err := osmconf.GetOsmConf().GetPKShare(grpIdString, index)
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	gpkShareBytes, err := osmconf.GetOsmConf().GetPKShareBytes(grpIdString, index)
 	if err != nil {
 		return nil, err
 	}
-
-	return gpkShare, nil
+	return msStep.schnorrMpcer.UnMarshPt(gpkShareBytes)
 }

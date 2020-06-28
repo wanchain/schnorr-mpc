@@ -50,6 +50,9 @@ type SchnorrMPCer interface {
 	PtToHexString(CurvePointer) string
 	StringToPt(string) (CurvePointer, error)
 	PtByteLen() int
+	GetMod() *big.Int
+	SplitPksFromBytes(buf []byte) ([]CurvePointer, error)
+	EvalByPolyG([]CurvePointer, uint16, *big.Int) (CurvePointer, error)
 }
 
 type MpcContexter interface {

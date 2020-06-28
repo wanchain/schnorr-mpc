@@ -143,8 +143,36 @@ func (ssm *SkSchnorrMpc) PtByteLen() int {
 	return PkLength
 }
 
+func (ssm *SkSchnorrMpc) GetMod() *big.Int {
+	return crypto.S256().Params().N
+}
+
 func (ssm *SkSchnorrMpc) StringToPt(str string) (mpcprotocol.CurvePointer, error) {
 	return StringtoPk(str)
+}
+
+func (ssm *SkSchnorrMpc) SplitPksFromBytes(buf []byte) ([]mpcprotocol.CurvePointer, error) {
+	ret := make([]mpcprotocol.CurvePointer, 0)
+	ret1, err := SplitPksFromBytes(buf[:])
+	for _, pt := range ret1 {
+		ret = append(ret, pt)
+	}
+	return ret, err
+}
+
+func (ssm *SkSchnorrMpc) EvalByPolyG(pts []mpcprotocol.CurvePointer, degree uint16, xvalue *big.Int) (mpcprotocol.CurvePointer, error) {
+	pks := make([]*ecdsa.PublicKey, 0)
+	for _, pt := range pts {
+		ptTemp, ok := pt.(*ecdsa.PublicKey)
+		if !ok {
+			errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
+			log.SyslogErr(errStr)
+			return nil, mpcprotocol.ErrTypeAssertFail
+		}
+		pks = append(pks, ptTemp)
+	}
+
+	return EvalByPolyG(pks, degree, xvalue)
 }
 
 func RandPoly(degree int, constant big.Int) mpcprotocol.Polynomial {

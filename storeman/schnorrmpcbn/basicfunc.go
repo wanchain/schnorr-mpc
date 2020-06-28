@@ -69,6 +69,17 @@ func (bsm *BnSchnorrMpc) PtByteLen() int {
 	return 64
 }
 
+func (bsm *BnSchnorrMpc) GetMod() *big.Int {
+	return bn256.Order
+}
+
+func (bsm *BnSchnorrMpc) SplitPksFromBytes(buf []byte) ([]mpcprotocol.CurvePointer, error) {
+	return nil, nil
+}
+func (bsm *BnSchnorrMpc) EvalByPolyG([]mpcprotocol.CurvePointer, uint16, *big.Int) (mpcprotocol.CurvePointer, error) {
+	return nil, nil
+}
+
 // Generate a random polynomial, its constant item is nominated
 func RandPoly(degree int, constant big.Int) mpcprotocol.Polynomial {
 
