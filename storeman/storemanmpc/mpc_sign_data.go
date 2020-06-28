@@ -9,10 +9,10 @@ import (
 )
 
 //send create LockAccount from leader
-func reqSignMpc(mpcID uint64, peers []mpcprotocol.PeerInfo, peerCurCount uint16, preSetValue ...MpcValue) (*MpcContext, error) {
+func reqSignMpc(mpcID uint64, peers []mpcprotocol.PeerInfo, peerCurCount uint16, curveType uint8, preSetValue ...MpcValue) (*MpcContext, error) {
 	result := createMpcBaseMpcResult()
 	result.InitializeValue(preSetValue...)
-	mpc := createMpcContext(mpcID, peers, result)
+	mpc := createMpcContext(mpcID, peers, result, curveType)
 
 	reqMpc := step.CreateRequestMpcStep(&mpc.peers, peerCurCount, mpcprotocol.MpcSignLeader)
 	reqMpc.SetWaiting(int(peerCurCount))
@@ -24,10 +24,10 @@ func reqSignMpc(mpcID uint64, peers []mpcprotocol.PeerInfo, peerCurCount uint16,
 }
 
 //get message from leader and create Context
-func ackSignMpc(mpcID uint64, peers []mpcprotocol.PeerInfo, peerCurCount uint16, preSetValue ...MpcValue) (*MpcContext, error) {
+func ackSignMpc(mpcID uint64, peers []mpcprotocol.PeerInfo, peerCurCount uint16, curveType uint8, preSetValue ...MpcValue) (*MpcContext, error) {
 	result := createMpcBaseMpcResult()
 	result.InitializeValue(preSetValue...)
-	mpc := createMpcContext(mpcID, peers, result)
+	mpc := createMpcContext(mpcID, peers, result, curveType)
 
 	ackMpc := step.CreateAckMpcStep(&mpc.peers, mpcprotocol.MpcSignPeer)
 	ackMpc.SetWaiting(0)

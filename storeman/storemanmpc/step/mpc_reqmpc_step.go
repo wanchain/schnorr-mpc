@@ -18,6 +18,7 @@ type RequestMpcStep struct {
 	mpcExt           []byte
 	message          map[discover.NodeID]bool
 	peerCount        uint16
+	curveType        []byte
 }
 
 func CreateRequestMpcStep(peers *[]mpcprotocol.PeerInfo, pc uint16, messageType int64) *RequestMpcStep {
@@ -78,6 +79,11 @@ func (req *RequestMpcStep) InitStep(result mpcprotocol.MpcResultInterface) error
 			return err
 		}
 
+		req.curveType, err = result.GetByteValue(mpcprotocol.MpcCurve)
+		if err != nil {
+			return err
+		}
+
 	}
 
 	return nil
@@ -100,10 +106,11 @@ func (req *RequestMpcStep) CreateMessage() []mpcprotocol.StepMessage {
 		msg.Data[1] = req.mpcSignByApprove[0]
 		msg.Data[2] = *big.NewInt(0).SetUint64(uint64(req.peerCount))
 
-		msg.BytesData = make([][]byte, 3)
+		msg.BytesData = make([][]byte, 4)
 		msg.BytesData[0] = req.mpcM
 		msg.BytesData[1] = req.address
 		msg.BytesData[2] = req.mpcExt
+		msg.BytesData[3] = req.curveType
 	} else if req.messageType == mpcprotocol.MpcGPKLeader {
 		//todo  do nothing?
 	}

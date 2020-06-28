@@ -19,6 +19,12 @@ const (
 	MpcSignLeader
 	MpcSignPeer
 )
+
+const (
+	SK256Curve = iota + 0
+	BN256Curve
+)
+
 const (
 	StatusCode = iota + 10 // used by storeman protocol
 	KeepaliveCode
@@ -64,6 +70,7 @@ const (
 
 	MpcExt       = "MpcExtern"    // extern
 	MpcByApprove = "MpcByApprove" // by approve
+	MpcCurve     = "MpcCurve"     // by approve
 	MpcGrpId     = "MpcGrpId"     // group ID
 
 	MpcTxHash   = "MpcTxHash"

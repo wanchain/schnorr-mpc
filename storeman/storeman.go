@@ -455,9 +455,9 @@ func (sa *StoremanAPI) SignDataByApprove(ctx context.Context, data mpcprotocol.S
 
 	sa.sm.mpcDistributor.SetCurPeerCount(uint16(len(sa.sm.peers)))
 	PKBytes := data.PKBytes
-
+	CurveBytes := data.Curve
 	//signed, err := sa.sm.mpcDistributor.CreateReqMpcSign([]byte(data.Data), PKBytes)
-	signed, err := sa.sm.mpcDistributor.CreateReqMpcSign([]byte(data.Data), []byte(data.Extern), PKBytes, 1)
+	signed, err := sa.sm.mpcDistributor.CreateReqMpcSign([]byte(data.Data), []byte(data.Extern), PKBytes, 1, CurveBytes)
 
 	// signed   R // s
 	if err == nil {
@@ -476,9 +476,10 @@ func (sa *StoremanAPI) SignData(ctx context.Context, data mpcprotocol.SendData) 
 	//}
 
 	PKBytes := data.PKBytes
+	CurveBytes := data.Curve
 	sa.sm.mpcDistributor.SetCurPeerCount(uint16(len(sa.sm.peers)))
 	//signed, err := sa.sm.mpcDistributor.CreateReqMpcSign([]byte(data.Data), PKBytes)
-	signed, err := sa.sm.mpcDistributor.CreateReqMpcSign([]byte(data.Data), []byte(data.Extern), PKBytes, 0)
+	signed, err := sa.sm.mpcDistributor.CreateReqMpcSign([]byte(data.Data), []byte(data.Extern), PKBytes, 0, CurveBytes)
 
 	// signed   R // s
 	if err == nil {

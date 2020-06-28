@@ -8,6 +8,7 @@ import (
 type SendData struct {
 	PKBytes hexutil.Bytes `json:"pk"`
 	Data    hexutil.Bytes `json:"data"`
+	Curve   hexutil.Bytes `json:"curve"`
 	Extern  string        `json:extern`
 }
 

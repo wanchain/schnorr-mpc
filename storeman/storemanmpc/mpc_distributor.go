@@ -23,7 +23,7 @@ import (
 )
 
 type MpcContextCreater interface {
-	CreateContext(int, uint64, []mpcprotocol.PeerInfo, uint16, ...MpcValue) (MpcInterface, error) //createContext
+	CreateContext(int, uint64, []mpcprotocol.PeerInfo, uint16, uint8, ...MpcValue) (MpcInterface, error) //createContext
 }
 
 type MpcValue struct {
@@ -251,7 +251,7 @@ func (mpcServer *MpcDistributor) SetCurPeerCount(peerCount uint16) {
 	mpcServer.peerCount = peerCount
 }
 
-func (mpcServer *MpcDistributor) CreateReqMpcSign(data []byte, extern []byte, pkBytes []byte, byApprove int64) (interface{}, error) {
+func (mpcServer *MpcDistributor) CreateReqMpcSign(data []byte, extern []byte, pkBytes []byte, byApprove int64, curveBytes []byte) (interface{}, error) {
 
 	log.SyslogInfo("CreateReqMpcSign begin")
 	grpId, _ := osmconf.GetOsmConf().GetGrpInxByGpk(pkBytes)
@@ -264,7 +264,8 @@ func (mpcServer *MpcDistributor) CreateReqMpcSign(data []byte, extern []byte, pk
 		MpcValue{mpcprotocol.PublicKeyResult, nil, pkBytes[:]},
 		MpcValue{mpcprotocol.MpcM, nil, data},
 		MpcValue{mpcprotocol.MpcExt, nil, extern},
-		MpcValue{mpcprotocol.MpcByApprove, []big.Int{*(big.NewInt(byApprove))}, nil})
+		MpcValue{mpcprotocol.MpcByApprove, []big.Int{*(big.NewInt(byApprove))}, nil},
+		MpcValue{mpcprotocol.MpcCurve, nil, curveBytes[:]})
 
 	return value, err
 }
@@ -286,11 +287,21 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 		}
 	}
 
+	var curveType uint8
+	for _, item := range preSetValue {
+		if item.Key == mpcprotocol.MpcCurve {
+			curveBig := big.NewInt(0).SetBytes(item.ByteValue)
+			curveType = uint8(curveBig.Uint64())
+			break
+		}
+	}
+
 	var address common.Address
 	var gpkString string
 	if ctxType == mpcprotocol.MpcSignLeader {
 		for _, item := range preSetValue {
 			if item.Key == mpcprotocol.MpcGpkBytes {
+				//todo for bn256
 				address, err = schnorrmpc.PkToAddress(item.ByteValue)
 				if err != nil {
 					return []byte{}, err
@@ -333,6 +344,7 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 		mpcID,
 		peers,
 		mpcServer.peerCount,
+		curveType,
 		preSetValue...)
 	if err != nil {
 		log.SyslogErr("MpcDistributor createRequestMpcContext, CreateContext fail", "err", err.Error())
@@ -422,6 +434,7 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 	nType := mpcMessage.Data[0].Int64()
 	nByApprove := mpcMessage.Data[1].Int64()
 	curPeerCount := uint16(mpcMessage.Data[2].Int64())
+
 	if nType == mpcprotocol.MpcGPKLeader {
 		ctxType = mpcprotocol.MpcGPKPeer
 	} else {
@@ -540,6 +553,7 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 		mpcMessage.ContextID,
 		msgPeers,
 		curPeerCount,
+		uint8(ctxType),
 		preSetValue...)
 
 	if err != nil {

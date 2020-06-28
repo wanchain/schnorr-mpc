@@ -23,9 +23,9 @@ const (
 type MpcPolycmStep struct {
 	BaseStep
 	message        map[discover.NodeID]bool
-	polycmGMap     schnorrmpc.PolyGMap
-	polycmGMSigMap schnorrmpc.PolyGSigMap
-	polyCoff       schnorrmpc.Polynomial
+	polycmGMap     mpcprotocol.PolyGMap
+	polycmGMSigMap mpcprotocol.PolyGSigMap
+	polyCoff       mpcprotocol.Polynomial
 	selfIndex      uint16
 	grpId          string
 }
@@ -35,8 +35,8 @@ func CreateMpcPolycmStep(peers *[]mpcprotocol.PeerInfo) *MpcPolycmStep {
 	return &MpcPolycmStep{
 		BaseStep:       *CreateBaseStep(peers, len(*peers)-1),
 		message:        make(map[discover.NodeID]bool),
-		polycmGMap:     make(schnorrmpc.PolyGMap),
-		polycmGMSigMap: make(schnorrmpc.PolyGSigMap),
+		polycmGMap:     make(mpcprotocol.PolyGMap),
+		polycmGMSigMap: make(mpcprotocol.PolyGSigMap),
 		polyCoff:       nil}
 }
 
@@ -57,13 +57,13 @@ func (req *MpcPolycmStep) InitStep(result mpcprotocol.MpcResultInterface) error 
 
 	cof := schnorrmpc.RandPoly(int(degree), *s)
 
-	req.polyCoff = make(schnorrmpc.Polynomial, len(cof))
+	req.polyCoff = make(mpcprotocol.Polynomial, len(cof))
 	copy(req.polyCoff, cof)
 
 	log.SyslogInfo("MpcPolycmStep:InitStep", "len(req.polyCoff)", len(req.polyCoff), "len(cof)", len(cof))
 
 	// build polycmG
-	pg := make(schnorrmpc.PolynomialG, threshold)
+	pg := make(mpcprotocol.PolynomialG, threshold)
 	for index, value := range cof {
 		skG, _ := schnorrmpc.SkG(&value)
 		pg[index] = *skG
@@ -254,7 +254,7 @@ func (req *MpcPolycmStep) fillCmIntoMap(msg *mpcprotocol.StepMessage) bool {
 
 	threshold, _ := osmconf.GetOsmConf().GetThresholdNum(grpIdString)
 	// build polycmG
-	pg := make(schnorrmpc.PolynomialG, threshold)
+	pg := make(mpcprotocol.PolynomialG, threshold)
 
 	log.SyslogDebug("fillCmIntoMap", "map key", inx, "group", grpIdString, "threshold", threshold, "len(msg.BytesData)", len(msg.BytesData))
 	for i := 0; i < len(msg.BytesData); i++ {

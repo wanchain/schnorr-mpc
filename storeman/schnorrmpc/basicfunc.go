@@ -8,7 +8,8 @@ import (
 	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/crypto"
-	"github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
+	"github.com/wanchain/schnorr-mpc/log"
+	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
 )
 
@@ -17,10 +18,133 @@ const PkLength = 65
 var BigOne = big.NewInt(1)
 var BigZero = big.NewInt(0)
 
-// Generate a random polynomial, its constant item is nominated
-func RandPoly(degree int, constant big.Int) Polynomial {
+type SkSchnorrMpc struct {
+}
 
-	poly := make(Polynomial, degree+1)
+func NewSkSchnorrMpc() *SkSchnorrMpc {
+	return &SkSchnorrMpc{}
+}
+
+func (ssm *SkSchnorrMpc) RandPoly(degree int, constant big.Int) mpcprotocol.Polynomial {
+	return RandPoly(degree, constant)
+}
+
+func (ssm *SkSchnorrMpc) EvaluatePoly(f mpcprotocol.Polynomial, x *big.Int, degree int) big.Int {
+	return EvaluatePoly(f, x, degree)
+}
+
+func (ssm *SkSchnorrMpc) Equal(left, right mpcprotocol.CurvePointer) bool {
+	ptLeft, ok := left.(*ecdsa.PublicKey)
+	if !ok {
+		fmt.Println("It's not ok for type ecdsa.PublicKey")
+		errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
+		log.SyslogErr(errStr)
+		return false
+	}
+
+	ptRight, ok := left.(*ecdsa.PublicKey)
+	if !ok {
+		errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
+		log.SyslogErr(errStr)
+		return false
+	}
+
+	ret, _ := PkEqual(ptLeft, ptRight)
+	return ret
+}
+
+func (ssm *SkSchnorrMpc) IsOnCurve(pt mpcprotocol.CurvePointer) bool {
+	ptTemp, ok := pt.(*ecdsa.PublicKey)
+	if !ok {
+		errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
+		log.SyslogErr(errStr)
+		return false
+	}
+
+	if CheckPK(ptTemp) == nil {
+		return true
+	} else {
+		return false
+	}
+}
+
+func (ssm *SkSchnorrMpc) SkG(sk *big.Int) (mpcprotocol.CurvePointer, error) {
+	return SkG(sk)
+}
+
+func (ssm *SkSchnorrMpc) MulPK(sk *big.Int, pk mpcprotocol.CurvePointer) (mpcprotocol.CurvePointer, error) {
+	pt, ok := pk.(*ecdsa.PublicKey)
+	if !ok {
+		errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
+		log.SyslogErr(errStr)
+		return nil, mpcprotocol.ErrTypeAssertFail
+	}
+	return SkMul(pt, sk)
+}
+
+func (ssm *SkSchnorrMpc) Add(left, right mpcprotocol.CurvePointer) (mpcprotocol.CurvePointer, error) {
+	ptRet, _ := ssm.NewPt()
+	ptLeft, ok := left.(*ecdsa.PublicKey)
+	if !ok {
+		fmt.Println("It's not ok for type ecdsa.PublicKey")
+		errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
+		log.SyslogErr(errStr)
+		return ptRet, mpcprotocol.ErrTypeAssertFail
+	}
+
+	ptRight, ok := left.(*ecdsa.PublicKey)
+	if !ok {
+		errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
+		log.SyslogErr(errStr)
+		return ptRet, mpcprotocol.ErrTypeAssertFail
+	}
+
+	ptTemp, ok := ptRet.(*ecdsa.PublicKey)
+	if !ok {
+		errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
+		log.SyslogErr(errStr)
+		return ptRet, mpcprotocol.ErrTypeAssertFail
+	}
+
+	ptTemp.X, ptTemp.Y = crypto.S256().Add(ptLeft.X, ptLeft.Y, ptRight.X, ptRight.Y)
+	return ptTemp, nil
+}
+
+func (ssm *SkSchnorrMpc) NewPt() (mpcprotocol.CurvePointer, error) {
+	sG := new(ecdsa.PublicKey)
+	sG.Curve = crypto.S256()
+	return sG, nil
+}
+
+func (ssm *SkSchnorrMpc) MarshPt(pt mpcprotocol.CurvePointer) ([]byte, error) {
+	ptTemp, ok := pt.(*ecdsa.PublicKey)
+	if !ok {
+		errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
+		log.SyslogErr(errStr)
+		return nil, mpcprotocol.ErrTypeAssertFail
+	}
+	return crypto.FromECDSAPub(ptTemp), nil
+}
+
+func (ssm *SkSchnorrMpc) UnMarshPt(b []byte) (mpcprotocol.CurvePointer, error) {
+	return crypto.ToECDSAPub(b), nil
+}
+
+func (ssm *SkSchnorrMpc) PtToHexString(pt mpcprotocol.CurvePointer) string {
+	b, err := ssm.MarshPt(pt)
+	if err != nil {
+		return ""
+	} else {
+		return hexutil.Encode(b)
+	}
+}
+
+func (ssm *SkSchnorrMpc) StringToPt(str string) (mpcprotocol.CurvePointer, error) {
+	return StringtoPk(str)
+}
+
+func RandPoly(degree int, constant big.Int) mpcprotocol.Polynomial {
+	poly := make(mpcprotocol.Polynomial, degree+1)
 
 	poly[0].Mod(&constant, crypto.S256().Params().N)
 
@@ -29,13 +153,13 @@ func RandPoly(degree int, constant big.Int) Polynomial {
 		temp, _ := Rand.Int(Rand.Reader, crypto.S256().Params().N)
 
 		// in case of polynomial degenerating
-		poly[i] = *temp.Add(temp, bigOne)
+		poly[i] = *temp.Add(temp, mpcprotocol.BigOne)
 	}
 	return poly
 }
 
 // Calculate polynomial's evaluation at some point
-func EvaluatePoly(f Polynomial, x *big.Int, degree int) big.Int {
+func EvaluatePoly(f mpcprotocol.Polynomial, x *big.Int, degree int) big.Int {
 
 	sum := big.NewInt(0)
 
@@ -226,7 +350,7 @@ func SplitPksFromBytes(buf []byte) ([]*ecdsa.PublicKey, error) {
 }
 
 func EvalByPolyG(pks []*ecdsa.PublicKey, degree uint16, x *big.Int) (*ecdsa.PublicKey, error) {
-	if len(pks) == 0 || x.Cmp(bigZero) == 0 {
+	if len(pks) == 0 || x.Cmp(mpcprotocol.BigZero) == 0 {
 		return nil, errors.New("len(pks)==0 or xvalue is zero")
 	}
 	if len(pks) != int(degree+1) {
@@ -274,10 +398,10 @@ func VerifyInternalData(pub *ecdsa.PublicKey, hash []byte, r, s *big.Int) bool {
 
 func CheckPK(pk *ecdsa.PublicKey) error {
 	if pk == nil {
-		return protocol.ErrInvalidPK
+		return mpcprotocol.ErrInvalidPK
 	}
 	if !crypto.S256().IsOnCurve(pk.X, pk.Y) {
-		return protocol.ErrInvalidPK
+		return mpcprotocol.ErrInvalidPK
 	} else {
 		return nil
 	}

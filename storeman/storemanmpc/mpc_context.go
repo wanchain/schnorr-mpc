@@ -7,6 +7,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
 	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
+	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpcbn"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"strconv"
 	"sync"
@@ -42,13 +43,15 @@ type MpcStepFunc interface {
 }
 
 type MpcContext struct {
-	ContextID   uint64 //Unique id for every content
-	quitMu      sync.Mutex
-	bQuit       bool
-	peers       []mpcprotocol.PeerInfo
-	mpcResult   mpcprotocol.MpcResultInterface
-	MpcSteps    []MpcStepFunc
-	MapStepChan map[uint64]chan *mpcprotocol.StepMessage
+	ContextID    uint64 //Unique id for every content
+	quitMu       sync.Mutex
+	bQuit        bool
+	peers        []mpcprotocol.PeerInfo
+	mpcResult    mpcprotocol.MpcResultInterface
+	MpcSteps     []MpcStepFunc
+	MapStepChan  map[uint64]chan *mpcprotocol.StepMessage
+	schnorrMPCer mpcprotocol.SchnorrMPCer
+	curveType    uint8
 }
 
 func (mpcCtx *MpcContext) getMpcResult(err error) (interface{}, error) {
@@ -252,7 +255,8 @@ func (mpcCtx *MpcContext) getMessage(PeerID *discover.NodeID,
 
 func createMpcContext(contextID uint64,
 	peers []mpcprotocol.PeerInfo,
-	mpcResult mpcprotocol.MpcResultInterface) *MpcContext {
+	mpcResult mpcprotocol.MpcResultInterface,
+	curveType uint8) *MpcContext {
 
 	mpc := &MpcContext{
 		ContextID:   contextID,
@@ -261,8 +265,17 @@ func createMpcContext(contextID uint64,
 		quitMu:      sync.Mutex{},
 		mpcResult:   mpcResult,
 		MapStepChan: make(map[uint64]chan *mpcprotocol.StepMessage),
+		curveType:   curveType,
 	}
 
+	switch int(curveType) {
+	case mpcprotocol.SK256Curve:
+		mpc.schnorrMPCer = schnorrmpc.NewSkSchnorrMpc()
+	case mpcprotocol.BN256Curve:
+		mpc.schnorrMPCer = schnorrmpcbn.NewBnSchnorrMpc()
+	default:
+		mpc.schnorrMPCer = schnorrmpc.NewSkSchnorrMpc()
+	}
 	return mpc
 }
 
@@ -379,4 +392,8 @@ func (mpcCtx *MpcContext) mainMPCProcess(StoremanManager mpcprotocol.StoremanMan
 	mpcCtx.quit(nil)
 	log.SyslogInfo("MpcContext finished", "ctx ID", mpcCtx.ContextID)
 	return mpcErr
+}
+
+func (mpcCtx *MpcContext) GetSchnorrMPCer() mpcprotocol.SchnorrMPCer {
+	return mpcCtx.schnorrMPCer
 }

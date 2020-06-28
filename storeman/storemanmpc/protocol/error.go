@@ -33,3 +33,7 @@ var (
 	ErrCheckContent = errors.New("fail to check content")
 	ErrInvalidPK    = errors.New("invalid pk")
 )
+
+var (
+	ErrTypeAssertFail = errors.New("type assert fail")
+)

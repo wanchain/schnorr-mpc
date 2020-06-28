@@ -53,7 +53,7 @@ func (g *G1) String() string {
 }
 
 // add by demmon
-func (e *G1) IsInfinity() bool{
+func (e *G1) IsInfinity() bool {
 	return e.p.IsInfinity()
 }
 
@@ -164,6 +164,11 @@ func (e *G1) Unmarshal(m []byte) ([]byte, error) {
 	}
 	return m[2*numBytes:], nil
 }
+
+func (e *G1) IsOnCurve() bool {
+	return e.p.IsOnCurve()
+}
+
 func (e *G1) UnmarshalPure(m []byte) ([]byte, error) {
 	// Each value is a 256-bit number.
 	const numBytes = 256 / 8
@@ -201,18 +206,18 @@ func (e *G1) UnmarshalPure(m []byte) ([]byte, error) {
 }
 
 var (
-	bn256_B = big.NewInt(3)
-	bn256_q = new(big.Int).Div(new(big.Int).Add(P, big.NewInt(1)), big.NewInt(4))
-	err_ep_nil = errors.New("ep is zero")
-	err_compress = errors.New("compress failed")
+	bn256_B        = big.NewInt(3)
+	bn256_q        = new(big.Int).Div(new(big.Int).Add(P, big.NewInt(1)), big.NewInt(4))
+	err_ep_nil     = errors.New("ep is zero")
+	err_compress   = errors.New("compress failed")
 	err_decompress = errors.New("decompress failed")
-	err_decode = errors.New("decode failed")
-	err_infinity = errors.New("infinity point")
+	err_decode     = errors.New("decode failed")
+	err_infinity   = errors.New("infinity point")
 )
 
 func GfpToBytes(p *gfP) []byte {
 	bs := make([]byte, 32)
-	for i:=0; i<4; i++ {
+	for i := 0; i < 4; i++ {
 		binary.LittleEndian.PutUint64(bs[i*8:], p[i])
 	}
 
@@ -220,7 +225,7 @@ func GfpToBytes(p *gfP) []byte {
 }
 func BytesToGfp(b []byte) *gfP {
 	var g gfP
-	for i:=0; i<4; i++ {
+	for i := 0; i < 4; i++ {
 		g[i] = binary.LittleEndian.Uint64(b[8*i:])
 	}
 
@@ -288,13 +293,14 @@ func (e *G1) DecodeRLP(s *rlp.Stream) error {
 func isOdd(a *big.Int) bool {
 	return a.Bit(0) == 1
 }
+
 // f[0~31]=x f[32~63]=y
 func compress(f []byte) []byte {
 	if len(f) != 64 {
 		return nil
 	}
 	format := byte(0x2)
-	if f[63] & 1 == 1 {
+	if f[63]&1 == 1 {
 		format |= 0x1
 	}
 	b := make([]byte, 33)
@@ -307,7 +313,7 @@ func decompress(c []byte) ([]byte, error) {
 		return nil, fmt.Errorf("decompress c len should >= 33")
 	}
 	ybit := false
-	if c[32] & 1 == 1 {
+	if c[32]&1 == 1 {
 		ybit = true
 	}
 	x := new(big.Int).SetBytes(c[0:32])
@@ -547,6 +553,7 @@ func (e *G2) DecodeRLP(s *rlp.Stream) error {
 	_, err = e.Unmarshal(b)
 	return err
 }
+
 //func (e *G2) EncodeRLP(w io.Writer) error {
 //	b := e.Marshal()
 //	x := compress(b[0:64])
@@ -583,7 +590,6 @@ func (e *G2) DecodeRLP(s *rlp.Stream) error {
 //	_, err = e.Unmarshal(b)
 //	return err
 //}
-
 
 // GT is an abstract cyclic group. The zero value is suitable for use as the
 // output of an operation, but cannot be used as an input.

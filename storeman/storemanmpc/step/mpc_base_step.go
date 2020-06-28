@@ -16,6 +16,7 @@ type BaseStep struct {
 	stepId       int
 	notRecvPeers map[discover.NodeID]*discover.NodeID
 	mpcResult    mpcprotocol.MpcResultInterface
+	schnorrMpcer mpcprotocol.SchnorrMPCer
 }
 
 func (step *BaseStep) InitStep(mpcResult mpcprotocol.MpcResultInterface) error {
@@ -162,4 +163,8 @@ func (step *BaseStep) SetStepId(stepId int) {
 
 func (step *BaseStep) GetStepId() int {
 	return step.stepId
+}
+
+func (step *BaseStep) SetSchnorrMpcer(smcer mpcprotocol.SchnorrMPCer) {
+	step.schnorrMpcer = smcer
 }

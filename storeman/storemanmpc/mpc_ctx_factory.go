@@ -13,11 +13,12 @@ func (*MpcCtxFactory) CreateContext(ctxType int,
 	mpcID uint64,
 	peers []mpcprotocol.PeerInfo,
 	peerCurCount uint16,
+	curveType uint8,
 	preSetValue ...MpcValue) (MpcInterface, error) {
 
 	log.Info("\n\n\n")
 	log.SyslogInfo("===================================== CreateContext=====================================")
-	log.SyslogInfo("CreateContext", "ctxType", ctxType, "peerCurCount", peerCurCount)
+	log.SyslogInfo("CreateContext", "ctxType", ctxType, "peerCurCount", peerCurCount, "curveType", curveType)
 	for i := 0; i < len(preSetValue); i++ {
 		if preSetValue[i].Key != mpcprotocol.MpcPrivateShare {
 			if preSetValue[i].Value != nil {
@@ -40,9 +41,9 @@ func (*MpcCtxFactory) CreateContext(ctxType int,
 	//	return ackGPKMpc(mpcID, peers, preSetValue...)
 
 	case mpcprotocol.MpcSignLeader:
-		return reqSignMpc(mpcID, peers, peerCurCount, preSetValue...)
+		return reqSignMpc(mpcID, peers, peerCurCount, curveType, preSetValue...)
 	case mpcprotocol.MpcSignPeer:
-		return ackSignMpc(mpcID, peers, peerCurCount, preSetValue...)
+		return ackSignMpc(mpcID, peers, peerCurCount, curveType, preSetValue...)
 	}
 
 	return nil, mpcprotocol.ErrContextType
