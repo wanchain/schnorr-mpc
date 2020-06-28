@@ -4,6 +4,8 @@ import (
 	"errors"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
+	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
+	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpcbn"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"github.com/wanchain/schnorr-mpc/storeman/storemanmpc/step"
 )
@@ -20,7 +22,7 @@ func reqSignMpc(mpcID uint64, peers []mpcprotocol.PeerInfo, peerCurCount uint16,
 	mpcReady := step.CreateMpcReadyStep(&mpc.peers)
 	mpcReady.SetWaiting(0)
 
-	return generateTxSignMpc(mpc, reqMpc, mpcReady, peerCurCount)
+	return generateTxSignMpc(mpc, reqMpc, mpcReady, peerCurCount, curveType)
 }
 
 //get message from leader and create Context
@@ -35,10 +37,10 @@ func ackSignMpc(mpcID uint64, peers []mpcprotocol.PeerInfo, peerCurCount uint16,
 	mpcReady := step.CreateGetMpcReadyStep(&mpc.peers)
 	mpcReady.SetWaiting(1)
 
-	return generateTxSignMpc(mpc, ackMpc, mpcReady, peerCurCount)
+	return generateTxSignMpc(mpc, ackMpc, mpcReady, peerCurCount, curveType)
 }
 
-func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStepFunc, peerCurCount uint16) (*MpcContext, error) {
+func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStepFunc, peerCurCount uint16, curveType uint8) (*MpcContext, error) {
 	log.SyslogInfo("generateTxSignMpc begin")
 
 	result := mpc.mpcResult
@@ -105,6 +107,19 @@ func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStep
 		stepItem.SetWaitAll(false)
 		stepItem.SetStepId(stepId)
 	}
+
+	var schnorrMpcer mpcprotocol.SchnorrMPCer
+	switch int(curveType) {
+	case mpcprotocol.SK256Curve:
+		schnorrMpcer = schnorrmpc.NewSkSchnorrMpc()
+	case mpcprotocol.BN256Curve:
+		schnorrMpcer = schnorrmpcbn.NewBnSchnorrMpc()
+	default:
+		schnorrMpcer = schnorrmpc.NewSkSchnorrMpc()
+	}
+
+	mpc.SetSchnorrMPCer(schnorrMpcer)
+	mpc.SetStepSchnorrMPCer()
 
 	return mpc, nil
 }

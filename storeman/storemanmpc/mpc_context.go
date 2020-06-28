@@ -40,6 +40,7 @@ type MpcStepFunc interface {
 	SetWaitAll(bool)
 	SetWaiting(int)
 	SetStepId(int)
+	SetSchnorrMpcer(mpcprotocol.SchnorrMPCer)
 }
 
 type MpcContext struct {
@@ -394,6 +395,16 @@ func (mpcCtx *MpcContext) mainMPCProcess(StoremanManager mpcprotocol.StoremanMan
 	return mpcErr
 }
 
-func (mpcCtx *MpcContext) GetSchnorrMPCer() mpcprotocol.SchnorrMPCer {
+func (mpcCtx *MpcContext) SchnorrMPCer() mpcprotocol.SchnorrMPCer {
 	return mpcCtx.schnorrMPCer
+}
+
+func (mpcCtx *MpcContext) SetSchnorrMPCer(smcer mpcprotocol.SchnorrMPCer) {
+	mpcCtx.schnorrMPCer = smcer
+}
+
+func (mpcCtx *MpcContext) SetStepSchnorrMPCer() {
+	for _, step := range mpcCtx.MpcSteps {
+		step.SetSchnorrMpcer(mpcCtx.schnorrMPCer)
+	}
 }

@@ -168,3 +168,7 @@ func (step *BaseStep) GetStepId() int {
 func (step *BaseStep) SetSchnorrMpcer(smcer mpcprotocol.SchnorrMPCer) {
 	step.schnorrMpcer = smcer
 }
+
+func (step *BaseStep) SchnorrMpcer() mpcprotocol.SchnorrMPCer {
+	return step.schnorrMpcer
+}
