@@ -9,14 +9,12 @@ import (
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
+	schcomm "github.com/wanchain/schnorr-mpc/storeman/schnorrcomm"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
 )
 
 const PkLength = 65
-
-var BigOne = big.NewInt(1)
-var BigZero = big.NewInt(0)
 
 type SkSchnorrMpc struct {
 }
@@ -61,10 +59,13 @@ func (ssm *SkSchnorrMpc) IsOnCurve(pt mpcprotocol.CurvePointer) bool {
 		return false
 	}
 
-	if CheckPK(ptTemp) == nil {
-		return true
-	} else {
+	if ptTemp == nil {
 		return false
+	}
+	if !crypto.S256().IsOnCurve(ptTemp.X, ptTemp.Y) {
+		return false
+	} else {
+		return true
 	}
 }
 
@@ -108,7 +109,7 @@ func (ssm *SkSchnorrMpc) Add(left, right mpcprotocol.CurvePointer) (mpcprotocol.
 func (ssm *SkSchnorrMpc) NewPt() (mpcprotocol.CurvePointer, error) {
 	sG := new(ecdsa.PublicKey)
 	sG.Curve = crypto.S256()
-	sG.X, sG.Y = crypto.S256().ScalarBaseMult(BigOne.Bytes())
+	sG.X, sG.Y = crypto.S256().ScalarBaseMult(schcomm.BigOne.Bytes())
 	return sG, nil
 }
 
@@ -189,7 +190,7 @@ func RandPoly(degree int, constant big.Int) mpcprotocol.Polynomial {
 		temp, _ := Rand.Int(Rand.Reader, crypto.S256().Params().N)
 
 		// in case of polynomial degenerating
-		poly[i] = *temp.Add(temp, mpcprotocol.BigOne)
+		poly[i] = *temp.Add(temp, schcomm.BigOne)
 	}
 	return poly
 }
@@ -376,7 +377,7 @@ func SkG(s *big.Int) (*ecdsa.PublicKey, error) {
 }
 
 func SkMul(pk *ecdsa.PublicKey, s *big.Int) (*ecdsa.PublicKey, error) {
-	err := CheckPK(pk)
+	err := checkPK(pk)
 	if err != nil {
 		return nil, err
 	}
@@ -403,7 +404,7 @@ func SplitPksFromBytes(buf []byte) ([]*ecdsa.PublicKey, error) {
 }
 
 func EvalByPolyG(pks []*ecdsa.PublicKey, degree uint16, x *big.Int) (*ecdsa.PublicKey, error) {
-	if len(pks) == 0 || x.Cmp(mpcprotocol.BigZero) == 0 {
+	if len(pks) == 0 || x.Cmp(schcomm.BigZero) == 0 {
 		return nil, errors.New("len(pks)==0 or xvalue is zero")
 	}
 	if len(pks) != int(degree+1) {
@@ -411,7 +412,7 @@ func EvalByPolyG(pks []*ecdsa.PublicKey, degree uint16, x *big.Int) (*ecdsa.Publ
 	}
 
 	for _, pk := range pks {
-		err := CheckPK(pk)
+		err := checkPK(pk)
 		if err != nil {
 			return nil, err
 		}
@@ -441,15 +442,7 @@ func PkEqual(pk1, pk2 *ecdsa.PublicKey) (bool, error) {
 	return pk1.X.Cmp(pk2.X) == 0 && pk1.Y.Cmp(pk2.Y) == 0, nil
 }
 
-func SignInternalData(prv *ecdsa.PrivateKey, hash []byte) (r, s *big.Int, err error) {
-	return ecdsa.Sign(Rand.Reader, prv, hash[:])
-}
-
-func VerifyInternalData(pub *ecdsa.PublicKey, hash []byte, r, s *big.Int) bool {
-	return ecdsa.Verify(pub, hash, r, s)
-}
-
-func CheckPK(pk *ecdsa.PublicKey) error {
+func checkPK(pk *ecdsa.PublicKey) error {
 	if pk == nil {
 		return mpcprotocol.ErrInvalidPK
 	}

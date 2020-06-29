@@ -6,7 +6,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
-	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
+	schcomm "github.com/wanchain/schnorr-mpc/storeman/schnorrcomm"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
 	"strconv"
@@ -125,7 +125,7 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	_, grpIdString, _ := osmconf.GetGrpId(rss.mpcResult)
 
 	senderPk, _ := osmconf.GetOsmConf().GetPKByNodeId(grpIdString, msg.PeerID)
-	err := schnorrmpc.CheckPK(senderPk)
+	err := schcomm.CheckPK(senderPk)
 	if err != nil {
 		log.SyslogErr("MpcRSKShare_Step", " HandleMessage", err.Error())
 	}
@@ -143,7 +143,7 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 
 	// 1. check sig
 	h := sha256.Sum256(sij.Bytes())
-	bVerifySig := schnorrmpc.VerifyInternalData(senderPk, h[:], &r, &s)
+	bVerifySig := schcomm.VerifyInternalData(senderPk, h[:], &r, &s)
 
 	bContent := true
 

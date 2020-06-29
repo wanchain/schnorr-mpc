@@ -11,7 +11,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
-	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
+	schcomm "github.com/wanchain/schnorr-mpc/storeman/schnorrcomm"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
 	"strconv"
@@ -63,7 +63,7 @@ func (ptStep *MpcRRcvJudgeStep) CreateMessage() []mpcprotocol.StepMessage {
 	h := sha256.Sum256(buf.Bytes())
 
 	prv, _ := osmconf.GetOsmConf().GetSelfPrvKey()
-	r, s, _ := schnorrmpc.SignInternalData(prv, h[:])
+	r, s, _ := schcomm.SignInternalData(prv, h[:])
 
 	message[0].Data = make([]big.Int, 3)
 	message[0].Data[0] = *ptStep.rcvColInter
@@ -92,7 +92,7 @@ func (ptStep *MpcRRcvJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool
 		log.SyslogErr("MpcRRcvInterStep", "GetPKByNodeId error", err.Error())
 	}
 
-	bVerifySig := schnorrmpc.VerifyInternalData(senderPk, h[:], &r, &s)
+	bVerifySig := schcomm.VerifyInternalData(senderPk, h[:], &r, &s)
 
 	if bVerifySig {
 		log.SyslogInfo("MpcRRcvInterStep::HandleMessage check sig success")

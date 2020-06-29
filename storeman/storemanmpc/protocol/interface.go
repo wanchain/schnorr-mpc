@@ -4,10 +4,6 @@ import (
 	"math/big"
 )
 
-var BigZero = big.NewInt(0)
-
-var BigOne = big.NewInt(1)
-
 // Structure defination for polynomial
 type Polynomial []big.Int
 

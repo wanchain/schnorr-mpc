@@ -10,7 +10,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
-	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
+	schcomm "github.com/wanchain/schnorr-mpc/storeman/schnorrcomm"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
 	"strconv"
@@ -134,7 +134,7 @@ func (req *MpcPolycmStep) CreateMessage() []mpcprotocol.StepMessage {
 	//prv,_ := osmconf.GetOsmConf().GetSelfPrvKey()
 	h := sha256.Sum256(buf.Bytes())
 	prv, _ := osmconf.GetOsmConf().GetSelfPrvKey()
-	r, s, _ := schnorrmpc.SignInternalData(prv, h[:])
+	r, s, _ := schcomm.SignInternalData(prv, h[:])
 
 	msg.Data = make([]big.Int, 2)
 	msg.Data[0] = *r
@@ -262,7 +262,7 @@ func (req *MpcPolycmStep) checkSig(msg *mpcprotocol.StepMessage) bool {
 		log.SyslogErr("MpcPolycmStep", "checkSig GetPKByNodeId err", err.Error())
 		return false
 	}
-	return schnorrmpc.VerifyInternalData(senderPk, h[:], r, s)
+	return schcomm.VerifyInternalData(senderPk, h[:], r, s)
 
 }
 

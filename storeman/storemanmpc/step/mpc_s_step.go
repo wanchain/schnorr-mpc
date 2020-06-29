@@ -7,7 +7,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
-	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
+	schcomm "github.com/wanchain/schnorr-mpc/storeman/schnorrcomm"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
 	"strconv"
@@ -55,7 +55,7 @@ func (msStep *MpcSStep) CreateMessage() []mpcprotocol.StepMessage {
 
 		h := sha256.Sum256(pointer.seed.Bytes())
 		prv, _ := osmconf.GetOsmConf().GetSelfPrvKey()
-		r, s, _ := schnorrmpc.SignInternalData(prv, h[:])
+		r, s, _ := schcomm.SignInternalData(prv, h[:])
 
 		message[0].Data = append(message[0].Data, pointer.seed)
 		message[0].Data = append(message[0].Data, *r)
@@ -84,7 +84,7 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 
 		senderPk, _ := osmconf.GetOsmConf().GetPKByNodeId(grpIdString, msg.PeerID)
 
-		err := schnorrmpc.CheckPK(senderPk)
+		err := schcomm.CheckPK(senderPk)
 		if err != nil {
 			log.SyslogErr("MpcSStep", "HandleMessage", err.Error())
 		}
@@ -93,7 +93,7 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 
 		// 1. check sig
 		h := sha256.Sum256(sshare.Bytes())
-		bVerifySig := schnorrmpc.VerifyInternalData(senderPk, h[:], &r, &s)
+		bVerifySig := schcomm.VerifyInternalData(senderPk, h[:], &r, &s)
 
 		if !bVerifySig {
 			// save error and send judge info to leader

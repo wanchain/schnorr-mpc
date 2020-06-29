@@ -6,6 +6,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
+	schcomm "github.com/wanchain/schnorr-mpc/storeman/schnorrcomm"
 	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpcbn"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
@@ -130,7 +131,7 @@ func (mpcCtx *MpcContext) getMpcResult(err error) (interface{}, error) {
 				oneRPrf.PolyDataS = rslshValue[5].Bytes()
 				oneRPrf.SndrAndRcvrIndex = [2]uint8{uint8(rslshValue[6].Int64()), uint8(rslshValue[7].Int64())}
 
-				if rslshValue[0].Cmp(schnorrmpc.BigZero) == 0 {
+				if rslshValue[0].Cmp(schcomm.BigZero) == 0 {
 					oneRPrf.BecauseSndr = false
 				} else {
 					oneRPrf.BecauseSndr = true
@@ -176,7 +177,7 @@ func (mpcCtx *MpcContext) getMpcResult(err error) (interface{}, error) {
 
 				oneRPrf.SndrAndRcvrIndex = [2]uint8{uint8(sslshValue[5].Int64()), uint8(sslshValue[6].Int64())}
 
-				if sslshValue[0].Cmp(schnorrmpc.BigZero) == 0 {
+				if sslshValue[0].Cmp(schcomm.BigZero) == 0 {
 					oneRPrf.BecauseSndr = false
 				} else {
 					oneRPrf.BecauseSndr = true

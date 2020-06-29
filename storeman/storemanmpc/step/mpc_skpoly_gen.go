@@ -9,7 +9,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
-	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
+	schcomm "github.com/wanchain/schnorr-mpc/storeman/schnorrcomm"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
 	"strconv"
@@ -87,7 +87,7 @@ func (poly *RandomPolynomialGen) initialize(peers *[]mpcprotocol.PeerInfo,
 			return err
 		}
 
-		poly.polyValueSigR[i], poly.polyValueSigS[i], _ = schnorrmpc.SignInternalData(prv, h[:])
+		poly.polyValueSigR[i], poly.polyValueSigS[i], _ = schcomm.SignInternalData(prv, h[:])
 		log.Info("RandomPolynomialGen::initialize poly ",
 			"group id", grpIdString,
 			"senderPk", hexutil.Encode(crypto.FromECDSAPub(&prv.PublicKey)),

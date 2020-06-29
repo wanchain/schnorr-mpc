@@ -8,7 +8,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
-	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
+	schcomm "github.com/wanchain/schnorr-mpc/storeman/schnorrcomm"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
 	"strconv"
@@ -52,7 +52,7 @@ func (addStep *MpcRStep) CreateMessage() []mpcprotocol.StepMessage {
 	h := sha256.Sum256(buf.Bytes())
 
 	prv, _ := osmconf.GetOsmConf().GetSelfPrvKey()
-	r, s, _ := schnorrmpc.SignInternalData(prv, h[:])
+	r, s, _ := schcomm.SignInternalData(prv, h[:])
 	// send rpkshare, sig of rpkshare
 	message[0].Data = make([]big.Int, 2)
 	message[0].Data[0] = *r
@@ -95,7 +95,7 @@ func (addStep *MpcRStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	buf.Write(msg.BytesData[0])
 	h := sha256.Sum256(buf.Bytes())
 
-	bVerifySig := schnorrmpc.VerifyInternalData(senderPk, h[:], &r, &s)
+	bVerifySig := schcomm.VerifyInternalData(senderPk, h[:], &r, &s)
 
 	if bVerifySig {
 		pointer.message[*msg.PeerID] = *pointPk

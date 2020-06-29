@@ -14,6 +14,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
+	schcomm "github.com/wanchain/schnorr-mpc/storeman/schnorrcomm"
 	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"io/ioutil"
@@ -333,7 +334,7 @@ func (cnf *OsmConf) GetSelfPrvKey() (*ecdsa.PrivateKey, error) {
 		log.SyslogErr("OsmConf", "GetSelfPrvKey.GetSelfPubKey", err.Error())
 		return nil, err
 	}
-	err = schnorrmpc.CheckPK(pk)
+	err = schcomm.CheckPK(pk)
 	if err != nil {
 		log.SyslogErr("OsmConf", "GetSelfPrvKey.CheckPK", err.Error())
 		return nil, err
@@ -547,7 +548,7 @@ func (cnf *OsmConf) getPkHash(grpId string, smInx uint16) (common.Hash, error) {
 
 	cnf.checkGrpId(grpId)
 	pk, _ := cnf.GetPK(grpId, smInx)
-	err := schnorrmpc.CheckPK(pk)
+	err := schcomm.CheckPK(pk)
 	if err != nil {
 		return common.Hash{}, err
 	}
@@ -768,12 +769,12 @@ func BuildDataByIndexes(indexes *[]big.Int) (*big.Int, error) {
 
 	if indexes == nil {
 		log.SyslogErr("BuildDataByIndexes indexes is null")
-		return schnorrmpc.BigZero, errors.New("invalid point")
+		return schcomm.BigZero, errors.New("invalid point")
 	}
 
-	ret := schnorrmpc.BigZero
+	ret := schcomm.BigZero
 	bigTm := big.NewInt(0)
-	bigTm.Add(schnorrmpc.BigOne, schnorrmpc.BigOne)
+	bigTm.Add(schcomm.BigOne, schcomm.BigOne)
 
 	for _, indexBig := range *indexes {
 		bigTm1 := big.NewInt(0)
@@ -801,7 +802,7 @@ func BuildStrByIndexes(indexes *[]big.Int) (string, error) {
 func InterSecByIndexes(indexes *[]big.Int) (*big.Int, error) {
 	if indexes == nil {
 		log.SyslogErr("BuildDataByIndexes indexes is null")
-		return schnorrmpc.BigZero, errors.New("invalid point")
+		return schcomm.BigZero, errors.New("invalid point")
 	}
 	if len(*indexes) == 0 {
 		return nil, errors.New("no indexes needed to be intersected")

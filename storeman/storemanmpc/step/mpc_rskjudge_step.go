@@ -5,7 +5,7 @@ import (
 	"crypto/sha256"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
-	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
+	schcomm "github.com/wanchain/schnorr-mpc/storeman/schnorrcomm"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
 	"strconv"
@@ -103,13 +103,13 @@ func (rsj *MpcRSkJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	grpId, grpIdString, _ := osmconf.GetGrpId(rsj.mpcResult)
 
 	senderPk, _ := osmconf.GetOsmConf().GetPK(grpIdString, uint16(senderIndex))
-	err := schnorrmpc.CheckPK(senderPk)
+	err := schcomm.CheckPK(senderPk)
 	if err != nil {
 		log.SyslogErr("MpcRSkJudgeStep", "HandleMessage", err.Error())
 	}
 	// 1. check sig
 	h := sha256.Sum256(sij.Bytes())
-	bVerifySig := schnorrmpc.VerifyInternalData(senderPk, h[:], &r, &s)
+	bVerifySig := schcomm.VerifyInternalData(senderPk, h[:], &r, &s)
 	bSnderWrong := true
 
 	if !bVerifySig {
@@ -182,9 +182,9 @@ func (rsj *MpcRSkJudgeStep) saveSlshProof(isSnder bool,
 
 	sslshValue := make([]big.Int, 9)
 	if isSnder {
-		sslshValue[0] = *schnorrmpc.BigOne
+		sslshValue[0] = *schcomm.BigOne
 	} else {
-		sslshValue[0] = *schnorrmpc.BigZero
+		sslshValue[0] = *schcomm.BigZero
 	}
 	sslshValue[1] = *polyR
 	sslshValue[2] = *polyS

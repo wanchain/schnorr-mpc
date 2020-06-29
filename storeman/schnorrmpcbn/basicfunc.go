@@ -3,6 +3,7 @@ package schnorrmpcbn
 import (
 	Rand "crypto/rand"
 	"github.com/wanchain/schnorr-mpc/crypto/bn256/cloudflare"
+	schcomm "github.com/wanchain/schnorr-mpc/storeman/schnorrcomm"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
 )
@@ -100,7 +101,7 @@ func RandPoly(degree int, constant big.Int) mpcprotocol.Polynomial {
 		temp, _ := Rand.Int(Rand.Reader, bn256.Order)
 
 		// in case of polynomial degenerating
-		poly[i] = *temp.Add(temp, mpcprotocol.BigOne)
+		poly[i] = *temp.Add(temp, schcomm.BigOne)
 	}
 	return poly
 }

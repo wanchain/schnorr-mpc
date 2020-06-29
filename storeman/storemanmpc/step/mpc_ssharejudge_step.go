@@ -2,13 +2,11 @@ package step
 
 import (
 	"bytes"
-	"crypto/ecdsa"
 	"crypto/sha256"
 	"encoding/hex"
-	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
-	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
+	schcomm "github.com/wanchain/schnorr-mpc/storeman/schnorrcomm"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
 	"strconv"
@@ -107,13 +105,13 @@ func (ssj *MpcSSahreJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool 
 	grpId, grpIdString, _ := osmconf.GetGrpId(ssj.mpcResult)
 
 	senderPk, _ := osmconf.GetOsmConf().GetPK(grpIdString, uint16(senderIndex))
-	err := schnorrmpc.CheckPK(senderPk)
+	err := schcomm.CheckPK(senderPk)
 	if err != nil {
 		log.SyslogErr("MpcSSahreJudgeStep", "HandleMessage", err.Error())
 	}
 	// 1. check sig
 	h := sha256.Sum256(sshare.Bytes())
-	bVerifySig := schnorrmpc.VerifyInternalData(senderPk, h[:], &r, &s)
+	bVerifySig := schcomm.VerifyInternalData(senderPk, h[:], &r, &s)
 
 	bSnderWrong := true
 	if !bVerifySig {
@@ -153,26 +151,51 @@ func (ssj *MpcSSahreJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool 
 	return true
 }
 
-func (ssj *MpcSSahreJudgeStep) checkContent(sshare, m *big.Int, rpkShare, gpkShare *ecdsa.PublicKey) (bool, error) {
-	sshareG, _ := schnorrmpc.SkG(sshare)
-	mPkShare, _ := schnorrmpc.SkMul(gpkShare, m)
+//func (ssj *MpcSSahreJudgeStep) checkContent(sshare, m *big.Int, rpkShare, gpkShare *ecdsa.PublicKey) (bool, error) {
+//	sshareG, _ := schnorrmpc.SkG(sshare)
+//	mPkShare, _ := schnorrmpc.SkMul(gpkShare, m)
+//
+//	pkTemp := new(ecdsa.PublicKey)
+//	pkTemp.Curve = crypto.S256()
+//	pkTemp.X, pkTemp.Y = rpkShare.X, rpkShare.Y
+//	pkTemp.X, pkTemp.Y = crypto.S256().Add(pkTemp.X, pkTemp.Y, mPkShare.X, mPkShare.Y)
+//
+//	left := sshareG
+//	right := pkTemp
+//	return schnorrmpc.PkEqual(left, right)
+//}
 
-	pkTemp := new(ecdsa.PublicKey)
-	pkTemp.Curve = crypto.S256()
-	pkTemp.X, pkTemp.Y = rpkShare.X, rpkShare.Y
-	pkTemp.X, pkTemp.Y = crypto.S256().Add(pkTemp.X, pkTemp.Y, mPkShare.X, mPkShare.Y)
+func (ssj *MpcSSahreJudgeStep) checkContent(sshare, m *big.Int, rpkShare, gpkShare mpcprotocol.CurvePointer) (bool, error) {
+	//sshareG, _ := schnorrmpc.SkG(sshare)
+	//mPkShare, _ := schnorrmpc.SkMul(gpkShare, m)
+	//
+	//pkTemp := new(ecdsa.PublicKey)
+	//pkTemp.Curve = crypto.S256()
+	//pkTemp.X, pkTemp.Y = rpkShare.X, rpkShare.Y
+	//pkTemp.X, pkTemp.Y = crypto.S256().Add(pkTemp.X, pkTemp.Y, mPkShare.X, mPkShare.Y)
+	//
+	//left := sshareG
+	//right := pkTemp
+	//return schnorrmpc.PkEqual(left, right)
+	smpcer := ssj.schnorrMpcer
+	sshareG, _ := smpcer.SkG(sshare)
+	mPkShare, _ := smpcer.MulPK(m, gpkShare)
+
+	pkTemp, _ := smpcer.Add(rpkShare, mPkShare)
 
 	left := sshareG
 	right := pkTemp
-	return schnorrmpc.PkEqual(left, right)
+	//return schnorrmpc.PkEqual(left, right)
+	return smpcer.Equal(left, right), nil
 }
 
-func (ssj *MpcSSahreJudgeStep) getRPkShare(index uint16) (*ecdsa.PublicKey, error) {
+func (ssj *MpcSSahreJudgeStep) getRPkShare(index uint16) (mpcprotocol.CurvePointer, error) {
 
 	key := mpcprotocol.RPkShare + strconv.Itoa(int(index))
 	pkBytes, _ := ssj.mpcResult.GetByteValue(key)
 
-	return crypto.ToECDSAPub(pkBytes), nil
+	//return crypto.ToECDSAPub(pkBytes), nil
+	return ssj.schnorrMpcer.UnMarshPt(pkBytes)
 }
 
 func (ssj *MpcSSahreJudgeStep) getm() (*big.Int, error) {
@@ -200,19 +223,19 @@ func (ssj *MpcSSahreJudgeStep) getm() (*big.Int, error) {
 	return m, nil
 }
 
-func (ssj *MpcSSahreJudgeStep) getGPKShare(index uint16) (*ecdsa.PublicKey, error) {
+func (ssj *MpcSSahreJudgeStep) getGPKShare(index uint16) (mpcprotocol.CurvePointer, error) {
 	//
 
 	_, grpIdString, err := osmconf.GetGrpId(ssj.mpcResult)
 	if err != nil {
 		return nil, err
 	}
-	gpkShare, err := osmconf.GetOsmConf().GetPKShare(grpIdString, index)
+
+	gpkShareBytes, err := osmconf.GetOsmConf().GetPKShareBytes(grpIdString, index)
 	if err != nil {
 		return nil, err
 	}
-
-	return gpkShare, nil
+	return ssj.schnorrMpcer.UnMarshPt(gpkShareBytes)
 }
 
 func (ssj *MpcSSahreJudgeStep) saveSlshCount(slshCount int) error {
@@ -235,13 +258,13 @@ func (ssj *MpcSSahreJudgeStep) saveSlshCount(slshCount int) error {
 func (ssj *MpcSSahreJudgeStep) saveSlshProof(isSnder bool,
 	m, sshare, r, s *big.Int,
 	sndrIndex, rcvrIndex, slshCount int,
-	rpkShare, gpkShare *ecdsa.PublicKey, grp []byte) error {
+	rpkShare, gpkShare mpcprotocol.CurvePointer, grp []byte) error {
 
 	sslshValue := make([]big.Int, 7)
 	if isSnder {
-		sslshValue[0] = *schnorrmpc.BigOne
+		sslshValue[0] = *schcomm.BigOne
 	} else {
-		sslshValue[0] = *schnorrmpc.BigZero
+		sslshValue[0] = *schcomm.BigZero
 	}
 
 	sslshValue[1] = *m
@@ -251,14 +274,27 @@ func (ssj *MpcSSahreJudgeStep) saveSlshProof(isSnder bool,
 	sslshValue[5] = *big.NewInt(0).SetInt64(int64(sndrIndex))
 	sslshValue[6] = *big.NewInt(0).SetInt64(int64(rcvrIndex))
 
+	smpcer := ssj.schnorrMpcer
 	// rpkShare, gpkShare, grpId
 	var sslshByte bytes.Buffer
-	sslshByte.Write(crypto.FromECDSAPub(rpkShare))
-	sslshByte.Write(crypto.FromECDSAPub(gpkShare))
+	//sslshByte.Write(crypto.FromECDSAPub(rpkShare))
+	//sslshByte.Write(crypto.FromECDSAPub(gpkShare))
+	rpkShareBytes, err := smpcer.MarshPt(rpkShare)
+	if err != nil {
+		log.SyslogErr("MpcSSahreJudgeStep", "MarshPt(rpkShare) err ", err.Error())
+		return err
+	}
+	gpkShareBytes, err := smpcer.MarshPt(gpkShare)
+	if err != nil {
+		log.SyslogErr("MpcSSahreJudgeStep", "MarshPt(gpkShare) err ", err.Error())
+		return err
+	}
+	sslshByte.Write(rpkShareBytes)
+	sslshByte.Write(gpkShareBytes)
 	sslshByte.Write(grp[:])
 
 	key1 := mpcprotocol.SSlshProof + strconv.Itoa(int(slshCount-1))
-	err := ssj.mpcResult.SetValue(key1, sslshValue)
+	err = ssj.mpcResult.SetValue(key1, sslshValue)
 	if err != nil {
 		log.SyslogErr("MpcSSahreJudgeStep", "save SlshProof.SetValue err ", err.Error(), "key", key1)
 		return err
