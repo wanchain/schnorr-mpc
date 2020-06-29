@@ -161,7 +161,6 @@ func (ssj *MpcSSahreJudgeStep) checkContent(sshare, m *big.Int, rpkShare, gpkSha
 
 	left := sshareG
 	right := pkTemp
-	//return schnorrmpc.PkEqual(left, right)
 	return smpcer.Equal(left, right), nil
 }
 

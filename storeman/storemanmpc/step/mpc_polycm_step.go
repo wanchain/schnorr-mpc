@@ -66,9 +66,7 @@ func (req *MpcPolycmStep) InitStep(result mpcprotocol.MpcResultInterface) error 
 	// build polycmG
 	pg := make(mpcprotocol.PolynomialG, threshold)
 	for index, value := range cof {
-		//skG, _ := schnorrmpc.SkG(&value)
 		skG, _ := smpcer.SkG(&value)
-		//pg[index] = *skG
 		pg[index] = skG
 	}
 	req.grpId = grpIdString
