@@ -83,36 +83,32 @@ func (ssm *SkSchnorrMpc) MulPK(sk *big.Int, pk mpcprotocol.CurvePointer) (mpcpro
 }
 
 func (ssm *SkSchnorrMpc) Add(left, right mpcprotocol.CurvePointer) (mpcprotocol.CurvePointer, error) {
-	ptRet, _ := ssm.NewPt()
+
 	ptLeft, ok := left.(*ecdsa.PublicKey)
 	if !ok {
 		fmt.Println("It's not ok for type ecdsa.PublicKey")
 		errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
 		log.SyslogErr(errStr)
-		return ptRet, mpcprotocol.ErrTypeAssertFail
+		return nil, mpcprotocol.ErrTypeAssertFail
 	}
 
-	ptRight, ok := left.(*ecdsa.PublicKey)
+	ptRight, ok := right.(*ecdsa.PublicKey)
 	if !ok {
 		errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
 		log.SyslogErr(errStr)
-		return ptRet, mpcprotocol.ErrTypeAssertFail
+		return nil, mpcprotocol.ErrTypeAssertFail
 	}
 
-	ptTemp, ok := ptRet.(*ecdsa.PublicKey)
-	if !ok {
-		errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
-		log.SyslogErr(errStr)
-		return ptRet, mpcprotocol.ErrTypeAssertFail
-	}
+	fmt.Println("ptLeft", ptLeft)
+	fmt.Println("ptRight", ptRight)
 
-	ptTemp.X, ptTemp.Y = crypto.S256().Add(ptLeft.X, ptLeft.Y, ptRight.X, ptRight.Y)
-	return ptTemp, nil
+	return Add(ptLeft, ptRight)
 }
 
 func (ssm *SkSchnorrMpc) NewPt() (mpcprotocol.CurvePointer, error) {
 	sG := new(ecdsa.PublicKey)
 	sG.Curve = crypto.S256()
+	sG.X, sG.Y = crypto.S256().ScalarBaseMult(BigOne.Bytes())
 	return sG, nil
 }
 
@@ -291,6 +287,23 @@ func SchnorrSign(psk big.Int, r big.Int, m big.Int) big.Int {
 	sum.Add(sum, &r)
 	sum.Mod(sum, crypto.S256().Params().N)
 	return *sum
+}
+
+func Add(left, right *ecdsa.PublicKey) (*ecdsa.PublicKey, error) {
+	onCurveLeft := crypto.S256().IsOnCurve(left.X, left.Y)
+	onCurveRight := crypto.S256().IsOnCurve(right.X, right.Y)
+	fmt.Println("......................................................", onCurveLeft, onCurveRight)
+	pkTemp := new(ecdsa.PublicKey)
+	pkTemp.Curve = crypto.S256()
+	pkTemp.X, pkTemp.Y = left.X, left.Y
+
+	if equal, _ := PkEqual(left, right); equal {
+		pkTemp.X, pkTemp.Y = crypto.S256().Double(pkTemp.X, pkTemp.Y)
+	} else {
+		pkTemp.X, pkTemp.Y = crypto.S256().Add(pkTemp.X, pkTemp.Y, right.X, right.Y)
+	}
+	return pkTemp, nil
+
 }
 
 // Lagrange's polynomial interpolation algorithm

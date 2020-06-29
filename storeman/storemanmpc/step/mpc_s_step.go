@@ -256,10 +256,14 @@ func (msStep *MpcSStep) checkContent(sshare, m *big.Int, rpkShare, gpkShare mpcp
 	smpcer := msStep.schnorrMpcer
 
 	if !smpcer.IsOnCurve(rpkShare) || !smpcer.IsOnCurve(gpkShare) {
-		return false, errors.New("rpkShare is invalid pk or gpkShare is invalid pk")
+		return false, errors.New("rpkShare or gpkShare is invalid pk or gpkShare is invalid pk")
 	}
 	sshareG, _ := smpcer.SkG(sshare)
 	mPkShare, _ := smpcer.MulPK(m, gpkShare)
+
+	if !smpcer.IsOnCurve(mPkShare) {
+		return false, errors.New("mPkShare is invalid pk or gpkShare is invalid pk")
+	}
 
 	pkTemp, err := smpcer.Add(rpkShare, mPkShare)
 	if err != nil {
