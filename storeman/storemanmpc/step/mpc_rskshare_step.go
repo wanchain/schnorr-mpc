@@ -58,16 +58,12 @@ func (rss *MpcRSKShare_Step) FinishStep(result mpcprotocol.MpcResultInterface, m
 		return err
 	}
 	// rpkShare
-	//rpkShare := new(ecdsa.PublicKey)
-	//rpkShare.Curve = crypto.S256()
-	//rpkShare.X, rpkShare.Y = crypto.S256().ScalarBaseMult((*skpv.result).Bytes())
 	rpkShare, err := rss.schnorrMpcer.SkG(skpv.result)
 	if err != nil {
 		log.SyslogErr("MpcRSKShare_Step", "SkG err", err.Error())
 	}
 
 	// RPkShare + selfIndex
-
 	_, grpIdString, _ := osmconf.GetGrpId(rss.mpcResult)
 
 	selfIndex, err := osmconf.GetOsmConf().GetSelfInx(grpIdString)

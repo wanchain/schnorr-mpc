@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
-	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
 	schcomm "github.com/wanchain/schnorr-mpc/storeman/schnorrcomm"
@@ -47,9 +46,12 @@ func (addStep *MpcRStep) CreateMessage() []mpcprotocol.StepMessage {
 	message[0].PeerID = nil
 
 	pointer := addStep.messages[0].(*mpcPointGenerator)
-	var buf bytes.Buffer
-	buf.Write(crypto.FromECDSAPub(&pointer.seed))
-	h := sha256.Sum256(buf.Bytes())
+	//buf.Write(crypto.FromECDSAPub(&pointer.seed))
+	seedBytes, err := addStep.schnorrMpcer.MarshPt(pointer.seed)
+	if err != nil {
+		log.SyslogErr("MpcRStep CreateMessage", "MarshPt err", err.Error())
+	}
+	h := sha256.Sum256(seedBytes)
 
 	prv, _ := osmconf.GetOsmConf().GetSelfPrvKey()
 	r, s, _ := schcomm.SignInternalData(prv, h[:])
@@ -59,7 +61,8 @@ func (addStep *MpcRStep) CreateMessage() []mpcprotocol.StepMessage {
 	message[0].Data[1] = *s
 
 	// only one point, rpkShare
-	message[0].BytesData = append(message[0].BytesData, crypto.FromECDSAPub(&pointer.seed))
+	//message[0].BytesData = append(message[0].BytesData, crypto.FromECDSAPub(&pointer.seed))
+	message[0].BytesData = append(message[0].BytesData, seedBytes)
 
 	return message
 }
@@ -77,7 +80,13 @@ func (addStep *MpcRStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		return false
 	}
 
-	pointPk := crypto.ToECDSAPub(msg.BytesData[0])
+	//pointPk := crypto.ToECDSAPub(msg.BytesData[0])
+	pointPk, err := addStep.schnorrMpcer.UnMarshPt(msg.BytesData[0])
+	if err != nil {
+		log.SyslogErr("HandleMessage", "UnMarshPt error ", err.Error())
+		return false
+	}
+
 	r := msg.Data[0]
 	s := msg.Data[1]
 
@@ -98,7 +107,8 @@ func (addStep *MpcRStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	bVerifySig := schcomm.VerifyInternalData(senderPk, h[:], &r, &s)
 
 	if bVerifySig {
-		pointer.message[*msg.PeerID] = *pointPk
+		//pointer.message[*msg.PeerID] = *pointPk
+		pointer.message[*msg.PeerID] = pointPk
 
 		// save rpkshare for check data of s
 		key := mpcprotocol.RPkShare + strconv.Itoa(int(senderIndex))
@@ -123,18 +133,24 @@ func (addStep *MpcRStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc m
 	}
 
 	pointer := addStep.messages[0].(*mpcPointGenerator)
+
+	resultBytes, err := addStep.schnorrMpcer.MarshPt(pointer.result)
+	if err != nil {
+		log.SyslogErr("MpcRStep FinishStep", "MarshPt error", err.Error())
+		return err
+	}
 	log.Info("generated gpk MpcPointStep::FinishStep",
 		"result key", addStep.resultKeys[0],
-		"result value ", hexutil.Encode(crypto.FromECDSAPub(&pointer.result)))
+		"result value ", hexutil.Encode(resultBytes))
 
 	//err = result.SetByteValue(ptStep.resultKeys[0], crypto.FromECDSAPub(&pointer.result))
-	err = result.SetByteValue(mpcprotocol.RPk, crypto.FromECDSAPub(&pointer.result))
+	err = result.SetByteValue(mpcprotocol.RPk, resultBytes)
 	if err != nil {
 		log.SyslogErr("HandleMessage", "MpcPointStep.FinishStep, SetValue fail. err", err.Error())
 		return err
 	}
 
-	log.SyslogInfo("@@@@@@@@@@@@save RPK", "key", mpcprotocol.RPk, "RPK", hexutil.Encode(crypto.FromECDSAPub(&pointer.result)))
+	log.SyslogInfo("@@@@@@@@@@@@save RPK", "key", mpcprotocol.RPk, "RPK")
 
 	_, grpIdString, _ := osmconf.GetGrpId(addStep.mpcResult)
 

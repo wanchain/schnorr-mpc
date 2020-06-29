@@ -16,6 +16,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
 	schcomm "github.com/wanchain/schnorr-mpc/storeman/schnorrcomm"
 	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
+	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpcbn"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"github.com/wanchain/schnorr-mpc/storeman/validator"
 	"io/ioutil"
@@ -321,7 +322,7 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 			// mpc private share
 			preSetValue = append(preSetValue, *value)
 		} else {
-			value, err := mpcServer.loadStoremanAddress(gpkString, &address)
+			value, err := mpcServer.loadStoremanAddress(curveType, gpkString, &address)
 			if err != nil {
 
 				log.SyslogErr("MpcDistributor createRequestMpcContext, loadStoremanAddress fail",
@@ -365,7 +366,7 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 	return mpc.getMpcResult(err)
 }
 
-func (mpcServer *MpcDistributor) loadStoremanAddress(gpkStr string, address *common.Address) (*MpcValue, error) {
+func (mpcServer *MpcDistributor) loadStoremanAddress(curveType uint8, gpkStr string, address *common.Address) (*MpcValue, error) {
 	log.SyslogInfo("MpcDistributor.loadStoremanAddress begin", "address", address.String())
 
 	mpcServer.accMu.Lock()
@@ -387,8 +388,18 @@ func (mpcServer *MpcDistributor) loadStoremanAddress(gpkStr string, address *com
 		mpcServer.mpcAccountMap[*address] = value
 	}
 
-	gpkShare, _ := schnorrmpc.SkG(&value.privateShare)
-	log.SyslogInfo("loadStoremanAddress", "gpkShare", hexutil.Encode(crypto.FromECDSAPub(gpkShare)))
+	var smpcer mpcprotocol.SchnorrMPCer
+	switch int(curveType) {
+	case mpcprotocol.SK256Curve:
+		smpcer = schnorrmpc.NewSkSchnorrMpc()
+	case mpcprotocol.BN256Curve:
+		smpcer = schnorrmpcbn.NewBnSchnorrMpc()
+	default:
+		smpcer = schnorrmpc.NewSkSchnorrMpc()
+	}
+	gpkShare, _ := smpcer.SkG(&value.privateShare)
+	log.SyslogInfo("loadStoremanAddress", "gpkShare", smpcer.PtToHexString(gpkShare))
+
 	return &MpcValue{mpcprotocol.MpcPrivateShare, []big.Int{value.privateShare}, nil}, nil
 }
 
@@ -445,13 +456,14 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 	log.SyslogInfo("createMpcCtx", "ctxType", ctxType, "ctxId", mpcMessage.ContextID)
 	var grpId string
 	var gpkStr string
+	var curveType uint8
 	if ctxType == mpcprotocol.MpcSignPeer {
 		log.SyslogInfo("createMpcCtx MpcSignPeer")
 		mpcM := mpcMessage.BytesData[0]
 		address := mpcMessage.BytesData[1]
 		mpcExt := mpcMessage.BytesData[2]
 		curveTypeBytes := mpcMessage.BytesData[3]
-
+		curveType = uint8(big.NewInt(0).SetBytes(curveTypeBytes).Uint64())
 		//add := common.Address{}
 		//copy(add[:], address)
 
@@ -474,7 +486,7 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 			// mpc private share
 		} else {
 			// load account
-			MpcPrivateShare, err = mpcServer.loadStoremanAddress(gpkStr, &add)
+			MpcPrivateShare, err = mpcServer.loadStoremanAddress(curveType, gpkStr, &add)
 			if err != nil {
 				return err
 			}

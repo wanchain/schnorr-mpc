@@ -205,6 +205,7 @@ func (ptStep *MpcRRcvJudgeStep) FinishStep(result mpcprotocol.MpcResultInterface
 		"key", mpcprotocol.RSkShare,
 		"value", hexutil.Encode(rskShare.Bytes()))
 
+	//todo curve point
 	rpkShare := new(ecdsa.PublicKey)
 	rpkShare.Curve = crypto.S256()
 	rpkShare.X, rpkShare.Y = crypto.S256().ScalarBaseMult(rskShare.Bytes())

@@ -24,11 +24,11 @@ func NewSkSchnorrMpc() *SkSchnorrMpc {
 }
 
 func (ssm *SkSchnorrMpc) RandPoly(degree int, constant big.Int) mpcprotocol.Polynomial {
-	return RandPoly(degree, constant)
+	return randPoly(degree, constant)
 }
 
 func (ssm *SkSchnorrMpc) EvaluatePoly(f mpcprotocol.Polynomial, x *big.Int, degree int) big.Int {
-	return EvaluatePoly(f, x, degree)
+	return evaluatePoly(f, x, degree)
 }
 
 func (ssm *SkSchnorrMpc) Equal(left, right mpcprotocol.CurvePointer) bool {
@@ -47,7 +47,7 @@ func (ssm *SkSchnorrMpc) Equal(left, right mpcprotocol.CurvePointer) bool {
 		return false
 	}
 
-	ret, _ := PkEqual(ptLeft, ptRight)
+	ret, _ := pkEqual(ptLeft, ptRight)
 	return ret
 }
 
@@ -70,7 +70,7 @@ func (ssm *SkSchnorrMpc) IsOnCurve(pt mpcprotocol.CurvePointer) bool {
 }
 
 func (ssm *SkSchnorrMpc) SkG(sk *big.Int) (mpcprotocol.CurvePointer, error) {
-	return SkG(sk)
+	return skG(sk)
 }
 
 func (ssm *SkSchnorrMpc) MulPK(sk *big.Int, pk mpcprotocol.CurvePointer) (mpcprotocol.CurvePointer, error) {
@@ -80,7 +80,7 @@ func (ssm *SkSchnorrMpc) MulPK(sk *big.Int, pk mpcprotocol.CurvePointer) (mpcpro
 		log.SyslogErr(errStr)
 		return nil, mpcprotocol.ErrTypeAssertFail
 	}
-	return SkMul(pt, sk)
+	return skMul(pt, sk)
 }
 
 func (ssm *SkSchnorrMpc) Add(left, right mpcprotocol.CurvePointer) (mpcprotocol.CurvePointer, error) {
@@ -103,7 +103,7 @@ func (ssm *SkSchnorrMpc) Add(left, right mpcprotocol.CurvePointer) (mpcprotocol.
 	fmt.Println("ptLeft", ptLeft)
 	fmt.Println("ptRight", ptRight)
 
-	return Add(ptLeft, ptRight)
+	return add(ptLeft, ptRight)
 }
 
 func (ssm *SkSchnorrMpc) NewPt() (mpcprotocol.CurvePointer, error) {
@@ -150,7 +150,7 @@ func (ssm *SkSchnorrMpc) StringToPt(str string) (mpcprotocol.CurvePointer, error
 
 func (ssm *SkSchnorrMpc) SplitPksFromBytes(buf []byte) ([]mpcprotocol.CurvePointer, error) {
 	ret := make([]mpcprotocol.CurvePointer, 0)
-	ret1, err := SplitPksFromBytes(buf[:])
+	ret1, err := splitPksFromBytes(buf[:])
 	for _, pt := range ret1 {
 		ret = append(ret, pt)
 	}
@@ -169,18 +169,36 @@ func (ssm *SkSchnorrMpc) EvalByPolyG(pts []mpcprotocol.CurvePointer, degree uint
 		pks = append(pks, ptTemp)
 	}
 
-	return EvalByPolyG(pks, degree, xvalue)
+	return evalByPolyG(pks, degree, xvalue)
 }
 
 func (ssm *SkSchnorrMpc) SchnorrSign(psk big.Int, r big.Int, m big.Int) big.Int {
-	return SchnorrSign(psk, r, m)
+	return schnorrSign(psk, r, m)
 }
 
 func (ssm *SkSchnorrMpc) Lagrange(f []big.Int, x []big.Int, degree int) big.Int {
-	return Lagrange(f, x, degree)
+	return lagrange(f, x, degree)
 }
 
-func RandPoly(degree int, constant big.Int) mpcprotocol.Polynomial {
+func (ssm *SkSchnorrMpc) LagrangeECC(sig []mpcprotocol.CurvePointer, x []big.Int, degree int) mpcprotocol.CurvePointer {
+
+	sigSec256 := make([]*ecdsa.PublicKey, 0)
+	for _, oneSig := range sig {
+		pTemp, ok := oneSig.(*ecdsa.PublicKey)
+		if !ok {
+			fmt.Println("It's not ok for type ecdsa.PublicKey")
+			errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
+			log.SyslogErr(errStr)
+			return nil
+		}
+
+		sigSec256 = append(sigSec256, pTemp)
+	}
+
+	return lagrangeECC(sigSec256, x, degree)
+}
+
+func randPoly(degree int, constant big.Int) mpcprotocol.Polynomial {
 	poly := make(mpcprotocol.Polynomial, degree+1)
 
 	poly[0].Mod(&constant, crypto.S256().Params().N)
@@ -196,7 +214,7 @@ func RandPoly(degree int, constant big.Int) mpcprotocol.Polynomial {
 }
 
 // Calculate polynomial's evaluation at some point
-func EvaluatePoly(f mpcprotocol.Polynomial, x *big.Int, degree int) big.Int {
+func evaluatePoly(f mpcprotocol.Polynomial, x *big.Int, degree int) big.Int {
 
 	sum := big.NewInt(0)
 
@@ -265,7 +283,7 @@ func evaluateb(x []big.Int, i int, degree int) *big.Int {
 }
 
 // Lagrange's polynomial interpolation algorithm: working in ECC points
-func LagrangeECC(sig []ecdsa.PublicKey, x []big.Int, degree int) *ecdsa.PublicKey {
+func lagrangeECC(sig []*ecdsa.PublicKey, x []big.Int, degree int) *ecdsa.PublicKey {
 
 	b := evaluateB(x, degree)
 
@@ -280,7 +298,7 @@ func LagrangeECC(sig []ecdsa.PublicKey, x []big.Int, degree int) *ecdsa.PublicKe
 	return sum
 }
 
-func SchnorrSign(psk big.Int, r big.Int, m big.Int) big.Int {
+func schnorrSign(psk big.Int, r big.Int, m big.Int) big.Int {
 	// sshare = rskshare + m*gskSahre
 	sum := big.NewInt(1)
 	sum.Mul(&psk, &m)
@@ -290,7 +308,7 @@ func SchnorrSign(psk big.Int, r big.Int, m big.Int) big.Int {
 	return *sum
 }
 
-func Add(left, right *ecdsa.PublicKey) (*ecdsa.PublicKey, error) {
+func add(left, right *ecdsa.PublicKey) (*ecdsa.PublicKey, error) {
 	onCurveLeft := crypto.S256().IsOnCurve(left.X, left.Y)
 	onCurveRight := crypto.S256().IsOnCurve(right.X, right.Y)
 	fmt.Println("......................................................", onCurveLeft, onCurveRight)
@@ -298,7 +316,7 @@ func Add(left, right *ecdsa.PublicKey) (*ecdsa.PublicKey, error) {
 	pkTemp.Curve = crypto.S256()
 	pkTemp.X, pkTemp.Y = left.X, left.Y
 
-	if equal, _ := PkEqual(left, right); equal {
+	if equal, _ := pkEqual(left, right); equal {
 		pkTemp.X, pkTemp.Y = crypto.S256().Double(pkTemp.X, pkTemp.Y)
 	} else {
 		pkTemp.X, pkTemp.Y = crypto.S256().Add(pkTemp.X, pkTemp.Y, right.X, right.Y)
@@ -308,7 +326,7 @@ func Add(left, right *ecdsa.PublicKey) (*ecdsa.PublicKey, error) {
 }
 
 // Lagrange's polynomial interpolation algorithm
-func Lagrange(f []big.Int, x []big.Int, degree int) big.Int {
+func lagrange(f []big.Int, x []big.Int, degree int) big.Int {
 
 	b := evaluateB(x, degree)
 
@@ -325,7 +343,7 @@ func Lagrange(f []big.Int, x []big.Int, degree int) big.Int {
 	return *s
 }
 
-func ValidatePublicKey(k *ecdsa.PublicKey) bool {
+func validatePublicKey(k *ecdsa.PublicKey) bool {
 	return k != nil && k.X != nil && k.Y != nil && k.X.Sign() != 0 && k.Y.Sign() != 0
 }
 
@@ -360,14 +378,14 @@ func StringtoPk(str string) (*ecdsa.PublicKey, error) {
 }
 
 //sg
-func SkG(s *big.Int) (*ecdsa.PublicKey, error) {
+func skG(s *big.Int) (*ecdsa.PublicKey, error) {
 	sG := new(ecdsa.PublicKey)
 	sG.Curve = crypto.S256()
 	sG.X, sG.Y = crypto.S256().ScalarBaseMult(s.Bytes())
 	return sG, nil
 }
 
-func SkMul(pk *ecdsa.PublicKey, s *big.Int) (*ecdsa.PublicKey, error) {
+func skMul(pk *ecdsa.PublicKey, s *big.Int) (*ecdsa.PublicKey, error) {
 	err := checkPK(pk)
 	if err != nil {
 		return nil, err
@@ -380,7 +398,7 @@ func SkMul(pk *ecdsa.PublicKey, s *big.Int) (*ecdsa.PublicKey, error) {
 }
 
 //
-func SplitPksFromBytes(buf []byte) ([]*ecdsa.PublicKey, error) {
+func splitPksFromBytes(buf []byte) ([]*ecdsa.PublicKey, error) {
 	if len(buf) < PkLength {
 		return nil, errors.New(fmt.Sprintf("SplitPksFromBytes len(buf) = %v", len(buf)))
 	}
@@ -394,7 +412,7 @@ func SplitPksFromBytes(buf []byte) ([]*ecdsa.PublicKey, error) {
 	return ret, nil
 }
 
-func EvalByPolyG(pks []*ecdsa.PublicKey, degree uint16, x *big.Int) (*ecdsa.PublicKey, error) {
+func evalByPolyG(pks []*ecdsa.PublicKey, degree uint16, x *big.Int) (*ecdsa.PublicKey, error) {
 	if len(pks) == 0 || x.Cmp(schcomm.BigZero) == 0 {
 		return nil, errors.New("len(pks)==0 or xvalue is zero")
 	}
@@ -428,7 +446,7 @@ func EvalByPolyG(pks []*ecdsa.PublicKey, degree uint16, x *big.Int) (*ecdsa.Publ
 	return sumPk, nil
 }
 
-func PkEqual(pk1, pk2 *ecdsa.PublicKey) (bool, error) {
+func pkEqual(pk1, pk2 *ecdsa.PublicKey) (bool, error) {
 	// check input parameters
 	return pk1.X.Cmp(pk2.X) == 0 && pk1.Y.Cmp(pk2.Y) == 0, nil
 }

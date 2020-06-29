@@ -30,10 +30,10 @@ const EmptyString = ""
 var osmConf *OsmConf
 
 type GrpElem struct {
-	Inx          uint16
-	WorkingPk    *ecdsa.PublicKey
-	NodeId       *discover.NodeID
-	PkShare      *ecdsa.PublicKey
+	Inx       uint16
+	WorkingPk *ecdsa.PublicKey
+	NodeId    *discover.NodeID
+	//PkShare      *ecdsa.PublicKey
 	PkShareBytes hexutil.Bytes
 	XValue       *big.Int
 }
@@ -147,7 +147,7 @@ func (cnf *OsmConf) LoadCnf(confPath string) error {
 
 			Inx, _ := strconv.Atoi(ge.Inx)
 			gii.ArrGrpElems[i].Inx = uint16(Inx)
-			gii.ArrGrpElems[i].PkShare = crypto.ToECDSAPub(ge.PkShare)
+			//gii.ArrGrpElems[i].PkShare = crypto.ToECDSAPub(ge.PkShare)
 			gii.ArrGrpElems[i].PkShareBytes = ge.PkShare
 			log.SyslogInfo("LoadCnf", "ge.WorkingPk", ge.WorkingPk)
 			log.SyslogInfo("LoadCnf", "ge.PkShare", ge.PkShare)
@@ -242,21 +242,21 @@ func (cnf *OsmConf) GetPKByNodeId(grpId string, nodeId *discover.NodeID) (*ecdsa
 }
 
 // get gpk share (public share)
-func (cnf *OsmConf) GetPKShare(grpId string, smInx uint16) (*ecdsa.PublicKey, error) {
-	defer cnf.wrLock.RUnlock()
-
-	cnf.wrLock.RLock()
-
-	cnf.checkGrpId(grpId)
-	arrGrpElem := cnf.GrpInfoMap[grpId].ArrGrpElems
-	for _, value := range arrGrpElem {
-		if value.Inx == smInx {
-			return value.PkShare, nil
-		}
-	}
-
-	panic(fmt.Sprintf("GetPKShare:Not find storeman, smInx %v", smInx))
-}
+//func (cnf *OsmConf) GetPKShare(grpId string, smInx uint16) (*ecdsa.PublicKey, error) {
+//	defer cnf.wrLock.RUnlock()
+//
+//	cnf.wrLock.RLock()
+//
+//	cnf.checkGrpId(grpId)
+//	arrGrpElem := cnf.GrpInfoMap[grpId].ArrGrpElems
+//	for _, value := range arrGrpElem {
+//		if value.Inx == smInx {
+//			return value.PkShare, nil
+//		}
+//	}
+//
+//	panic(fmt.Sprintf("GetPKShare:Not find storeman, smInx %v", smInx))
+//}
 
 // get gpk share (public share)
 func (cnf *OsmConf) GetPKShareBytes(grpId string, smInx uint16) ([]byte, error) {
@@ -275,28 +275,28 @@ func (cnf *OsmConf) GetPKShareBytes(grpId string, smInx uint16) ([]byte, error) 
 	panic(fmt.Sprintf("GetPKShare:Not find storeman, smInx %v", smInx))
 }
 
-func (cnf *OsmConf) GetPKShareByNodeId(grpId string, nodeId *discover.NodeID) (*ecdsa.PublicKey, error) {
-	defer cnf.wrLock.RUnlock()
-
-	cnf.wrLock.RLock()
-
-	cnf.checkGrpId(grpId)
-	if nodeId == nil {
-		log.SyslogErr("GetPKShareByNodeId, nodeId is null")
-		panic("GetPKShareByNodeId, nodeId is null")
-	}
-	arrGrpElem := cnf.GrpInfoMap[grpId].ArrGrpElems
-	for _, value := range arrGrpElem {
-		if *value.NodeId == *nodeId {
-			return value.PkShare, nil
-		}
-	}
-	panic(fmt.Sprintf("GetPKShareByNodeId:Not find storeman, nodeId %v", *nodeId))
-}
+//func (cnf *OsmConf) GetPKShareByNodeId(grpId string, nodeId *discover.NodeID) (*ecdsa.PublicKey, error) {
+//	defer cnf.wrLock.RUnlock()
+//
+//	cnf.wrLock.RLock()
+//
+//	cnf.checkGrpId(grpId)
+//	if nodeId == nil {
+//		log.SyslogErr("GetPKShareByNodeId, nodeId is null")
+//		panic("GetPKShareByNodeId, nodeId is null")
+//	}
+//	arrGrpElem := cnf.GrpInfoMap[grpId].ArrGrpElems
+//	for _, value := range arrGrpElem {
+//		if *value.NodeId == *nodeId {
+//			return value.PkShare, nil
+//		}
+//	}
+//	panic(fmt.Sprintf("GetPKShareByNodeId:Not find storeman, nodeId %v", *nodeId))
+//}
 
 //-----------------------get self---------------------------------
 
-func (cnf *OsmConf) GetSelfPubKey() (*ecdsa.PublicKey, error) {
+func (cnf *OsmConf) getSelfPubKey() (*ecdsa.PublicKey, error) {
 	defer cnf.wrLock.RUnlock()
 
 	cnf.wrLock.RLock()
@@ -329,7 +329,7 @@ func (cnf *OsmConf) GetSelfNodeId() (*discover.NodeID, error) {
 }
 
 func (cnf *OsmConf) GetSelfPrvKey() (*ecdsa.PrivateKey, error) {
-	pk, err := cnf.GetSelfPubKey()
+	pk, err := cnf.getSelfPubKey()
 	if err != nil {
 		log.SyslogErr("OsmConf", "GetSelfPrvKey.GetSelfPubKey", err.Error())
 		return nil, err
@@ -498,7 +498,7 @@ func (cnf *OsmConf) GetGrpElemsInxes(grpId string) (*ArrayGrpElemsInx, error) {
 	return &ret, nil
 }
 
-func (cnf *OsmConf) GetGrpElems(grpId string) (*ArrayGrpElem, error) {
+func (cnf *OsmConf) getGrpElems(grpId string) (*ArrayGrpElem, error) {
 	defer cnf.wrLock.RUnlock()
 
 	cnf.wrLock.RLock()
@@ -508,7 +508,7 @@ func (cnf *OsmConf) GetGrpElems(grpId string) (*ArrayGrpElem, error) {
 
 }
 
-func (cnf *OsmConf) GetGrpItem(grpId string, smInx uint16) (*GrpElem, error) {
+func (cnf *OsmConf) getGrpItem(grpId string, smInx uint16) (*GrpElem, error) {
 	defer cnf.wrLock.RUnlock()
 
 	cnf.wrLock.RLock()
@@ -520,7 +520,7 @@ func (cnf *OsmConf) GetGrpItem(grpId string, smInx uint16) (*GrpElem, error) {
 			return &grpElem, nil
 		}
 	}
-	panic(fmt.Sprintf("GetGrpItem error. grpId = %v,smInx=%v", grpId, smInx))
+	panic(fmt.Sprintf("getGrpItem error. grpId = %v,smInx=%v", grpId, smInx))
 }
 
 func (cnf *OsmConf) GetGrpInxByGpk(gpk hexutil.Bytes) (string, error) {
@@ -557,18 +557,18 @@ func (cnf *OsmConf) getPkHash(grpId string, smInx uint16) (common.Hash, error) {
 }
 
 // compute f(x) x=hash(pk) bigInt s[i][j]
-func (cnf *OsmConf) GetPkToBigInt(grpId string, smInx uint16) (*big.Int, error) {
-	defer cnf.wrLock.RUnlock()
-
-	cnf.wrLock.RLock()
-
-	cnf.checkGrpId(grpId)
-	h, err := cnf.getPkHash(grpId, smInx)
-	if err != nil {
-		return big.NewInt(0), err
-	}
-	return big.NewInt(0).SetBytes(h.Bytes()), nil
-}
+//func (cnf *OsmConf) GetPkToBigInt(grpId string, smInx uint16) (*big.Int, error) {
+//	defer cnf.wrLock.RUnlock()
+//
+//	cnf.wrLock.RLock()
+//
+//	cnf.checkGrpId(grpId)
+//	h, err := cnf.getPkHash(grpId, smInx)
+//	if err != nil {
+//		return big.NewInt(0), err
+//	}
+//	return big.NewInt(0).SetBytes(h.Bytes()), nil
+//}
 
 func (cnf *OsmConf) GetInxByNodeId(grpId string, id *discover.NodeID) (uint16, error) {
 	defer cnf.wrLock.RUnlock()
@@ -634,7 +634,7 @@ func (cnf *OsmConf) GetXValueByIndex(grpId string, index uint16) (*big.Int, erro
 	cnf.wrLock.RLock()
 	cnf.checkGrpId(grpId)
 
-	ge, err := cnf.GetGrpItem(grpId, index)
+	ge, err := cnf.getGrpItem(grpId, index)
 	if err != nil {
 		return big.NewInt(0), err
 	} else {
@@ -656,7 +656,7 @@ func (cnf *OsmConf) GetPeersByGrpId(grpId string) ([]mpcprotocol.PeerInfo, error
 	cnf.wrLock.RLock()
 	cnf.checkGrpId(grpId)
 	peers := make([]mpcprotocol.PeerInfo, 0)
-	grpElems, _ := cnf.GetGrpElems(grpId)
+	grpElems, _ := cnf.getGrpElems(grpId)
 	for _, grpElem := range *grpElems {
 		peers = append(peers, mpcprotocol.PeerInfo{PeerID: *grpElem.NodeId, Seed: 0})
 	}
@@ -673,7 +673,7 @@ func (cnf *OsmConf) GetAllPeersNodeIds() ([]discover.NodeID, error) {
 
 	for _, grpInfo := range cnf.GrpInfoMap {
 
-		grpElems, _ := cnf.GetGrpElems(grpInfo.GrpId)
+		grpElems, _ := cnf.getGrpElems(grpInfo.GrpId)
 		for _, grpElem := range *grpElems {
 			nodeIdsMap[*grpElem.NodeId] = nil
 		}
@@ -706,7 +706,7 @@ func (cnf *OsmConf) IsLeader(grpId string) (bool, error) {
 //////////////////////////////////util/////////////////////////////
 
 // intersection
-func Intersect(slice1, slice2 []uint16) []uint16 {
+func intersect(slice1, slice2 []uint16) []uint16 {
 	m := make(map[uint16]int)
 	ret := make([]uint16, 0)
 	for _, v := range slice1 {
@@ -727,7 +727,7 @@ func Intersect(slice1, slice2 []uint16) []uint16 {
 func Difference(slice1, slice2 []uint16) []uint16 {
 	m := make(map[uint16]int)
 	ret := make([]uint16, 0)
-	inter := Intersect(slice1, slice2)
+	inter := intersect(slice1, slice2)
 	for _, v := range inter {
 		m[v]++
 	}

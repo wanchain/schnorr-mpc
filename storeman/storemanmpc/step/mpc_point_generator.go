@@ -1,30 +1,34 @@
 package step
 
 import (
-	"crypto/ecdsa"
 	"encoding/hex"
 	"errors"
-	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
-	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
 	"strconv"
 )
 
 type mpcPointGenerator struct {
-	seed        ecdsa.PublicKey
-	message     map[discover.NodeID]ecdsa.PublicKey
-	result      ecdsa.PublicKey
+	//seed        ecdsa.PublicKey
+	//message     map[discover.NodeID]ecdsa.PublicKey
+	//result      ecdsa.PublicKey
+	//preValueKey string
+	//grpIdString string
+	//smcer       mpcprotocol.SchnorrMPCer
+
+	seed        mpcprotocol.CurvePointer
+	message     map[discover.NodeID]mpcprotocol.CurvePointer
+	result      mpcprotocol.CurvePointer
 	preValueKey string
 	grpIdString string
 	smcer       mpcprotocol.SchnorrMPCer
 }
 
 func createPointGenerator(preValueKey string) *mpcPointGenerator {
-	return &mpcPointGenerator{message: make(map[discover.NodeID]ecdsa.PublicKey), preValueKey: preValueKey}
+	return &mpcPointGenerator{message: make(map[discover.NodeID]mpcprotocol.CurvePointer), preValueKey: preValueKey}
 }
 
 func (point *mpcPointGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcprotocol.MpcResultInterface) error {
@@ -52,7 +56,12 @@ func (point *mpcPointGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result
 		return err
 	}
 
-	point.seed = *crypto.ToECDSAPub(value)
+	//point.seed = *crypto.ToECDSAPub(value)
+	point.seed, err = point.smcer.UnMarshPt(value)
+	if err != nil {
+		log.SyslogErr("mpcPointGenerator", "UnMarshPt", err.Error())
+		return err
+	}
 
 	log.SyslogInfo("mpcPointGenerator.initialize succeed")
 	return nil
@@ -62,7 +71,8 @@ func (point *mpcPointGenerator) calculateResult() error {
 	log.SyslogInfo("mpcPointGenerator.calculateResult begin")
 
 	seeds := make([]big.Int, 0)
-	gpkshares := make([]ecdsa.PublicKey, 0)
+	//gpkshares := make([]ecdsa.PublicKey, 0)
+	gpkshares := make([]mpcprotocol.CurvePointer, 0)
 	for nodeId, value := range point.message {
 
 		xValue, err := osmconf.GetOsmConf().GetXValueByNodeId(point.grpIdString, &nodeId)
@@ -73,20 +83,21 @@ func (point *mpcPointGenerator) calculateResult() error {
 		seeds = append(seeds, *xValue)
 
 		// build PK[]
-		var gpkshare ecdsa.PublicKey
-		gpkshare.Curve = crypto.S256()
+		//var gpkshare ecdsa.PublicKey
+		//gpkshare.Curve = crypto.S256()
+		//
+		//gpkshare.X = value.X
+		//gpkshare.Y = value.Y
+		//
+		//gpkshares = append(gpkshares, gpkshare)
 
-		gpkshare.X = value.X
-		gpkshare.Y = value.Y
-
-		gpkshares = append(gpkshares, gpkshare)
+		gpkshares = append(gpkshares, value)
 
 	}
 
 	for index, gpkshareTemp := range gpkshares {
 		log.SyslogInfo("all public share",
-			"gpk share x", hex.EncodeToString(gpkshareTemp.X.Bytes()),
-			"gpk share y", hex.EncodeToString(gpkshareTemp.Y.Bytes()),
+			"gpk share ", point.smcer.PtToHexString(gpkshareTemp),
 			"seed", hex.EncodeToString(seeds[index].Bytes()))
 	}
 
@@ -102,26 +113,32 @@ func (point *mpcPointGenerator) calculateResult() error {
 		"Now nodes number:", len(gpkshares))
 	if len(gpkshares) < int(threshold) {
 		return mpcprotocol.ErrRNW
-
-		//if ok,_ := osmconf.GetOsmConf().IsLeader(point.grpIdString);ok{
-		//	// only leader invoke the errRNW and response to client.
-		//	return mpcprotocol.ErrRNW
-		//}else{
-		//	return nil
-		//}
 	}
 
-	result := schnorrmpc.LagrangeECC(gpkshares, seeds[:], int(degree))
+	smpcer := point.smcer
+	//result := schnorrmpc.LagrangeECC(gpkshares, seeds[:], int(degree))
+	//
+	//if !schnorrmpc.ValidatePublicKey(result) {
+	//	log.SyslogErr("mpcPointGenerator::calculateResult", "mpcPointGenerator.ValidatePublicKey fail. err", mpcprotocol.ErrPointZero.Error())
+	//	return mpcprotocol.ErrPointZero
+	//}
 
-	if !schnorrmpc.ValidatePublicKey(result) {
+	result := smpcer.LagrangeECC(gpkshares, seeds[:], int(degree))
+
+	//if !schnorrmpc.ValidatePublicKey(result) {
+	//	log.SyslogErr("mpcPointGenerator::calculateResult", "mpcPointGenerator.ValidatePublicKey fail. err", mpcprotocol.ErrPointZero.Error())
+	//	return mpcprotocol.ErrPointZero
+	//}
+
+	if !smpcer.IsOnCurve(result) {
 		log.SyslogErr("mpcPointGenerator::calculateResult", "mpcPointGenerator.ValidatePublicKey fail. err", mpcprotocol.ErrPointZero.Error())
 		return mpcprotocol.ErrPointZero
 	}
 
-	point.result = *result
+	point.result = result
 
 	log.SyslogInfo("gpk mpcPointGenerator.calculateResult succeed ",
-		"gpk x", hex.EncodeToString(crypto.FromECDSAPub(result)))
+		"gpk ", smpcer.PtToHexString(result))
 	return nil
 }
 

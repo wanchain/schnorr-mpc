@@ -89,6 +89,10 @@ func (bsm *BnSchnorrMpc) Lagrange(f []big.Int, x []big.Int, degree int) big.Int 
 	return Lagrange(f, x, degree)
 }
 
+func (bsm *BnSchnorrMpc) LagrangeECC(sig []mpcprotocol.CurvePointer, x []big.Int, degree int) mpcprotocol.CurvePointer {
+	return nil
+}
+
 // Generate a random polynomial, its constant item is nominated
 func RandPoly(degree int, constant big.Int) mpcprotocol.Polynomial {
 

@@ -78,6 +78,7 @@ func (mars *MpcAckRSStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc 
 		return err
 	}
 
+	//todo curve point
 	// rpk : R
 	rpk := new(ecdsa.PublicKey)
 	rpk.Curve = crypto.S256()
@@ -146,16 +147,13 @@ func (mars *MpcAckRSStep) verifyRS(result mpcprotocol.MpcResultInterface) error 
 	}
 
 	smpcer := mars.schnorrMpcer
-	//gpk := new(ecdsa.PublicKey)
-	//gpk.Curve = crypto.S256()
-	//gpk.X, gpk.Y = &gpkItem[0], &gpkItem[1]
-	//gpk := crypto.ToECDSAPub(gpkItem[:])
 	gpk, err := smpcer.UnMarshPt(gpkItem[:])
 	if err != nil {
 		log.SyslogErr("MpcAckRSStep::verifyRS", "UnMarshPt err", err.Error())
 		return err
 	}
 
+	//todo CurvePoint
 	// rpk : R
 	rpk := new(ecdsa.PublicKey)
 	rpk.Curve = crypto.S256()
@@ -172,20 +170,12 @@ func (mars *MpcAckRSStep) verifyRS(result mpcprotocol.MpcResultInterface) error 
 	m := new(big.Int).SetBytes(mTemp[:])
 
 	// check ssG = rpk + m*gpk
-	//ssG := new(ecdsa.PublicKey)
-	//ssG.Curve = crypto.S256()
-	//ssG.X, ssG.Y = crypto.S256().ScalarBaseMult(mars.mpcS.Bytes())
-
 	ssG, err := smpcer.SkG(&mars.mpcS)
 	if err != nil {
 		log.SyslogErr("MpcAckRSStep::verifyRS", "SkG err", err.Error())
 		return err
 	}
 	// m*gpk
-	//mgpk := new(ecdsa.PublicKey)
-	//mgpk.Curve = crypto.S256()
-	//mgpk.X, mgpk.Y = crypto.S256().ScalarMult(gpk.X, gpk.Y, m.Bytes())
-	//
 
 	mgpk, err := smpcer.MulPK(m, gpk)
 	if err != nil {
@@ -193,11 +183,6 @@ func (mars *MpcAckRSStep) verifyRS(result mpcprotocol.MpcResultInterface) error 
 		return err
 	}
 	//// rpk + m*gpk
-	//temp := new(ecdsa.PublicKey)
-	//temp.Curve = crypto.S256()
-	//
-	//temp.X, temp.Y = crypto.S256().Add(mgpk.X, mgpk.Y, rpk.X, rpk.Y)
-
 	temp, err := smpcer.Add(mgpk, rpk)
 	if err != nil {
 		log.SyslogErr("MpcAckRSStep::verifyRS", "Add err", err.Error())
@@ -212,13 +197,6 @@ func (mars *MpcAckRSStep) verifyRS(result mpcprotocol.MpcResultInterface) error 
 		"sG", smpcer.PtToHexString(ssG),
 		"s", hexutil.Encode(mars.mpcS.Bytes()),
 		"gpk", smpcer.PtToHexString(gpk))
-
-	//if ssG.X.Cmp(temp.X) == 0 && ssG.Y.Cmp(temp.Y) == 0 {
-	//	log.SyslogInfo("Verification success")
-	//} else {
-	//	log.SyslogErr("Verification failed")
-	//	return mpcprotocol.ErrVerifyFailed
-	//}
 
 	if smpcer.Equal(ssG, temp) {
 		log.SyslogInfo("Verification success")
