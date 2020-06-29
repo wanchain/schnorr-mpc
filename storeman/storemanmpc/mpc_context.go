@@ -9,6 +9,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpcbn"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
+	"github.com/wanchain/schnorr-mpc/storeman/storemanmpc/step"
 	"strconv"
 	"sync"
 )
@@ -41,6 +42,7 @@ type MpcStepFunc interface {
 	SetWaiting(int)
 	SetStepId(int)
 	SetSchnorrMpcer(mpcprotocol.SchnorrMPCer)
+	GetMsgGens() []step.MpcMessageGenerator
 }
 
 type MpcContext struct {

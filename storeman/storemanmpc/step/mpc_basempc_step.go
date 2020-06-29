@@ -38,6 +38,10 @@ func (mpcStep *BaseMpcStep) InitStep(result mpcprotocol.MpcResultInterface) erro
 	return nil
 }
 
+func (mpcStep *BaseMpcStep) GetMsgGens() []MpcMessageGenerator {
+	return mpcStep.messages
+}
+
 func (mpcStep *BaseMpcStep) FinishStep() error {
 	err := mpcStep.BaseStep.FinishStep()
 	if err != nil {

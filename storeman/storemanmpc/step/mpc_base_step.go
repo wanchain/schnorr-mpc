@@ -172,3 +172,7 @@ func (step *BaseStep) SetSchnorrMpcer(smcer mpcprotocol.SchnorrMPCer) {
 func (step *BaseStep) SchnorrMpcer() mpcprotocol.SchnorrMPCer {
 	return step.schnorrMpcer
 }
+
+func (step *BaseStep) GetMsgGens() []MpcMessageGenerator {
+	return nil
+}

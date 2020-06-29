@@ -121,5 +121,13 @@ func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStep
 	mpc.SetSchnorrMPCer(schnorrMpcer)
 	mpc.SetStepSchnorrMPCer()
 
+	for _, step := range mpc.MpcSteps {
+		msgGens := step.GetMsgGens()
+		if msgGens != nil {
+			for _, msgGen := range msgGens {
+				msgGen.SetSchnorrMpcer(schnorrMpcer)
+			}
+		}
+	}
 	return mpc, nil
 }
