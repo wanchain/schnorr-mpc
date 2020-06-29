@@ -20,6 +20,7 @@ type mpcPointGenerator struct {
 	result      ecdsa.PublicKey
 	preValueKey string
 	grpIdString string
+	smcer       mpcprotocol.SchnorrMPCer
 }
 
 func createPointGenerator(preValueKey string) *mpcPointGenerator {
@@ -121,5 +122,10 @@ func (point *mpcPointGenerator) calculateResult() error {
 
 	log.SyslogInfo("gpk mpcPointGenerator.calculateResult succeed ",
 		"gpk x", hex.EncodeToString(crypto.FromECDSAPub(result)))
+	return nil
+}
+
+func (point *mpcPointGenerator) SetSchnorrMpcer(smcer mpcprotocol.SchnorrMPCer) error {
+	point.smcer = smcer
 	return nil
 }

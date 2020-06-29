@@ -36,9 +36,9 @@ type SchnorrMPCer interface {
 	RandPoly(degree int, constant big.Int) Polynomial
 	EvaluatePoly(f Polynomial, x *big.Int, degree int) big.Int
 	//LagrangeECC(sig []ecdsa.PublicKey, x []big.Int, degree int) *ecdsa.PublicKey
-	//SchnorrSign(psk big.Int, r big.Int, m big.Int) big.Int
-	//Lagrange(f []big.Int, x []big.Int, degree int) big.Int
+	SchnorrSign(psk big.Int, r big.Int, m big.Int) big.Int
 
+	Lagrange(f []big.Int, x []big.Int, degree int) big.Int
 	Equal(left, right CurvePointer) bool
 	IsOnCurve(pt CurvePointer) bool
 	SkG(sk *big.Int) (CurvePointer, error)

@@ -11,6 +11,7 @@ import (
 type MpcMessageGenerator interface {
 	initialize(*[]mpcprotocol.PeerInfo, mpcprotocol.MpcResultInterface) error
 	calculateResult() error
+	SetSchnorrMpcer(smcer mpcprotocol.SchnorrMPCer) error
 }
 
 type BaseMpcStep struct {
@@ -29,7 +30,7 @@ func (mpcStep *BaseMpcStep) InitStep(result mpcprotocol.MpcResultInterface) erro
 	for _, message := range mpcStep.messages {
 		err := message.initialize(mpcStep.peers, result)
 		if err != nil {
-			log.SyslogErr("BaseMpcStep::InitStep"," init msg fail. err", err.Error())
+			log.SyslogErr("BaseMpcStep::InitStep", " init msg fail. err", err.Error())
 			return err
 		}
 	}
@@ -46,7 +47,7 @@ func (mpcStep *BaseMpcStep) FinishStep() error {
 	for _, message := range mpcStep.messages {
 		err := message.calculateResult()
 		if err != nil {
-			log.SyslogErr("BaseMpcStep::FinishStep","BaseMpcStep, calculate msg result fail. err", err.Error())
+			log.SyslogErr("BaseMpcStep::FinishStep", "BaseMpcStep, calculate msg result fail. err", err.Error())
 			return err
 		}
 	}
@@ -54,25 +55,24 @@ func (mpcStep *BaseMpcStep) FinishStep() error {
 	return nil
 }
 
-func (mpcStep *BaseMpcStep) ShowNotArriveNodes(hash common.Hash, selfNodeId *discover.NodeID){
+func (mpcStep *BaseMpcStep) ShowNotArriveNodes(hash common.Hash, selfNodeId *discover.NodeID) {
 	if len(mpcStep.notRecvPeers) != 0 {
-		for peerId,_ := range mpcStep.notRecvPeers {
+		for peerId, _ := range mpcStep.notRecvPeers {
 			if peerId != *selfNodeId {
 				//log.SyslogErr(fmt.Sprintf("Not received data from %v", peerId.String()))
-				log.SyslogErr("ShowNotArriveNodes","hash(signedData)",hash.String(),"Not received data from ", peerId.String())
+				log.SyslogErr("ShowNotArriveNodes", "hash(signedData)", hash.String(), "Not received data from ", peerId.String())
 			}
 		}
 	}
 }
 
-
-func (mpcStep *BaseMpcStep) GetSignedDataHash(result mpcprotocol.MpcResultInterface)(error,common.Hash){
+func (mpcStep *BaseMpcStep) GetSignedDataHash(result mpcprotocol.MpcResultInterface) (error, common.Hash) {
 	var retHash = common.Hash{}
 	// check signVerify
 	M, err := result.GetByteValue(mpcprotocol.MpcM)
 	if err != nil {
 		log.SyslogErr("GetSignedDataHash . err", err.Error())
-		return err,retHash
+		return err, retHash
 	}
 	retHash = sha256.Sum256(M)
 	return nil, retHash

@@ -80,6 +80,14 @@ func (bsm *BnSchnorrMpc) EvalByPolyG([]mpcprotocol.CurvePointer, uint16, *big.In
 	return nil, nil
 }
 
+func (bsm *BnSchnorrMpc) SchnorrSign(psk big.Int, r big.Int, m big.Int) big.Int {
+	return SchnorrSign(psk, r, m)
+}
+
+func (bsm *BnSchnorrMpc) Lagrange(f []big.Int, x []big.Int, degree int) big.Int {
+	return Lagrange(f, x, degree)
+}
+
 // Generate a random polynomial, its constant item is nominated
 func RandPoly(degree int, constant big.Int) mpcprotocol.Polynomial {
 

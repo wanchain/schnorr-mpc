@@ -114,3 +114,8 @@ func (poly *RandomPolynomialGen) calculateResult() error {
 
 	return nil
 }
+
+func (poly *RandomPolynomialGen) SetSchnorrMpcer(smcer mpcprotocol.SchnorrMPCer) error {
+	poly.smpcer = smcer
+	return nil
+}

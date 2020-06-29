@@ -34,7 +34,7 @@ func CreateMpcSStep(peers *[]mpcprotocol.PeerInfo, preValueKeys []string, result
 	//	MpcPrivateShare
 	//  MpcS
 	for i := 0; i < signNum; i++ {
-		mpc.messages[i] = createSGenerator(preValueKeys[i])
+		mpc.messages[i] = createSGenerator(preValueKeys[i], mpc.schnorrMpcer)
 	}
 
 	return mpc

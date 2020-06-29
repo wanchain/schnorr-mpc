@@ -2,15 +2,12 @@ package step
 
 import (
 	"bytes"
-	"crypto/ecdsa"
 	"crypto/sha256"
 	"errors"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
-	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
-	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
 )
@@ -21,10 +18,11 @@ type mpcSGenerator struct {
 	result      big.Int
 	preValueKey string
 	grpIdString string
+	smpcer      mpcprotocol.SchnorrMPCer
 }
 
-func createSGenerator(preValueKey string) *mpcSGenerator {
-	return &mpcSGenerator{message: make(map[discover.NodeID]big.Int), preValueKey: preValueKey}
+func createSGenerator(preValueKey string, smpcer mpcprotocol.SchnorrMPCer) *mpcSGenerator {
+	return &mpcSGenerator{message: make(map[discover.NodeID]big.Int), preValueKey: preValueKey, smpcer: smpcer}
 }
 
 func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcprotocol.MpcResultInterface) error {
@@ -41,7 +39,14 @@ func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcpr
 		log.SyslogErr("mpcSGenerator.initialize get RPk fail")
 		return err
 	}
-	rgpk := *crypto.ToECDSAPub(rgpkBytes)
+	smpcer := msg.smpcer
+
+	//rgpk := *crypto.ToECDSAPub(rgpkBytes)
+	//rgpk, err := smpcer.UnMarshPt(rgpkBytes)
+	//if err != nil {
+	//	log.SyslogErr("mpcSGenerator.initialize UnMarshPt fail", "err", err.Error())
+	//	return err
+	//}
 
 	// M
 	MBytes, err := result.GetByteValue(mpcprotocol.MpcM)
@@ -55,7 +60,8 @@ func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcpr
 	// compute m
 	var buffer bytes.Buffer
 	buffer.Write(hashMBytes[:])
-	buffer.Write(crypto.FromECDSAPub(&rgpk))
+	//buffer.Write(crypto.FromECDSAPub(&rgpk))
+	buffer.Write(rgpkBytes)
 
 	mBytes := sha256.Sum256(buffer.Bytes())
 	m := new(big.Int).SetBytes(mBytes[:])
@@ -75,30 +81,34 @@ func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcpr
 	// gskShare[0] = *schnorrmpc.BigOne
 	// malice code end  (just for test)
 
-	sigShare := schnorrmpc.SchnorrSign(gskShare[0], rskShare[0], *m)
+	//sigShare := schnorrmpc.SchnorrSign(gskShare[0], rskShare[0], *m)
+	sigShare := smpcer.SchnorrSign(gskShare[0], rskShare[0], *m)
 	msg.seed = sigShare
 
-	rpkShare := new(ecdsa.PublicKey)
-	rpkShare.Curve = crypto.S256()
-	rpkShare.X, rpkShare.Y = crypto.S256().ScalarBaseMult(rskShare[0].Bytes())
+	//rpkShare := new(ecdsa.PublicKey)
+	//rpkShare.Curve = crypto.S256()
+	//rpkShare.X, rpkShare.Y = crypto.S256().ScalarBaseMult(rskShare[0].Bytes())
+	//
+	//gpkShare := new(ecdsa.PublicKey)
+	//gpkShare.Curve = crypto.S256()
+	//gpkShare.X, rpkShare.Y = crypto.S256().ScalarBaseMult(gskShare[0].Bytes())
 
-	gpkShare := new(ecdsa.PublicKey)
-	gpkShare.Curve = crypto.S256()
-	gpkShare.X, rpkShare.Y = crypto.S256().ScalarBaseMult(gskShare[0].Bytes())
-
-	//log.Info("@@@@@@@@@@@@@@ SchnorrSign @@@@@@@@@@@@@@",
-	//	"M", hexutil.Encode(MBytes),
-	//	"m", hexutil.Encode(m.Bytes()),
-	//	"gskShare", hexutil.Encode(gskShare[0].Bytes()),
-	//	"rskShare", hexutil.Encode(rskShare[0].Bytes()),
-	//	"gpkShare", hexutil.Encode(crypto.FromECDSAPub(gpkShare)),
-	//	"rpkShare", hexutil.Encode(crypto.FromECDSAPub(rpkShare)))
+	rpkShare, err := smpcer.SkG(&rskShare[0])
+	if err != nil {
+		log.SyslogErr("mpcSGenerator.initialize get MpcPrivateShare fail", "SkG rskShare error", err.Error())
+		return err
+	}
+	gpkShare, err := smpcer.SkG(&gskShare[0])
+	if err != nil {
+		log.SyslogErr("mpcSGenerator.initialize get MpcPrivateShare fail", "SkG gskShare error", err.Error())
+		return err
+	}
 
 	log.Info("@@@@@@@@@@@@@@ SchnorrSign @@@@@@@@@@@@@@",
 		"M", hexutil.Encode(MBytes),
 		"m", hexutil.Encode(m.Bytes()),
-		"gpkShare", hexutil.Encode(crypto.FromECDSAPub(gpkShare)),
-		"rpkShare", hexutil.Encode(crypto.FromECDSAPub(rpkShare)))
+		"gpkShare", smpcer.PtToHexString(gpkShare),
+		"rpkShare", smpcer.PtToHexString(rpkShare))
 
 	_, grpIdString, _ := osmconf.GetGrpId(result)
 
@@ -147,9 +157,15 @@ func (msg *mpcSGenerator) calculateResult() error {
 
 	}
 
-	result := schnorrmpc.Lagrange(sigshares, seeds[:], int(degree))
+	//result := schnorrmpc.Lagrange(sigshares, seeds[:], int(degree))
+	result := msg.smpcer.Lagrange(sigshares, seeds[:], int(degree))
 	msg.result = result
 	log.SyslogInfo("mpcSGenerator.calculateResult succeed")
 
+	return nil
+}
+
+func (msg *mpcSGenerator) SetSchnorrMpcer(smcer mpcprotocol.SchnorrMPCer) error {
+	msg.smpcer = smcer
 	return nil
 }

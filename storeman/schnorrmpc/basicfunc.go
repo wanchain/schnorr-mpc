@@ -175,6 +175,14 @@ func (ssm *SkSchnorrMpc) EvalByPolyG(pts []mpcprotocol.CurvePointer, degree uint
 	return EvalByPolyG(pks, degree, xvalue)
 }
 
+func (ssm *SkSchnorrMpc) SchnorrSign(psk big.Int, r big.Int, m big.Int) big.Int {
+	return SchnorrSign(psk, r, m)
+}
+
+func (ssm *SkSchnorrMpc) Lagrange(f []big.Int, x []big.Int, degree int) big.Int {
+	return Lagrange(f, x, degree)
+}
+
 func RandPoly(degree int, constant big.Int) mpcprotocol.Polynomial {
 	poly := make(mpcprotocol.Polynomial, degree+1)
 
