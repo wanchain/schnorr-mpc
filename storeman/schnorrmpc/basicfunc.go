@@ -329,15 +329,6 @@ func ValidatePublicKey(k *ecdsa.PublicKey) bool {
 	return k != nil && k.X != nil && k.Y != nil && k.X.Sign() != 0 && k.Y.Sign() != 0
 }
 
-func UintRand(MaxValue uint64) (uint64, error) {
-	num, err := Rand.Int(Rand.Reader, new(big.Int).SetUint64(MaxValue))
-	if err != nil {
-		return 0, err
-	}
-
-	return num.Uint64(), nil
-}
-
 func PkToAddress(PkBytes []byte) (common.Address, error) {
 	if len(PkBytes) != PkLength {
 		return common.Address{}, errors.New("invalid pk address")

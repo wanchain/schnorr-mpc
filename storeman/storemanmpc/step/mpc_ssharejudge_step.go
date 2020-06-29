@@ -151,32 +151,8 @@ func (ssj *MpcSSahreJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool 
 	return true
 }
 
-//func (ssj *MpcSSahreJudgeStep) checkContent(sshare, m *big.Int, rpkShare, gpkShare *ecdsa.PublicKey) (bool, error) {
-//	sshareG, _ := schnorrmpc.SkG(sshare)
-//	mPkShare, _ := schnorrmpc.SkMul(gpkShare, m)
-//
-//	pkTemp := new(ecdsa.PublicKey)
-//	pkTemp.Curve = crypto.S256()
-//	pkTemp.X, pkTemp.Y = rpkShare.X, rpkShare.Y
-//	pkTemp.X, pkTemp.Y = crypto.S256().Add(pkTemp.X, pkTemp.Y, mPkShare.X, mPkShare.Y)
-//
-//	left := sshareG
-//	right := pkTemp
-//	return schnorrmpc.PkEqual(left, right)
-//}
-
 func (ssj *MpcSSahreJudgeStep) checkContent(sshare, m *big.Int, rpkShare, gpkShare mpcprotocol.CurvePointer) (bool, error) {
-	//sshareG, _ := schnorrmpc.SkG(sshare)
-	//mPkShare, _ := schnorrmpc.SkMul(gpkShare, m)
-	//
-	//pkTemp := new(ecdsa.PublicKey)
-	//pkTemp.Curve = crypto.S256()
-	//pkTemp.X, pkTemp.Y = rpkShare.X, rpkShare.Y
-	//pkTemp.X, pkTemp.Y = crypto.S256().Add(pkTemp.X, pkTemp.Y, mPkShare.X, mPkShare.Y)
-	//
-	//left := sshareG
-	//right := pkTemp
-	//return schnorrmpc.PkEqual(left, right)
+
 	smpcer := ssj.schnorrMpcer
 	sshareG, _ := smpcer.SkG(sshare)
 	mPkShare, _ := smpcer.MulPK(m, gpkShare)

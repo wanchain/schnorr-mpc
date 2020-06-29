@@ -14,6 +14,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	"github.com/wanchain/schnorr-mpc/rlp"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
+	schcomm "github.com/wanchain/schnorr-mpc/storeman/schnorrcomm"
 	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"github.com/wanchain/schnorr-mpc/storeman/validator"
@@ -395,7 +396,7 @@ func (mpcServer *MpcDistributor) getMpcID() (uint64, error) {
 	var mpcID uint64
 	var err error
 	for {
-		mpcID, err = schnorrmpc.UintRand(uint64(1<<64 - 1))
+		mpcID, err = schcomm.UintRand(uint64(1<<64 - 1))
 		if err != nil {
 			log.SyslogErr("MpcDistributor getMpcID, UnitRand fail", "err", err.Error())
 			return 0, err

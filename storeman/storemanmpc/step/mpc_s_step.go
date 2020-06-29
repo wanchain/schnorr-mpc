@@ -228,26 +228,6 @@ func (msStep *MpcSStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mp
 	return nil
 }
 
-//func (msStep *MpcSStep) checkContent(sshare, m *big.Int, rpkShare, gpkShare *ecdsa.PublicKey) (bool, error) {
-//	if sshare == nil || m == nil {
-//		return false, errors.New("sshare is nil or m is nil")
-//	}
-//	if schnorrmpc.CheckPK(rpkShare) != nil || schnorrmpc.CheckPK(gpkShare) != nil {
-//		return false, errors.New("rpkShare is invalid pk or gpkShare is invalid pk")
-//	}
-//	sshareG, _ := schnorrmpc.SkG(sshare)
-//	mPkShare, _ := schnorrmpc.SkMul(gpkShare, m)
-//
-//	pkTemp := new(ecdsa.PublicKey)
-//	pkTemp.Curve = crypto.S256()
-//	pkTemp.X, pkTemp.Y = rpkShare.X, rpkShare.Y
-//	pkTemp.X, pkTemp.Y = crypto.S256().Add(pkTemp.X, pkTemp.Y, mPkShare.X, mPkShare.Y)
-//
-//	left := sshareG
-//	right := pkTemp
-//	return schnorrmpc.PkEqual(left, right)
-//}
-
 func (msStep *MpcSStep) checkContent(sshare, m *big.Int, rpkShare, gpkShare mpcprotocol.CurvePointer) (bool, error) {
 	if sshare == nil || m == nil {
 		return false, errors.New("sshare is nil or m is nil")

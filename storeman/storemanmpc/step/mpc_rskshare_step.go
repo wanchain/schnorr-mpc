@@ -171,7 +171,6 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	pgBytes, _ := rss.mpcResult.GetByteValue(keyPolyCMG)
 
 	//split the pk list
-	//pks, err := schnorrmpc.SplitPksFromBytes(pgBytes[:])
 	pks, err := rss.schnorrMpcer.SplitPksFromBytes(pgBytes[:])
 	if err != nil {
 		log.SyslogErr("MpcRSKShare_Step::HandleMessage",
@@ -189,17 +188,11 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		log.SyslogErr("before evalByPolyG", "len(pks)", len(pks), "threshold", threshold)
 		return true
 	}
-	//sijgEval, err := schnorrmpc.EvalByPolyG(pks, uint16(len(pks)-1), xValue)
 	sijgEval, err := rss.schnorrMpcer.EvalByPolyG(pks, uint16(len(pks)-1), xValue)
 	if err != nil {
 		log.SyslogErr("schnorrmpc.EvalByPolyG", "error", err.Error())
 		return true
 	}
-
-	//sijg, _ := schnorrmpc.SkG(&sij)
-	//if ok, _ := schnorrmpc.PkEqual(sijg, sijgEval); !ok {
-	//	bContent = false
-	//}
 
 	sijg, _ := rss.schnorrMpcer.SkG(&sij)
 	if !rss.schnorrMpcer.Equal(sijg, sijgEval) {

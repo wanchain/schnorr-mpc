@@ -80,18 +80,8 @@ func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcpr
 	// malice code begin (just for test)
 	// gskShare[0] = *schnorrmpc.BigOne
 	// malice code end  (just for test)
-
-	//sigShare := schnorrmpc.SchnorrSign(gskShare[0], rskShare[0], *m)
 	sigShare := smpcer.SchnorrSign(gskShare[0], rskShare[0], *m)
 	msg.seed = sigShare
-
-	//rpkShare := new(ecdsa.PublicKey)
-	//rpkShare.Curve = crypto.S256()
-	//rpkShare.X, rpkShare.Y = crypto.S256().ScalarBaseMult(rskShare[0].Bytes())
-	//
-	//gpkShare := new(ecdsa.PublicKey)
-	//gpkShare.Curve = crypto.S256()
-	//gpkShare.X, rpkShare.Y = crypto.S256().ScalarBaseMult(gskShare[0].Bytes())
 
 	rpkShare, err := smpcer.SkG(&rskShare[0])
 	if err != nil {

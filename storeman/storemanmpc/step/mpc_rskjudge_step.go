@@ -130,10 +130,6 @@ func (rsj *MpcRSkJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	}
 
 	//split the pk list
-	//pks, _ := schnorrmpc.SplitPksFromBytes(pgBytes[:])
-	//sijgEval, _ := schnorrmpc.EvalByPolyG(pks, uint16(len(pks)-1), xValue)
-	//sijg, _ := schnorrmpc.SkG(&sij)
-
 	pks, _ := rsj.schnorrMpcer.SplitPksFromBytes(pgBytes[:])
 	sijgEval, _ := rsj.schnorrMpcer.EvalByPolyG(pks, uint16(len(pks)-1), xValue)
 	sijg, _ := rsj.schnorrMpcer.SkG(&sij)

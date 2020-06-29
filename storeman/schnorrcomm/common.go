@@ -29,3 +29,12 @@ func CheckPK(pk *ecdsa.PublicKey) error {
 		return nil
 	}
 }
+
+func UintRand(MaxValue uint64) (uint64, error) {
+	num, err := Rand.Int(Rand.Reader, new(big.Int).SetUint64(MaxValue))
+	if err != nil {
+		return 0, err
+	}
+
+	return num.Uint64(), nil
+}

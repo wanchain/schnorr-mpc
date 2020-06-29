@@ -73,9 +73,6 @@ func (poly *RandomPolynomialGen) initialize(peers *[]mpcprotocol.PeerInfo,
 			"poly x seed", xValue,
 			"degree", degree)
 
-		//poly.polyValue[i] = schnorrmpc.EvaluatePoly(poly.randCoefficient,
-		//	xValue,
-		//	degree)
 		poly.polyValue[i] = poly.smpcer.EvaluatePoly(poly.randCoefficient,
 			xValue,
 			degree)

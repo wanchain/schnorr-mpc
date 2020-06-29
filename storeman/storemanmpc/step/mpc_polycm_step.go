@@ -56,7 +56,6 @@ func (req *MpcPolycmStep) InitStep(result mpcprotocol.MpcResultInterface) error 
 	}
 
 	smpcer := req.schnorrMpcer
-	//cof := schnorrmpc.RandPoly(int(degree), *s)
 	cof := smpcer.RandPoly(int(degree), *s)
 
 	req.polyCoff = make(mpcprotocol.Polynomial, len(cof))
