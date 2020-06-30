@@ -20,7 +20,7 @@ func requestTxSignMpc(mpcID uint64, peers []mpcprotocol.PeerInfo, peerCount uint
 	requestMpc.SetWaiting(int(peerCount))
 
 	mpcReady := step.CreateMpcReadyStep(&mpc.peers)
-	return generateTxSignMpc(mpc, requestMpc, mpcReady, peerCount)
+	return generateTxSignMpc(mpc, requestMpc, mpcReady, peerCount, mpcID)
 }
 
 //get message from leader and create Context
@@ -32,10 +32,10 @@ func acknowledgeTxSignMpc(mpcID uint64, peers []mpcprotocol.PeerInfo, peerCount 
 	// wait 0
 	mpcReady := step.CreateGetMpcReadyStep(&mpc.peers)
 	// wait 1
-	return generateTxSignMpc(mpc, AcknowledgeMpc, mpcReady, peerCount)
+	return generateTxSignMpc(mpc, AcknowledgeMpc, mpcReady, peerCount, mpcID)
 }
 
-func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStepFunc, peerCount uint16) (*MpcContext, error) {
+func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStepFunc, peerCount uint16, mpcID uint64) (*MpcContext, error) {
 	log.SyslogInfo("generateTxSignMpc begin")
 
 	signNum, err := getSignNumFromTxInfo(mpc)

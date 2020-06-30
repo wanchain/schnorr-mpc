@@ -15,6 +15,7 @@ type BaseStep struct {
 	waitAll      bool // true: wait all
 	stepId       int
 	notRecvPeers map[discover.NodeID]*discover.NodeID
+	mpcId        uint64
 }
 
 func CreateBaseStep(peers *[]mpcprotocol.PeerInfo, wait int) *BaseStep {
@@ -147,4 +148,8 @@ func (step *BaseStep) SetStepId(stepId int) {
 
 func (step *BaseStep) GetStepId() int {
 	return step.stepId
+}
+
+func (step *BaseStep) SetMpcId(mpcId uint64) {
+	step.mpcId = mpcId
 }

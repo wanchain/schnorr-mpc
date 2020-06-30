@@ -133,6 +133,22 @@ func (req *RequestMpcStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc
 	data := make([]big.Int, 1)
 	data[0].SetInt64(req.messageType)
 	result.SetValue(mpcprotocol.MPCActoin, data)
+
+	if req.messageType == mpcprotocol.MpcTXSignLeader {
+
+		rcvedCount := len(req.message)
+		if rcvedCount < (mpcprotocol.MpcSchnrThr - 1) {
+			log.SyslogErr("RequestMpcStep", "need number ", mpcprotocol.MpcSchnrThr, "received num", rcvedCount)
+
+			mpcMsg := &mpcprotocol.MpcMessage{ContextID: req.mpcId,
+				StepID: 0,
+				Peers:  []byte(mpcprotocol.ErrFailedTxVerify.Error())}
+
+			mpc.BoardcastMessage(nil, mpcprotocol.MPCError, mpcMsg)
+
+			return mpcprotocol.ErrVerifyFailed
+		}
+	}
 	return nil
 }
 

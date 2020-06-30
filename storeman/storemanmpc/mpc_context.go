@@ -24,6 +24,7 @@ type MpcStepFunc interface {
 	GetMessageChan() chan *mpcprotocol.StepMessage
 	SetWaitAll(bool)
 	SetStepId(int)
+	SetMpcId(uint64)
 }
 
 type MpcContext struct {

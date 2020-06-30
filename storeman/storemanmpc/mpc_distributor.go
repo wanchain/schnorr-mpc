@@ -720,18 +720,18 @@ func (mpcServer *MpcDistributor) createMpcContext(mpcMessage *mpcprotocol.MpcMes
 
 			verifyResult := validator.ValidateTx(signer, address, chainType, &chainId, txBytesData, txHash.Bytes())
 			if !verifyResult {
-				mpcMsg := &mpcprotocol.MpcMessage{ContextID: mpcMessage.ContextID,
-					StepID: 0,
-					Peers:  []byte(mpcprotocol.ErrFailedTxVerify.Error())}
-				peerInfo := mpcServer.getMessagePeers(mpcMessage)
-				peerIDs := make([]discover.NodeID, 0)
-				for _, item := range *peerInfo {
-					peerIDs = append(peerIDs, item.PeerID)
-				}
-
-				mpcServer.BoardcastMessage(peerIDs, mpcprotocol.MPCError, mpcMsg)
-
-				log.SyslogErr("createMpcContext, verify tx fail", "ContextID", mpcMessage.ContextID)
+				//mpcMsg := &mpcprotocol.MpcMessage{ContextID: mpcMessage.ContextID,
+				//	StepID: 0,
+				//	Peers:  []byte(mpcprotocol.ErrFailedTxVerify.Error())}
+				//peerInfo := mpcServer.getMessagePeers(mpcMessage)
+				//peerIDs := make([]discover.NodeID, 0)
+				//for _, item := range *peerInfo {
+				//	peerIDs = append(peerIDs, item.PeerID)
+				//}
+				//
+				//mpcServer.BoardcastMessage(peerIDs, mpcprotocol.MPCError, mpcMsg)
+				//
+				//log.SyslogErr("createMpcContext, verify tx fail", "ContextID", mpcMessage.ContextID)
 				return mpcprotocol.ErrFailedTxVerify
 			}
 
@@ -749,16 +749,17 @@ func (mpcServer *MpcDistributor) createMpcContext(mpcMessage *mpcprotocol.MpcMes
 
 			verifyResult := validator.ValidateBtcTx(&btcTx)
 			if !verifyResult {
-				mpcMsg := &mpcprotocol.MpcMessage{ContextID: mpcMessage.ContextID,
-					StepID: 0,
-					Peers:  []byte(mpcprotocol.ErrFailedTxVerify.Error())}
-				peerInfo := mpcServer.getMessagePeers(mpcMessage)
-				peerIDs := make([]discover.NodeID, 0)
-				for _, item := range *peerInfo {
-					peerIDs = append(peerIDs, item.PeerID)
-				}
 
-				mpcServer.BoardcastMessage(peerIDs, mpcprotocol.MPCError, mpcMsg)
+				//mpcMsg := &mpcprotocol.MpcMessage{ContextID: mpcMessage.ContextID,
+				//	StepID: 0,
+				//	Peers:  []byte(mpcprotocol.ErrFailedTxVerify.Error())}
+				//peerInfo := mpcServer.getMessagePeers(mpcMessage)
+				//peerIDs := make([]discover.NodeID, 0)
+				//for _, item := range *peerInfo {
+				//	peerIDs = append(peerIDs, item.PeerID)
+				//}
+				//
+				//mpcServer.BoardcastMessage(peerIDs, mpcprotocol.MPCError, mpcMsg)
 
 				log.SyslogErr("createMpcContext, verify tx fail", "ContextID", mpcMessage.ContextID)
 				return mpcprotocol.ErrFailedTxVerify
