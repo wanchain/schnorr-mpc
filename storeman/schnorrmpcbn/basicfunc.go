@@ -2,11 +2,17 @@ package schnorrmpcbn
 
 import (
 	Rand "crypto/rand"
+	"errors"
+	"fmt"
+	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/crypto/bn256/cloudflare"
+	"github.com/wanchain/schnorr-mpc/log"
 	schcomm "github.com/wanchain/schnorr-mpc/storeman/schnorrcomm"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
 )
+
+const PkLength = 64
 
 // Generator of ECC
 var gbase = new(bn256.G1).ScalarBaseMult(big.NewInt(int64(1)))
@@ -19,82 +25,182 @@ func NewBnSchnorrMpc() *BnSchnorrMpc {
 }
 
 func (bsm *BnSchnorrMpc) RandPoly(degree int, constant big.Int) mpcprotocol.Polynomial {
-	return RandPoly(degree, constant)
+	return randPoly(degree, constant)
 }
 
 func (bsm *BnSchnorrMpc) EvaluatePoly(f mpcprotocol.Polynomial, x *big.Int, degree int) big.Int {
-	return EvaluatePoly(f, x, degree)
+	return evaluatePoly(f, x, degree)
 }
 
 func (bsm *BnSchnorrMpc) Equal(left, right mpcprotocol.CurvePointer) bool {
-	return true
+	ptLeft, ok := left.(*bn256.G1)
+	if !ok {
+		fmt.Println("It's not ok for type bn256.G1")
+		errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
+		log.SyslogErr(errStr)
+		return false
+	}
+
+	ptRight, ok := left.(*bn256.G1)
+	if !ok {
+		errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
+		log.SyslogErr(errStr)
+		return false
+	}
+	return compareG1(ptLeft, ptRight)
 }
 
 func (bsm *BnSchnorrMpc) IsOnCurve(pt mpcprotocol.CurvePointer) bool {
-	return true
+	ptTemp, ok := pt.(*bn256.G1)
+	if !ok {
+		errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
+		log.SyslogErr(errStr)
+		return false
+	}
+
+	if ptTemp == nil {
+		return false
+	}
+	return ptTemp.IsOnCurve()
 }
 
 func (bsm *BnSchnorrMpc) SkG(sk *big.Int) (mpcprotocol.CurvePointer, error) {
-	return nil, nil
+	return new(bn256.G1).ScalarBaseMult(sk), nil
 }
 
 func (bsm *BnSchnorrMpc) MulPK(sk *big.Int, pk mpcprotocol.CurvePointer) (mpcprotocol.CurvePointer, error) {
-	return nil, nil
+	pt, ok := pk.(*bn256.G1)
+	if !ok {
+		errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
+		log.SyslogErr(errStr)
+		return nil, mpcprotocol.ErrTypeAssertFail
+	}
+	return new(bn256.G1).ScalarMult(pt, sk), nil
 }
 
 func (bsm *BnSchnorrMpc) Add(left, right mpcprotocol.CurvePointer) (mpcprotocol.CurvePointer, error) {
-	return nil, nil
+	ptLeft, ok := left.(*bn256.G1)
+	if !ok {
+		fmt.Println("It's not ok for type bn256.G1")
+		errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
+		log.SyslogErr(errStr)
+		return nil, mpcprotocol.ErrTypeAssertFail
+	}
+
+	ptRight, ok := left.(*bn256.G1)
+	if !ok {
+		errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
+		log.SyslogErr(errStr)
+		return nil, mpcprotocol.ErrTypeAssertFail
+	}
+	return new(bn256.G1).Add(ptLeft, ptRight), nil
 }
 
 func (bsm *BnSchnorrMpc) NewPt() (mpcprotocol.CurvePointer, error) {
-	return nil, nil
+	return new(bn256.G1), nil
 }
 
 func (bsm *BnSchnorrMpc) MarshPt(pt mpcprotocol.CurvePointer) ([]byte, error) {
-	return nil, nil
+	ptTemp, ok := pt.(*bn256.G1)
+	if !ok {
+		errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
+		log.SyslogErr(errStr)
+		return nil, mpcprotocol.ErrTypeAssertFail
+	}
+	return ptTemp.Marshal(), nil
+
 }
 
 func (bsm *BnSchnorrMpc) UnMarshPt(b []byte) (mpcprotocol.CurvePointer, error) {
-	return nil, nil
+	ptRet := new(bn256.G1)
+	_, err := ptRet.Unmarshal(b)
+	if err != nil {
+		errStr := fmt.Sprintf("From byte to pt, error:%s", err.Error())
+		log.SyslogErr(errStr)
+		return nil, err
+	}
+	return ptRet, nil
 }
 
 func (bsm *BnSchnorrMpc) PtToHexString(pt mpcprotocol.CurvePointer) string {
-	return ""
-}
-
-func (bsm *BnSchnorrMpc) StringToPt(str string) (mpcprotocol.CurvePointer, error) {
-	return nil, nil
+	b, err := bsm.MarshPt(pt)
+	if err != nil {
+		return ""
+	} else {
+		return hexutil.Encode(b)
+	}
 }
 
 func (bsm *BnSchnorrMpc) PtByteLen() int {
-	return 64
+	return PkLength
 }
 
 func (bsm *BnSchnorrMpc) GetMod() *big.Int {
 	return bn256.Order
 }
 
-func (bsm *BnSchnorrMpc) SplitPksFromBytes(buf []byte) ([]mpcprotocol.CurvePointer, error) {
-	return nil, nil
+func (bsm *BnSchnorrMpc) StringToPt(str string) (mpcprotocol.CurvePointer, error) {
+	pkBytes, err := hexutil.Decode(str)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(pkBytes) != PkLength {
+		return nil, errors.New(fmt.Sprintf("len(pkBytes)= %v error. ", len(pkBytes)))
+	}
+	return bsm.UnMarshPt(pkBytes)
 }
-func (bsm *BnSchnorrMpc) EvalByPolyG([]mpcprotocol.CurvePointer, uint16, *big.Int) (mpcprotocol.CurvePointer, error) {
-	return nil, nil
+
+func (bsm *BnSchnorrMpc) SplitPksFromBytes(buf []byte) ([]mpcprotocol.CurvePointer, error) {
+	ret := make([]mpcprotocol.CurvePointer, 0)
+	ret1, err := splitPksFromBytes(buf[:])
+	for _, pt := range ret1 {
+		ret = append(ret, pt)
+	}
+	return ret, err
+}
+
+func (bsm *BnSchnorrMpc) EvalByPolyG(pts []mpcprotocol.CurvePointer, degree uint16, xvalue *big.Int) (mpcprotocol.CurvePointer, error) {
+	pks := make([]*bn256.G1, 0)
+	for _, pt := range pts {
+		ptTemp, ok := pt.(*bn256.G1)
+		if !ok {
+			errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
+			log.SyslogErr(errStr)
+			return nil, mpcprotocol.ErrTypeAssertFail
+		}
+		pks = append(pks, ptTemp)
+	}
+	return evalByPolyG(pks, degree, xvalue)
 }
 
 func (bsm *BnSchnorrMpc) SchnorrSign(psk big.Int, r big.Int, m big.Int) big.Int {
-	return SchnorrSign(psk, r, m)
+	return schnorrSign(psk, r, m)
 }
 
 func (bsm *BnSchnorrMpc) Lagrange(f []big.Int, x []big.Int, degree int) big.Int {
-	return Lagrange(f, x, degree)
+	return lagrange(f, x, degree)
 }
 
 func (bsm *BnSchnorrMpc) LagrangeECC(sig []mpcprotocol.CurvePointer, x []big.Int, degree int) mpcprotocol.CurvePointer {
-	return nil
+	sigSecBn := make([]*bn256.G1, 0)
+	for _, oneSig := range sig {
+		pTemp, ok := oneSig.(*bn256.G1)
+		if !ok {
+			fmt.Println("It's not ok for type ecdsa.PublicKey")
+			errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
+			log.SyslogErr(errStr)
+			return nil
+		}
+
+		sigSecBn = append(sigSecBn, pTemp)
+	}
+
+	return lagrangeECC(sigSecBn, x, degree)
 }
 
 // Generate a random polynomial, its constant item is nominated
-func RandPoly(degree int, constant big.Int) mpcprotocol.Polynomial {
+func randPoly(degree int, constant big.Int) mpcprotocol.Polynomial {
 
 	poly := make(mpcprotocol.Polynomial, degree+1)
 
@@ -111,7 +217,7 @@ func RandPoly(degree int, constant big.Int) mpcprotocol.Polynomial {
 }
 
 // Calculate polynomial's evaluation at some point
-func EvaluatePoly(f mpcprotocol.Polynomial, x *big.Int, degree int) big.Int {
+func evaluatePoly(f mpcprotocol.Polynomial, x *big.Int, degree int) big.Int {
 
 	sum := big.NewInt(0)
 
@@ -180,7 +286,7 @@ func evaluateb(x []big.Int, i int, degree int) big.Int {
 }
 
 // Lagrange's polynomial interpolation algorithm: working in ECC points
-func LagrangeECC(sig []*bn256.G1, x []big.Int, degree int) bn256.G1 {
+func lagrangeECC(sig []*bn256.G1, x []big.Int, degree int) bn256.G1 {
 
 	b := evaluateB(x, degree)
 
@@ -193,7 +299,26 @@ func LagrangeECC(sig []*bn256.G1, x []big.Int, degree int) bn256.G1 {
 	return *sum
 }
 
-func SchnorrSign(psk big.Int, r big.Int, m big.Int) big.Int {
+func splitPksFromBytes(buf []byte) ([]*bn256.G1, error) {
+	if len(buf) < PkLength {
+		return nil, errors.New(fmt.Sprintf("SplitPksFromBytes len(buf) = %v", len(buf)))
+	}
+	nPk := len(buf) / PkLength
+	ret := make([]*bn256.G1, nPk)
+	for i := 0; i < nPk; i++ {
+		onePkBytes := buf[i*PkLength : (i+1)*PkLength]
+		onePk := new(bn256.G1)
+		_, err := onePk.Unmarshal(onePkBytes)
+		if err != nil {
+			log.SyslogErr("bn splitPksFromBytes", "err", err.Error())
+			return nil, err
+		}
+		ret[i] = onePk
+	}
+	return ret, nil
+}
+
+func schnorrSign(psk big.Int, r big.Int, m big.Int) big.Int {
 	sum := big.NewInt(1)
 	sum.Mul(&psk, &m)
 	sum.Mod(sum, bn256.Order)
@@ -203,7 +328,7 @@ func SchnorrSign(psk big.Int, r big.Int, m big.Int) big.Int {
 }
 
 // Lagrange's polynomial interpolation algorithm
-func Lagrange(f []big.Int, x []big.Int, degree int) big.Int {
+func lagrange(f []big.Int, x []big.Int, degree int) big.Int {
 
 	b := evaluateB(x, degree)
 
@@ -221,6 +346,32 @@ func Lagrange(f []big.Int, x []big.Int, degree int) big.Int {
 }
 
 // The comparison function of G1
-func CompareG1(a bn256.G1, b bn256.G1) bool {
+func compareG1(a *bn256.G1, b *bn256.G1) bool {
 	return a.String() == b.String()
+}
+
+func evalByPolyG(pks []*bn256.G1, degree uint16, x *big.Int) (*bn256.G1, error) {
+	if len(pks) == 0 || x.Cmp(schcomm.BigZero) == 0 {
+		return nil, errors.New("len(pks)==0 or xvalue is zero")
+	}
+	if len(pks) != int(degree+1) {
+		return nil, errors.New("degree is not content with the len(pks)")
+	}
+
+	for _, pk := range pks {
+		if !pk.IsOnCurve() {
+			return nil, errors.New("bn Pt is not on curve")
+		}
+
+	}
+	sumPk := new(bn256.G1)
+	for i := 0; i < int(degree)+1; i++ {
+
+		temp1 := new(big.Int).Exp(x, big.NewInt(int64(i)), bn256.Order)
+		temp1.Mod(temp1, bn256.Order)
+
+		temp1Pk := new(bn256.G1).ScalarMult(pks[i], temp1)
+		sumPk.Add(sumPk, temp1Pk)
+	}
+	return sumPk, nil
 }
