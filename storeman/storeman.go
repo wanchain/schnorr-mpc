@@ -544,9 +544,9 @@ func (sa *StoremanAPI) SignMpcTransaction(ctx context.Context, tx mpcprotocol.Se
 	trans := types.NewTransaction(uint64(*tx.Nonce), *tx.To, (*big.Int)(tx.Value), (*big.Int)(tx.Gas), (*big.Int)(tx.GasPrice), tx.Data)
 	signed, err := sa.sm.mpcDistributor.CreateRequestMpcSign(trans, tx.From, tx.ChainType, tx.SignType, (*big.Int)(tx.ChainID))
 	if err == nil {
-		log.SyslogInfo("@@@@@@@@@@SignMpcTransaction end", "signed", common.ToHex(signed))
+		log.SyslogInfo("@@@@@@@@@@SignMpcTransaction end", "signed", common.ToHex(signed), "txInfo", tx.String())
 	} else {
-		log.SyslogErr("@@@@@@@@@@SignMpcTransaction end", "err", err.Error())
+		log.SyslogErr("@@@@@@@@@@SignMpcTransaction end", "err", err.Error(), "txInfo", tx.String())
 	}
 
 	return signed, err
@@ -572,12 +572,12 @@ func (sa *StoremanAPI) SignMpcBtcTransaction(ctx context.Context, args btc.MsgTx
 
 	signeds, err := sa.sm.mpcDistributor.CreateRequestBtcMpcSign(&args)
 	if err != nil {
-		log.SyslogErr("@@@@@@@@@@SignMpcBtcTransaction end", "err", err.Error())
+		log.SyslogErr("@@@@@@@@@@SignMpcBtcTransaction end", "err", err.Error(), "txInfo", args.String())
 		return nil, err
 	}
 
 	for i := 0; i < len(signeds); i++ {
-		log.SyslogInfo("@@@@@@@@@@SignMpcBtcTransaction end", "signed", common.ToHex(signeds[i]))
+		log.SyslogInfo("@@@@@@@@@@SignMpcBtcTransaction end", "signed", common.ToHex(signeds[i]), "txInfo", args.String())
 	}
 
 	return signeds, err
