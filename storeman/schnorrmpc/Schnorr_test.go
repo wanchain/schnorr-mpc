@@ -58,10 +58,10 @@ func TestSchnorr(t *testing.T) {
 	var sshare [Nstm][Nstm]big.Int
 
 	for i := 0; i < Nstm; i++ {
-		poly[i] = RandPoly(Degree, *s[i]) // fi(x), set si as its constant term
+		poly[i] = randPoly(Degree, *s[i]) // fi(x), set si as its constant term
 		for j := 0; j < Nstm; j++ {
 			// share for j is fi(x) evaluation result on x[j]=Hash(Pub[j])
-			sshare[i][j] = EvaluatePoly(poly[i], &x[j], Degree)
+			sshare[i][j] = evaluatePoly(poly[i], &x[j], Degree)
 		}
 	}
 
@@ -80,14 +80,20 @@ func TestSchnorr(t *testing.T) {
 	}
 
 	// Each storeman node publishes the scalar point of its group private key share
-	gpkshare := make([]ecdsa.PublicKey, Nstm)
+	gpkshare := make([]*ecdsa.PublicKey, Nstm)
 
 	for i := 0; i < Nstm; i++ {
-		gpkshare[i].X, gpkshare[i].Y = crypto.S256().ScalarBaseMult(gskshare[i].Bytes())
+		shareTemp := new(ecdsa.PublicKey)
+		shareTemp.Curve = crypto.S256()
+
+		shareTemp.X, shareTemp.Y = crypto.S256().ScalarBaseMult(gskshare[i].Bytes())
+
+		//gpkshare[i].X, gpkshare[i].Y = crypto.S256().ScalarBaseMult(gskshare[i].Bytes())
+		gpkshare[i] = shareTemp
 	}
 
 	// Each storeman node computes the group public key by Lagrange's polynomial interpolation
-	gpk := LagrangeECC(gpkshare, x, Degree)
+	gpk := lagrangeECC(gpkshare, x, Degree)
 
 	//----------------------------------------------  Signing ----------------------------------------------//
 
@@ -104,10 +110,10 @@ func TestSchnorr(t *testing.T) {
 	var rrshare [Nstm][Nstm]big.Int
 
 	for i := 0; i < Nstm; i++ {
-		poly1[i] = RandPoly(Degree, *s[i]) // fi(x), set si as its constant term
+		poly1[i] = randPoly(Degree, *s[i]) // fi(x), set si as its constant term
 		for j := 0; j < Nstm; j++ {
 			// share for j is fi(x) evaluation result on x[j]=Hash(Pub[j])
-			rrshare[i][j] = EvaluatePoly(poly1[i], &x[j], Degree)
+			rrshare[i][j] = evaluatePoly(poly1[i], &x[j], Degree)
 		}
 	}
 
@@ -125,13 +131,19 @@ func TestSchnorr(t *testing.T) {
 	}
 
 	// Compute the scalar point of r
-	rpkshare := make([]ecdsa.PublicKey, Nstm)
+	rpkshare := make([]*ecdsa.PublicKey, Nstm)
 
 	for i := 0; i < Nstm; i++ {
-		rpkshare[i].X, rpkshare[i].Y = crypto.S256().ScalarBaseMult(rshare[i].Bytes())
+
+		shareTemp := new(ecdsa.PublicKey)
+		shareTemp.Curve = crypto.S256()
+
+		shareTemp.X, shareTemp.Y = crypto.S256().ScalarBaseMult(rshare[i].Bytes())
+
+		rpkshare[i] = shareTemp
 	}
 
-	rpk := LagrangeECC(rpkshare, x, Degree)
+	rpk := lagrangeECC(rpkshare, x, Degree)
 
 	// Forming the m: hash(message||rpk)
 	var buffer bytes.Buffer
@@ -145,12 +157,12 @@ func TestSchnorr(t *testing.T) {
 	sigshare := make([]big.Int, Nstm)
 
 	for i := 0; i < Nstm; i++ {
-		sigshare[i] = SchnorrSign(*gskshare[i], *rshare[i], *m)
+		sigshare[i] = schnorrSign(*gskshare[i], *rshare[i], *m)
 	}
 
 	// Compute the signature using Lagrange's polynomial interpolation
 
-	ss := Lagrange(sigshare, x, Degree)
+	ss := lagrange(sigshare, x, Degree)
 
 	// the final signature = (rpk,ss)
 
@@ -268,10 +280,10 @@ func TestSchnorr2(t *testing.T) {
 	var sshare [Nstm][Nstm]big.Int
 
 	for i := 0; i < Nstm; i++ {
-		poly[i] = RandPoly(Degree, *s[i]) // fi(x), set si as its constant term
+		poly[i] = randPoly(Degree, *s[i]) // fi(x), set si as its constant term
 		for j := 0; j < Nstm; j++ {
 			// share for j is fi(x) evaluation result on x[j]=Hash(Pub[j])
-			sshare[i][j] = EvaluatePoly(poly[i], &x[j], Degree)
+			sshare[i][j] = evaluatePoly(poly[i], &x[j], Degree)
 		}
 	}
 
@@ -290,20 +302,26 @@ func TestSchnorr2(t *testing.T) {
 	}
 
 	// Each storeman node publishes the scalar point of its group private key share
-	gpkshare := make([]ecdsa.PublicKey, Nstm)
+	gpkshare := make([]*ecdsa.PublicKey, Nstm)
 
 	for i := 0; i < Nstm; i++ {
-		gpkshare[i].X, gpkshare[i].Y = crypto.S256().ScalarBaseMult(gskshare[i].Bytes())
+		shareTemp := new(ecdsa.PublicKey)
+		shareTemp.Curve = crypto.S256()
+
+		shareTemp.X, shareTemp.Y = crypto.S256().ScalarBaseMult(gskshare[i].Bytes())
+
+		//gpkshare[i].X, gpkshare[i].Y = crypto.S256().ScalarBaseMult(gskshare[i].Bytes())
+		gpkshare[i] = shareTemp
 	}
 
 	// Each storeman node computes the group public key by Lagrange's polynomial interpolation
-	gpk := LagrangeECC(gpkshare, x, Degree)
+	gpk := lagrangeECC(gpkshare, x, Degree)
 
 	fmt.Printf("gpk: %v \n", hexutil.Encode(crypto.FromECDSAPub(gpk)))
 
 	for i := 0; i < Nstm; i++ {
 		fmt.Printf("x[%v]: %v \n", i, hexutil.Encode(x[i].Bytes()))
-		fmt.Printf("gpkshare[%v]: %v \n", i, hexutil.Encode(crypto.FromECDSAPub(&gpkshare[i])))
+		fmt.Printf("gpkshare[%v]: %v \n", i, hexutil.Encode(crypto.FromECDSAPub(gpkshare[i])))
 		fmt.Printf("gskshare[%v]: %v \n\n", i, hexutil.Encode(gskshare[i].Bytes()))
 	}
 
@@ -322,10 +340,10 @@ func TestSchnorr2(t *testing.T) {
 	var rrshare [Nstm][Nstm]big.Int
 
 	for i := 0; i < Nstm; i++ {
-		poly1[i] = RandPoly(Degree, *s[i]) // fi(x), set si as its constant term
+		poly1[i] = randPoly(Degree, *s[i]) // fi(x), set si as its constant term
 		for j := 0; j < Nstm; j++ {
 			// share for j is fi(x) evaluation result on x[j]=Hash(Pub[j])
-			rrshare[i][j] = EvaluatePoly(poly1[i], &x[j], Degree)
+			rrshare[i][j] = evaluatePoly(poly1[i], &x[j], Degree)
 		}
 	}
 }
@@ -354,7 +372,7 @@ func TestSchnorr3(t *testing.T) {
 		pks[i] = crypto.ToECDSAPub(onePkBytes)
 	}
 
-	pkRet, _ := EvalByPolyG(pks, uint16(pkCount-1), xValue)
+	pkRet, _ := evalByPolyG(pks, uint16(pkCount-1), xValue)
 
 	fmt.Printf(hexutil.Encode(crypto.FromECDSAPub(pkRet)))
 }
@@ -371,7 +389,7 @@ func TestAdd(t *testing.T) {
 	pkBytes, _ = hexutil.Decode(pkString2)
 	pk2 := crypto.ToECDSAPub(pkBytes)
 
-	pk3, _ := Add(pk1, pk2)
+	pk3, _ := add(pk1, pk2)
 	fmt.Println(pk3)
 }
 

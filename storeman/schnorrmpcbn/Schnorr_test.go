@@ -7,6 +7,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/crypto/bn256/cloudflare"
+	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
 	"testing"
 )
@@ -56,14 +57,14 @@ func TestSchnorr(t *testing.T) {
 	}
 
 	// Each storeman node conducts the shamir secret sharing process
-	poly := make([]Polynomial, Nstm)
+	poly := make([]mpcprotocol.Polynomial, Nstm)
 
 	var sshare [Nstm][Nstm]big.Int
 
 	for i := 0; i < Nstm; i++ {
-		poly[i] = RandPoly(Degree, *s[i]) // fi(x), set si as its constant term
+		poly[i] = randPoly(Degree, *s[i]) // fi(x), set si as its constant term
 		for j := 0; j < Nstm; j++ {
-			sshare[i][j] = EvaluatePoly(poly[i], &x[j], Degree) // share for j is fi(x) evaluation result on x[j]=Hash(Pub[j])
+			sshare[i][j] = evaluatePoly(poly[i], &x[j], Degree) // share for j is fi(x) evaluation result on x[j]=Hash(Pub[j])
 		}
 	}
 
@@ -89,7 +90,7 @@ func TestSchnorr(t *testing.T) {
 
 	// Each storeman node computes the group public key by Lagrange's polynomial interpolation
 
-	gpk := LagrangeECC(gpkshare, x, Degree)
+	gpk := lagrangeECC(gpkshare, x, Degree)
 
 	//----------------------------------------------  Signing ----------------------------------------------//
 
@@ -101,14 +102,14 @@ func TestSchnorr(t *testing.T) {
 		rr[i], _ = rand.Int(rand.Reader, bn256.Order)
 	}
 
-	poly1 := make([]Polynomial, Nstm)
+	poly1 := make([]mpcprotocol.Polynomial, Nstm)
 
 	var rrshare [Nstm][Nstm]big.Int
 
 	for i := 0; i < Nstm; i++ {
-		poly1[i] = RandPoly(Degree, *s[i]) // fi(x), set si as its constant term
+		poly1[i] = randPoly(Degree, *s[i]) // fi(x), set si as its constant term
 		for j := 0; j < Nstm; j++ {
-			rrshare[i][j] = EvaluatePoly(poly1[i], &x[j], Degree) // share for j is fi(x) evaluation result on x[j]=Hash(Pub[j])
+			rrshare[i][j] = evaluatePoly(poly1[i], &x[j], Degree) // share for j is fi(x) evaluation result on x[j]=Hash(Pub[j])
 		}
 	}
 
@@ -131,7 +132,7 @@ func TestSchnorr(t *testing.T) {
 		rpkshare[i] = new(bn256.G1).ScalarBaseMult(rshare[i])
 	}
 
-	rpk := LagrangeECC(rpkshare, x, Degree)
+	rpk := lagrangeECC(rpkshare, x, Degree)
 
 	// Forming the m: hash(message||rpk)
 	var buffer bytes.Buffer
@@ -145,12 +146,12 @@ func TestSchnorr(t *testing.T) {
 	sigshare := make([]big.Int, Nstm)
 
 	for i := 0; i < Nstm; i++ {
-		sigshare[i] = SchnorrSign(*gskshare[i], *rshare[i], *m)
+		sigshare[i] = schnorrSign(*gskshare[i], *rshare[i], *m)
 	}
 
 	// Compute the signature using Lagrange's polynomial interpolation
 
-	ss := Lagrange(sigshare, x, Degree)
+	ss := lagrange(sigshare, x, Degree)
 
 	// the final signature = (rpk,ss)
 
@@ -164,7 +165,7 @@ func TestSchnorr(t *testing.T) {
 
 	temp := new(bn256.G1).Add(mgpk, &rpk)
 
-	if CompareG1(*ssG, *temp) {
+	if compareG1(ssG, temp) {
 		fmt.Println("Verification Succeeded")
 		fmt.Println(" ", ssG.Marshal())
 		fmt.Println(" ", temp.Marshal())
@@ -180,7 +181,7 @@ func TestSchnorr(t *testing.T) {
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	if CompareG1(*temp, *temp1) {
+	if compareG1(temp, temp1) {
 		fmt.Println("Marshal success")
 	} else {
 		fmt.Println("Marshal fail")
