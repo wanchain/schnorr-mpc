@@ -118,8 +118,9 @@ func (cnf *OsmConf) LoadCnf(confPath string) error {
 	}
 	errUnmarshal := json.Unmarshal(b, &ofcContent)
 	if errUnmarshal != nil {
-		log.SyslogErr("LoadCnf.Unmarshal", "error", err.Error())
-		panic(errUnmarshal)
+		log.SyslogErr("LoadCnf.Unmarshal", "error", errUnmarshal.Error())
+		fmt.Println(errUnmarshal.Error())
+		panic(errUnmarshal.Error())
 	}
 
 	// save configure file content to the OsmConf struct.
@@ -742,7 +743,7 @@ func Difference(slice1, slice2 []uint16) []uint16 {
 }
 
 func pkToAddr(PkBytes []byte) (common.Address, error) {
-	if len(PkBytes) != schnorrmpc.PkLength {
+	if len(PkBytes) != schnorrmpc.NewSkSchnorrMpc().PtByteLen() {
 		return common.Address{}, errors.New("invalid pk address in osmconf.go")
 	}
 	pk := crypto.ToECDSAPub(PkBytes[:])
@@ -827,26 +828,50 @@ func IsHaming(sendCol *big.Int, smIndex uint16) (bool, error) {
 
 //////////////// test only begin///////////////
 
-func (cnf *OsmConf) GetPrivateShare() (big.Int, error) {
+func (cnf *OsmConf) GetPrivateShare(curveType uint8) (big.Int, error) {
 	defer cnf.wrLock.RUnlock()
 
 	cnf.wrLock.RLock()
 
-	nodeId, _ := cnf.GetSelfNodeId()
-	if hexutil.Encode((*nodeId)[:]) == "0x9c6d6f351a3ede10ed994f7f6b754b391745bba7677b74063ff1c58597ad52095df8e95f736d42033eee568dfa94c5a7689a9b83cc33bf919ff6763ae7f46f8d" {
-		return *big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x37b1af24c261773b711293c76564896ea3dacf5da54ba3a1d9f5f6d8feff3b"))), nil
-	}
+	switch int(curveType) {
+	case mpcprotocol.SK256Curve:
+		// gpk: 0x04ee8797b2d53915708fb24cee7dbdddfa43eb2cbfa19cd427cdfd02d2169bb028e5dfa3514a92fa2eb4da42085bbc7807c1acb08f132c13b2951759d4281ece8b
+		nodeId, _ := cnf.GetSelfNodeId()
+		if hexutil.Encode((*nodeId)[:]) == "0xed214e8ce499d92a2085e7e6041b4f081c7d29d8770057fc705a131d2918fcdb737e23980bdd11fa86f5d824ea1f8a35333ac6f99246464dd4d19adac9da21d1" {
+			return *big.NewInt(0).SetBytes(hexutil.MustDecode(string("0xa5420177f0aac28eea347cd492f716f98ca3d6493ac966fb5f82aa85f9553c18"))), nil
+		}
 
-	if hexutil.Encode((*nodeId)[:]) == "0x78f760cd286c36c5db44c590f9e2409411e41f0bd10d17b6d4fb208cddf8df9b6957a027ee3b628fb685501cad256fefdc103916e2418e0ec9cee4883bbe4e4d" {
-		return *big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x4f60631f7273a4bc9b056f01b6414291c09ac3e3365e4804e697937edf79b303"))), nil
-	}
+		if hexutil.Encode((*nodeId)[:]) == "0xe6d15450a252e2209574a98585785a79c160746fa282a8ab9d4658c381093928eda1f03e70606dd4eee6402389c619ac9f725c63e5b80b947730d31152ce6612" {
+			return *big.NewInt(0).SetBytes(hexutil.MustDecode(string("0xd4da82196907e3489ca4c9f44fc63a577874d193ed6d1fcfdb95d91494d177ae"))), nil
+		}
 
-	if hexutil.Encode((*nodeId)[:]) == "0xdc997644bc12df6da60fef4922e257dc74bd506a05be714fb1380d1031c3eac102085bcc676339aa95b38502a6788ae6e4db329903e92d1a70be7e207c38ad35" {
-		return *big.NewInt(0).SetBytes(hexutil.MustDecode(string("0xaeb934491f9706d38b2a74ccf4658041b1127d1c3dd344cbc9b30425f7fc45a8"))), nil
-	}
+		if hexutil.Encode((*nodeId)[:]) == "0xf938ff60f1e8ebea4c229d894c98418e90c149814ed7909c3dd47cb015cd1f15d71722121a0cc646a0576e29372bfbd6037fe2c5b6ed68214da50318eebb13e1" {
+			return *big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x67ecb53e17beb3f1b6085001644d02009bf405ed358dc09b615b96b4aa477eb4"))), nil
+		}
 
-	if hexutil.Encode((*nodeId)[:]) == "0x005d55b8634d6afa930b0a8c31a3cc2c8246d996ed06fb41d2520a4d8155eefa41258440ee2bfff2473191e62495729b9ef86d7be685ac21fd67d71b09cce1a5" {
-		return *big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x51607e6ae0111434e813c1ae72c70222d6e5216f375c75ca09a888ee77861380"))), nil
+		if hexutil.Encode((*nodeId)[:]) == "0x3d7346cf5ac1dfa9beace3f93b215acc8cf4bb2b1653f50649e803a60e91c7dc41d9f491afbc0199633caaa298233139d53ac64556c51ea654d52eca70b5e9c7" {
+			return *big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x179c4640ad957738b68d5c562daf2f4d7cfa697df46c9c28405501e1ec991926"))), nil
+		}
+	case mpcprotocol.BN256Curve:
+		// gpk: 0x2ab2e3655ebd58b188f9ed3ba466e3ae39f4f6e9bcbe80e355be8f1ccd222f97175ebb6b000cb43a3aa6e69dd05d1710719559b17983a0067420de99f3c3cd9f
+		nodeId, _ := cnf.GetSelfNodeId()
+		if hexutil.Encode((*nodeId)[:]) == "0xed214e8ce499d92a2085e7e6041b4f081c7d29d8770057fc705a131d2918fcdb737e23980bdd11fa86f5d824ea1f8a35333ac6f99246464dd4d19adac9da21d1" {
+			return *big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x6934315acd94b49ecdff3c85b8e28191e3e98444e144a9e96d9057de5ddd74f1"))), nil
+		}
+
+		if hexutil.Encode((*nodeId)[:]) == "0xe6d15450a252e2209574a98585785a79c160746fa282a8ab9d4658c381093928eda1f03e70606dd4eee6402389c619ac9f725c63e5b80b947730d31152ce6612" {
+			return *big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x74deabccc1bd2a0f26a4f13bd7db2e2d1aaf739065620d835548a7e84cb59395"))), nil
+		}
+
+		if hexutil.Encode((*nodeId)[:]) == "0xf938ff60f1e8ebea4c229d894c98418e90c149814ed7909c3dd47cb015cd1f15d71722121a0cc646a0576e29372bfbd6037fe2c5b6ed68214da50318eebb13e1" {
+			return *big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x83a65e1cbf9f059841e7fb672f7dcefedace8043f4fa035828f70901f735f814"))), nil
+		}
+
+		if hexutil.Encode((*nodeId)[:]) == "0x3d7346cf5ac1dfa9beace3f93b215acc8cf4bb2b1653f50649e803a60e91c7dc41d9f491afbc0199633caaa298233139d53ac64556c51ea654d52eca70b5e9c7" {
+			return *big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x83a5311e7e22376d66d96f34f64ddb9c18a71fb12c2b9a008f255efa3467c63c"))), nil
+		}
+	default:
+		return big.Int{}, nil
 	}
 	return big.Int{}, nil
 }

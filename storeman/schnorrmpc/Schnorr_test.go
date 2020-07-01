@@ -225,22 +225,22 @@ func TestSchnorr(t *testing.T) {
 }
 
 // create gpk for 4 nodes.
-func TestSchnorr2(t *testing.T) {
+func TestSchnorrCreateGpk4Nodes(t *testing.T) {
 
 	// Number of storeman nodes
 	const Nstm = 4
 
 	// Threshold for storeman signature
-	const Thres = 2
+	const Thres = 3
 
 	// Polynomial degree for shamir secret sharing
 	const Degree = Thres - 1
 
 	const (
-		pk0 = "0x04d9482a01dd8bb0fb997561e734823d6cf341557ab117b7f0de72530c5e2f0913ef74ac187589ed90a2b9b69f736af4b9f87c68ae34c550a60f4499e2559cbfa5"
-		pk1 = "0x043d0461abc005e082021fb2dd81781f676941b2f922422932d56374646328a8132bb0f7956532981bced30a1aa3301e9134041b399058de31d388651fc005b49e"
-		pk2 = "0x04f65f08b31c46e97751865b24a176f28888f2cef91ffdf95d0cbf3fd71b4abdab7f4b4b55cfac5853198854569bad590ed260557f50e6bc944ad63a274369339a"
-		pk3 = "0x042687ff2d4ba1cfa8bbd27aa33d691dabe007a0eaaf109aab2a990154906f00860e5ead9ed95080c144a61a0eabb5df7f109ff348c9b9de68ee133a49c0731fc0"
+		pk0 = "0x0425fa6a4190ddc87d9f9dd986726cafb901e15c21aafd2ed729efed1200c73de89f1657726631d29733f4565a97dc00200b772b4bc2f123a01e582e7e56b80cf8"
+		pk1 = "0x04be3b7fd88613dc272a36f4de570297f5f33b87c26de3060ad04e2ea697e13125a2454acd296e1879a7ddd0084d9e4e724fca9ef610b21420978476e2632a1782"
+		pk2 = "0x0495e8fd461c37f1db5da62bfbee2ad305d77e57fbef917ec8109e6425e942fb60ddc28b1edfdbcda1aa5ace3160b458b9d3d5b1fe306b4d09a030302a08e2db93"
+		pk3 = "0x04ccd16e96a70a5b496ff1cec869902b6a8ffa00715897937518f1c9299726f7090bc36cc23c1d028087eb0988c779663e996391f290631317fc22f84fa9bf2467"
 	)
 	// Generate storeman's public key and private key
 	Pubkey := make([]*ecdsa.PublicKey, Nstm)
@@ -260,7 +260,7 @@ func TestSchnorr2(t *testing.T) {
 	for i := 0; i < Nstm; i++ {
 		h := sha256.Sum256(crypto.FromECDSAPub(Pubkey[i]))
 		x[i].SetBytes(h[:])
-		//x[i].Mod(&x[i], crypto.S256().Params().N)
+		x[i].Mod(&x[i], crypto.S256().Params().N)
 	}
 
 	//----------------------------------------------  Setup  ----------------------------------------------//

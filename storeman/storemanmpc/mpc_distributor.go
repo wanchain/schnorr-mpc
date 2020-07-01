@@ -306,7 +306,9 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 				//todo for bn256
 				address, err = schnorrmpc.PkToAddress(item.ByteValue)
 				if err != nil {
-					return []byte{}, err
+					if !schcomm.PocTest {
+						return []byte{}, err
+					}
 				}
 				gpkString = hexutil.Encode(item.ByteValue)
 				break
@@ -314,10 +316,8 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 		}
 		// peers1: the peers which are used to create the group public key, used to build the sign data.
 
-		var POC bool
-		POC = false
-		if POC {
-			b, _ := osmconf.GetOsmConf().GetPrivateShare()
+		if schcomm.PocTest {
+			b, _ := osmconf.GetOsmConf().GetPrivateShare(curveType)
 			value := &MpcValue{mpcprotocol.MpcPrivateShare, []big.Int{b}, nil}
 			// mpc private share
 			preSetValue = append(preSetValue, *value)
@@ -358,11 +358,6 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 	mpcServer.addMpcContext(mpcID, mpc)
 	defer mpcServer.removeMpcContext(mpcID)
 	err = mpc.mainMPCProcess(mpcServer)
-	//if err != nil {
-	//	log.SyslogErr("MpcDistributor createRequestMpcContext, mainMPCProcess fail", "err", err.Error())
-	//	return []byte{}, err
-	//}
-
 	return mpc.getMpcResult(err)
 }
 
@@ -469,7 +464,9 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 
 		add, err := schnorrmpc.PkToAddress(address[:])
 		if err != nil {
-			return err
+			if !schcomm.PocTest {
+				return err
+			}
 		}
 
 		gpkStr = hexutil.Encode(address[:])
@@ -478,10 +475,8 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 
 		var MpcPrivateShare *MpcValue
 
-		var POC bool
-		POC = false
-		if POC {
-			b, _ := osmconf.GetOsmConf().GetPrivateShare()
+		if schcomm.PocTest {
+			b, _ := osmconf.GetOsmConf().GetPrivateShare(curveType)
 			MpcPrivateShare = &MpcValue{mpcprotocol.MpcPrivateShare, []big.Int{b}, nil}
 			// mpc private share
 		} else {
@@ -569,7 +564,7 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 		mpcMessage.ContextID,
 		msgPeers,
 		curPeerCount,
-		uint8(ctxType),
+		uint8(curveType),
 		preSetValue...)
 
 	if err != nil {

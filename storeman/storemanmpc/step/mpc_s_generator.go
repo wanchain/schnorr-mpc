@@ -60,7 +60,6 @@ func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcpr
 	// compute m
 	var buffer bytes.Buffer
 	buffer.Write(hashMBytes[:])
-	//buffer.Write(crypto.FromECDSAPub(&rgpk))
 	buffer.Write(rgpkBytes)
 
 	mBytes := sha256.Sum256(buffer.Bytes())

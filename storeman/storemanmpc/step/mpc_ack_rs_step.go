@@ -2,10 +2,8 @@ package step
 
 import (
 	"bytes"
-	"crypto/ecdsa"
 	"crypto/sha256"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
-	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
@@ -15,18 +13,19 @@ import (
 type MpcAckRSStep struct {
 	BaseStep
 	message    map[discover.NodeID]bool
-	remoteMpcR map[discover.NodeID][]big.Int // R
-	remoteMpcS map[discover.NodeID]big.Int   // S
+	remoteMpcR map[discover.NodeID]mpcprotocol.CurvePointer // R
+	remoteMpcS map[discover.NodeID]big.Int                  // S
 	accType    string
-	mpcR       [2]big.Int
-	mpcS       big.Int
+	//mpcR       [2]big.Int
+	mpcR mpcprotocol.CurvePointer
+	mpcS big.Int
 }
 
 func CreateAckMpcRSStep(peers *[]mpcprotocol.PeerInfo, accType string) *MpcAckRSStep {
 	mpc := &MpcAckRSStep{
 		*CreateBaseStep(peers, -1),
 		make(map[discover.NodeID]bool),
-		make(map[discover.NodeID][]big.Int),
+		make(map[discover.NodeID]mpcprotocol.CurvePointer),
 		make(map[discover.NodeID]big.Int),
 		accType,
 		[2]big.Int{*big.NewInt(0), *big.NewInt(0)},
@@ -37,16 +36,12 @@ func CreateAckMpcRSStep(peers *[]mpcprotocol.PeerInfo, accType string) *MpcAckRS
 func (mars *MpcAckRSStep) InitStep(result mpcprotocol.MpcResultInterface) error {
 	log.SyslogInfo("MpcAckRSStep.InitStep begin")
 	mars.BaseStep.InitStep(result)
-	//value, err := result.GetValue(mpcprotocol.RPk)
 	rpkBytes, err := result.GetByteValue(mpcprotocol.RPk)
-	rpk := crypto.ToECDSAPub(rpkBytes[:])
-
+	mars.mpcR, err = mars.schnorrMpcer.UnMarshPt(rpkBytes)
 	if err != nil {
-		log.SyslogErr("MpcAckRSStep::InitStep", "ack mpc account step, init fail. err", err.Error())
+		log.SyslogErr("MpcAckRSStep::InitStep", "ack mpc account step, init fail UnMarshPt. err", err.Error())
 		return err
 	}
-	//mars.mpcR[0], mars.mpcR[1] = value[0], value[1]
-	mars.mpcR[0], mars.mpcR[1] = *rpk.X, *rpk.Y
 
 	sValue, err := result.GetValue(mpcprotocol.MpcS)
 	if err != nil {
@@ -58,12 +53,25 @@ func (mars *MpcAckRSStep) InitStep(result mpcprotocol.MpcResultInterface) error 
 }
 
 func (mars *MpcAckRSStep) CreateMessage() []mpcprotocol.StepMessage {
-	return []mpcprotocol.StepMessage{mpcprotocol.StepMessage{
+
+	rpkBytes, err := mars.schnorrMpcer.MarshPt(mars.mpcR)
+	if err != nil {
+		log.SyslogErr("MpcAckRSStep::InitStep", "ack mpc account step, init fail. err", err.Error())
+	}
+
+	msg := mpcprotocol.StepMessage{
 		MsgCode:   mpcprotocol.MPCMessage,
 		PeerID:    nil,
 		Peers:     nil,
-		Data:      []big.Int{mars.mpcS, mars.mpcR[0], mars.mpcR[1]},
-		BytesData: nil}}
+		Data:      nil,
+		BytesData: nil}
+	msg.BytesData = make([][]byte, 1)
+	msg.BytesData[0] = rpkBytes
+
+	msg.Data = make([]big.Int, 1)
+	msg.Data[0] = mars.mpcS
+
+	return []mpcprotocol.StepMessage{msg}
 }
 
 func (mars *MpcAckRSStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mpcprotocol.StoremanManager) error {
@@ -78,14 +86,13 @@ func (mars *MpcAckRSStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc 
 		return err
 	}
 
-	//todo curve point
 	// rpk : R
-	rpk := new(ecdsa.PublicKey)
-	rpk.Curve = crypto.S256()
-	rpk.X, rpk.Y = &mars.mpcR[0], &mars.mpcR[1]
-	// Forming the m: hash(message||rpk)
+	rpkBytes, err := mars.schnorrMpcer.MarshPt(mars.mpcR)
+	if err != nil {
+		return err
+	}
 	var buffer bytes.Buffer
-	buffer.Write(crypto.FromECDSAPub(rpk))
+	buffer.Write(rpkBytes)
 	// S
 	buffer.Write(mars.mpcS.Bytes())
 	result.SetByteValue(mpcprotocol.MpcContextResult, buffer.Bytes())
@@ -102,9 +109,17 @@ func (mars *MpcAckRSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		return false
 	}
 
-	if len(msg.Data) >= 3 {
-		mars.remoteMpcR[*msg.PeerID] = []big.Int{msg.Data[1], msg.Data[2]}
+	if len(msg.Data) >= 1 {
 		mars.remoteMpcS[*msg.PeerID] = msg.Data[0]
+	}
+
+	if len(msg.BytesData) >= 1 {
+		rpt, err := mars.schnorrMpcer.UnMarshPt(msg.BytesData[0])
+		if err != nil {
+			log.SyslogErr("MpcAckRSStep::HandleMessage", "MpcAckRSStep.HandleMessage UnMarshPt error", err.Error())
+			return false
+		}
+		mars.remoteMpcR[*msg.PeerID] = rpt
 	}
 
 	mars.message[*msg.PeerID] = true
@@ -118,7 +133,7 @@ func (mars *MpcAckRSStep) verifyRS(result mpcprotocol.MpcResultInterface) error 
 			return mpcprotocol.ErrInvalidMPCR
 		}
 
-		if mars.mpcR[0].Cmp(&mpcR[0]) != 0 || mars.mpcR[1].Cmp(&mpcR[1]) != 0 {
+		if !mars.schnorrMpcer.Equal(mars.mpcR, mpcR) {
 			return mpcprotocol.ErrInvalidMPCR
 		}
 	}
@@ -153,19 +168,17 @@ func (mars *MpcAckRSStep) verifyRS(result mpcprotocol.MpcResultInterface) error 
 		return err
 	}
 
-	//todo CurvePoint
 	// rpk : R
-	rpk := new(ecdsa.PublicKey)
-	rpk.Curve = crypto.S256()
-	rpk.X, rpk.Y = &mars.mpcR[0], &mars.mpcR[1]
-
+	rpkBytes, err := smpcer.MarshPt(mars.mpcR)
+	if err != nil {
+		log.SyslogErr("MpcAckRSStep::verifyRS", "MarshPt err", err.Error())
+		return err
+	}
 	// Forming the m: hash(message||rpk)
 	var buffer bytes.Buffer
 	//buffer.Write(M[:])
 	buffer.Write(hashMBytes[:])
-
-	buffer.Write(crypto.FromECDSAPub(rpk))
-	//mTemp := crypto.Keccak256(buffer.Bytes())
+	buffer.Write(rpkBytes)
 	mTemp := sha256.Sum256(buffer.Bytes())
 	m := new(big.Int).SetBytes(mTemp[:])
 
@@ -183,7 +196,7 @@ func (mars *MpcAckRSStep) verifyRS(result mpcprotocol.MpcResultInterface) error 
 		return err
 	}
 	//// rpk + m*gpk
-	temp, err := smpcer.Add(mgpk, rpk)
+	temp, err := smpcer.Add(mgpk, mars.mpcR)
 	if err != nil {
 		log.SyslogErr("MpcAckRSStep::verifyRS", "Add err", err.Error())
 		return err
@@ -192,7 +205,7 @@ func (mars *MpcAckRSStep) verifyRS(result mpcprotocol.MpcResultInterface) error 
 		"M", hexutil.Encode(M[:]),
 		"hash(M)", hexutil.Encode(hashMBytes[:]),
 		"m", hexutil.Encode(m.Bytes()),
-		"R", hexutil.Encode(crypto.FromECDSAPub(rpk)),
+		"R", hexutil.Encode(rpkBytes),
 		"rpk+m*gpk", smpcer.PtToHexString(temp),
 		"sG", smpcer.PtToHexString(ssG),
 		"s", hexutil.Encode(mars.mpcS.Bytes()),

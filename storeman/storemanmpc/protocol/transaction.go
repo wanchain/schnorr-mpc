@@ -29,6 +29,7 @@ type SignedResult struct {
 	// 4. sSlsh
 
 	ResultType uint8
+	CurveType  uint8
 	GrpId      hexutil.Bytes `json:"GrpId"`
 
 	// uint256, one bit, one sm index

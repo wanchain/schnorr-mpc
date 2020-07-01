@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
-	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
@@ -49,13 +48,13 @@ func (req *MpcPolycmStep) InitStep(result mpcprotocol.MpcResultInterface) error 
 
 	threshold, _ := osmconf.GetOsmConf().GetThresholdNum(grpIdString)
 	degree := threshold - 1
-	s, err := rand.Int(rand.Reader, crypto.S256().Params().N)
+	smpcer := req.schnorrMpcer
+	s, err := rand.Int(rand.Reader, smpcer.GetMod())
 	if err != nil {
 		log.SyslogErr("MpcPolycmStep::InitStep", "rand.Int fail. err", err.Error())
 		return err
 	}
 
-	smpcer := req.schnorrMpcer
 	cof := smpcer.RandPoly(int(degree), *s)
 
 	req.polyCoff = make(mpcprotocol.Polynomial, len(cof))
@@ -82,7 +81,6 @@ func (req *MpcPolycmStep) InitStep(result mpcprotocol.MpcResultInterface) error 
 	for key, value := range req.polycmGMap {
 		log.SyslogDebug("-----------------key", "key index", key)
 		for index, pk := range value {
-			//log.SyslogDebug("-----------------G", "index", index, "G", hexutil.Encode(crypto.FromECDSAPub(&pk)))
 			log.SyslogDebug("-----------------G", "index", index, "G", smpcer.PtToHexString(pk))
 		}
 	}
@@ -116,9 +114,6 @@ func (req *MpcPolycmStep) CreateMessage() []mpcprotocol.StepMessage {
 	// build msg.data & msg.bytedata
 	var buf bytes.Buffer
 	for index, pk := range req.polycmGMap[req.selfIndex] {
-
-		//buf.Write(crypto.FromECDSAPub(&pk))
-		//msg.BytesData[index] = crypto.FromECDSAPub(&pk)
 
 		ptBytes, err := smpcer.MarshPt(pk)
 		if err != nil {
@@ -155,8 +150,6 @@ func (req *MpcPolycmStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc 
 		key := mpcprotocol.RPolyCMG + strconv.Itoa(int(index))
 		var buf bytes.Buffer
 		for _, polyCmItem := range polyCms {
-
-			//buf.Write(crypto.FromECDSAPub(&polyCmItem))
 			ptBytes, err := smpcer.MarshPt(polyCmItem)
 			if err != nil {
 				return err
@@ -277,15 +270,11 @@ func (req *MpcPolycmStep) fillCmIntoMap(msg *mpcprotocol.StepMessage) bool {
 	smpcer := req.schnorrMpcer
 	log.SyslogDebug("fillCmIntoMap", "map key", inx, "group", grpIdString, "threshold", threshold, "len(msg.BytesData)", len(msg.BytesData))
 	for i := 0; i < len(msg.BytesData); i++ {
-		pk := crypto.ToECDSAPub(msg.BytesData[i][:])
-		log.SyslogDebug("		fillCmIntoMap", "item index", i, "one poly commit item G", hexutil.Encode(msg.BytesData[i][:]))
-		pg[i] = *pk
-
+		log.SyslogDebug("		fillCmIntoMap", "item index", i, "From message one poly commit item G", hexutil.Encode(msg.BytesData[i][:]))
 		pt, err := smpcer.UnMarshPt(msg.BytesData[i][:])
 		if err != nil {
 			return false
 		}
-		log.SyslogDebug("		fillCmIntoMap", "item index", i, "one poly commit item G", hexutil.Encode(msg.BytesData[i][:]))
 		pg[i] = pt
 	}
 	req.polycmGMap[inx] = pg

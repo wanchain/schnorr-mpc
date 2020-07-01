@@ -111,10 +111,13 @@ func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStep
 	var schnorrMpcer mpcprotocol.SchnorrMPCer
 	switch int(curveType) {
 	case mpcprotocol.SK256Curve:
+		log.SyslogInfo("......Using SK256 curve")
 		schnorrMpcer = schnorrmpc.NewSkSchnorrMpc()
 	case mpcprotocol.BN256Curve:
+		log.SyslogInfo("......Using BN256 curve")
 		schnorrMpcer = schnorrmpcbn.NewBnSchnorrMpc()
 	default:
+		log.SyslogInfo("......Using SK256 curve (default...)")
 		schnorrMpcer = schnorrmpc.NewSkSchnorrMpc()
 	}
 

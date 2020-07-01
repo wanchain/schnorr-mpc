@@ -46,7 +46,6 @@ func (addStep *MpcRStep) CreateMessage() []mpcprotocol.StepMessage {
 	message[0].PeerID = nil
 
 	pointer := addStep.messages[0].(*mpcPointGenerator)
-	//buf.Write(crypto.FromECDSAPub(&pointer.seed))
 	seedBytes, err := addStep.schnorrMpcer.MarshPt(pointer.seed)
 	if err != nil {
 		log.SyslogErr("MpcRStep CreateMessage", "MarshPt err", err.Error())
@@ -61,7 +60,6 @@ func (addStep *MpcRStep) CreateMessage() []mpcprotocol.StepMessage {
 	message[0].Data[1] = *s
 
 	// only one point, rpkShare
-	//message[0].BytesData = append(message[0].BytesData, crypto.FromECDSAPub(&pointer.seed))
 	message[0].BytesData = append(message[0].BytesData, seedBytes)
 
 	return message
@@ -69,9 +67,9 @@ func (addStep *MpcRStep) CreateMessage() []mpcprotocol.StepMessage {
 
 func (addStep *MpcRStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 
-	log.SyslogInfo("MpcPointStep.HandleMessage begin ",
+	log.SyslogInfo("MpcRStep.HandleMessage begin ",
 		"peerID", msg.PeerID.String(),
-		"gpk x", hex.EncodeToString(msg.BytesData[0]))
+		"gpk ", hex.EncodeToString(msg.BytesData[0]))
 
 	pointer := addStep.messages[0].(*mpcPointGenerator)
 	_, exist := pointer.message[*msg.PeerID]
@@ -80,7 +78,6 @@ func (addStep *MpcRStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		return false
 	}
 
-	//pointPk := crypto.ToECDSAPub(msg.BytesData[0])
 	pointPk, err := addStep.schnorrMpcer.UnMarshPt(msg.BytesData[0])
 	if err != nil {
 		log.SyslogErr("HandleMessage", "UnMarshPt error ", err.Error())
@@ -94,8 +91,9 @@ func (addStep *MpcRStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 
 	senderPk, _ := osmconf.GetOsmConf().GetPKByNodeId(grpIdString, msg.PeerID)
 
-	if !addStep.schnorrMpcer.IsOnCurve(senderPk) {
-		log.SyslogErr("MpcPointStep IsOnCurve", "senderPk", addStep.schnorrMpcer.PtToHexString(senderPk))
+	err = schcomm.CheckPK(senderPk)
+	if err != nil {
+		log.SyslogErr("MpcRStep", "HandleMessage", err.Error())
 	}
 
 	senderIndex, _ := osmconf.GetOsmConf().GetInxByNodeId(grpIdString, msg.PeerID)
@@ -143,7 +141,6 @@ func (addStep *MpcRStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc m
 		"result key", addStep.resultKeys[0],
 		"result value ", hexutil.Encode(resultBytes))
 
-	//err = result.SetByteValue(ptStep.resultKeys[0], crypto.FromECDSAPub(&pointer.result))
 	err = result.SetByteValue(mpcprotocol.RPk, resultBytes)
 	if err != nil {
 		log.SyslogErr("HandleMessage", "MpcPointStep.FinishStep, SetValue fail. err", err.Error())

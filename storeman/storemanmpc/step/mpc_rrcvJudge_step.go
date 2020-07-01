@@ -2,12 +2,10 @@ package step
 
 import (
 	"bytes"
-	"crypto/ecdsa"
 	"crypto/sha256"
 	"errors"
 	"fmt"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
-	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
@@ -193,22 +191,22 @@ func (ptStep *MpcRRcvJudgeStep) FinishStep(result mpcprotocol.MpcResultInterface
 	rskShare := big.NewInt(0)
 	for _, value := range bigs {
 		rskShare.Add(rskShare, &value)
-		rskShare.Mod(rskShare, crypto.S256().Params().N)
+		rskShare.Mod(rskShare, ptStep.schnorrMpcer.GetMod())
 	}
 
 	err = result.SetValue(mpcprotocol.RSkShare, []big.Int{*rskShare})
 	if err != nil {
 		return err
 	}
-
+	scmper := ptStep.schnorrMpcer
 	log.SyslogInfo("......MpcRRcvJudgeStep.FinishStep setValue",
 		"key", mpcprotocol.RSkShare,
 		"value", hexutil.Encode(rskShare.Bytes()))
 
-	//todo curve point
-	rpkShare := new(ecdsa.PublicKey)
-	rpkShare.Curve = crypto.S256()
-	rpkShare.X, rpkShare.Y = crypto.S256().ScalarBaseMult(rskShare.Bytes())
+	rpkShare, err := scmper.SkG(rskShare)
+	if err != nil {
+		return err
+	}
 
 	selfIndex, err := osmconf.GetOsmConf().GetSelfInx(grpIdString)
 	if err != nil {
@@ -216,14 +214,19 @@ func (ptStep *MpcRRcvJudgeStep) FinishStep(result mpcprotocol.MpcResultInterface
 		return err
 	}
 	key := mpcprotocol.RPkShare + strconv.Itoa(int(selfIndex))
-	err = result.SetByteValue(key, crypto.FromECDSAPub(rpkShare))
+
+	rpkShareBytes, err := scmper.MarshPt(rpkShare)
+	if err != nil {
+		return err
+	}
+	err = result.SetByteValue(key, rpkShareBytes)
 	if err != nil {
 		return err
 	}
 
 	log.SyslogInfo("......MpcRRcvJudgeStep.FinishStep SetByteValue",
 		"key", key,
-		"value", hexutil.Encode(crypto.FromECDSAPub(rpkShare)))
+		"value", hexutil.Encode(rpkShareBytes))
 
 	log.SyslogInfo("MpcRRcvJudgeStep.FinishStep end")
 	return nil

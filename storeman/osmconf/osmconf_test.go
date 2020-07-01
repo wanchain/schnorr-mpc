@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-const configFilePath = "/home/jacob/mpc_test_1/data1/groupInfo.json"
+const configFilePath = "/home/jacob/mpc_poc/data1/groupInfo.json"
 const selfNodeId = "0x9c6d6f351a3ede10ed994f7f6b754b391745bba7677b74063ff1c58597ad52095df8e95f736d42033eee568dfa94c5a7689a9b83cc33bf919ff6763ae7f46f8d"
 const pwd = "123456"
 
@@ -42,11 +42,17 @@ func TestAll(t *testing.T) {
 	fmt.Printf(hexutil.Encode(crypto.FromECDSAPub(pk)))
 }
 
+func TestLoadCnf(t *testing.T) {
+	osm := GetOsmConf()
+	osm.SetFilePath(configFilePath)
+	osm.LoadCnf(configFilePath)
+}
+
 func TestIntersect(t *testing.T) {
 	s1 := []uint16{1, 2, 3, 4}
 	s2 := []uint16{2, 3, 4, 5, 6, 7}
 
-	s := Intersect(s1, s2)
+	s := intersect(s1, s2)
 	fmt.Printf("%v", s)
 }
 

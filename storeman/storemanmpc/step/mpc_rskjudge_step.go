@@ -129,6 +129,7 @@ func (rsj *MpcRSkJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		log.SyslogErr("MpcRSkJudgeStep", "HandleMessage.GetXValueByIndex", err.Error())
 	}
 
+	xValue.Mod(xValue, rsj.schnorrMpcer.GetMod())
 	//split the pk list
 	pks, _ := rsj.schnorrMpcer.SplitPksFromBytes(pgBytes[:])
 	sijgEval, _ := rsj.schnorrMpcer.EvalByPolyG(pks, uint16(len(pks)-1), xValue)

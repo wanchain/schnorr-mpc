@@ -76,6 +76,8 @@ func (point *mpcPointGenerator) calculateResult() error {
 	for nodeId, value := range point.message {
 
 		xValue, err := osmconf.GetOsmConf().GetXValueByNodeId(point.grpIdString, &nodeId)
+		xValue.Mod(xValue, point.smcer.GetMod())
+
 		if err != nil {
 			log.SyslogErr("mpcPointGenerator", "calculateResult", err.Error())
 			return err

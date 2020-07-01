@@ -105,7 +105,6 @@ func (poly *RandomPolynomialGen) calculateResult() error {
 	log.Info("RandomPolynomialGen::calculateResult ", "len of recieved message", len(poly.message))
 	for _, value := range poly.message {
 		poly.result.Add(poly.result, &value)
-		//poly.result.Mod(poly.result, crypto.S256().Params().N)
 		poly.result.Mod(poly.result, poly.smpcer.GetMod())
 	}
 

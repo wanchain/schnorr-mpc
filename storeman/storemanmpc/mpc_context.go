@@ -1,6 +1,7 @@
 package storemanmpc
 
 import (
+	"errors"
 	"fmt"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/log"
@@ -58,190 +59,212 @@ type MpcContext struct {
 	curveType    uint8
 }
 
+func (mpcCtx *MpcContext) buildSucc(sr *mpcprotocol.SignedResult) (interface{}, error) {
+	mpcResult := mpcCtx.mpcResult
+	sr.ResultType = success
+	value, err := mpcCtx.mpcResult.GetByteValue(mpcprotocol.MpcContextResult)
+	grpId, grpIdString, _ := osmconf.GetGrpId(mpcResult)
+
+	log.SyslogInfo("buildSuccSR.getMpcResult", "grpIdString", grpIdString)
+
+	okIndexes, _ := mpcResult.GetValue(mpcprotocol.SOKIndex)
+
+	OkIndexesStr, _ := osmconf.BuildStrByIndexes(&okIndexes)
+	log.SyslogInfo("buildSuccSR.getMpcResult", "okIndexes", OkIndexesStr)
+
+	retBig, _ := osmconf.BuildDataByIndexes(&okIndexes)
+	sr.IncntData = retBig.Bytes()
+	log.SyslogInfo("buildSuccSR.getMpcResult", "IncntData", hexutil.Encode(sr.IncntData))
+
+	if err != nil {
+		return nil, err
+	} else {
+		sr.R = value[0:65]
+		sr.S = value[65:]
+		sr.GrpId = grpId
+
+		return *sr, nil
+	}
+}
+
+func (mpcCtx *MpcContext) buildRSlsh(sr *mpcprotocol.SignedResult) (interface{}, error) {
+	mpcResult := mpcCtx.mpcResult
+	//build R slash proof
+	sr.ResultType = rSlsh
+
+	keyErrNum := mpcprotocol.RSlshProofNum
+	errNum, err := mpcResult.GetValue(keyErrNum)
+	if err != nil {
+		log.SyslogErr("getMpcResult", "RSlshProofNum mpcResult.GetValue error:", err.Error(), "key", keyErrNum)
+		return nil, err
+	}
+	errNumInt64 := errNum[0].Int64()
+	for i := 0; i < int(errNumInt64); i++ {
+		key := mpcprotocol.RSlshProof + strconv.Itoa(int(i))
+		rslshValue, err := mpcResult.GetValue(key)
+		if err != nil {
+			log.SyslogErr("getMpcResult", "RSlshProof mpcResult.GetValue error:", err.Error())
+			return nil, err
+		}
+
+		if len(rslshValue) != 9 {
+			log.SyslogErr("getMpcResult rslshValue format error.", "len(rslshValue)", len(rslshValue))
+			return nil, err
+		} else {
+
+			oneRPrf := mpcprotocol.RSlshPrf{}
+			oneRPrf.PolyCMR = rslshValue[1].Bytes()
+			oneRPrf.PolyCMS = rslshValue[2].Bytes()
+			oneRPrf.PolyData = rslshValue[3].Bytes()
+			oneRPrf.PolyDataR = rslshValue[4].Bytes()
+			oneRPrf.PolyDataS = rslshValue[5].Bytes()
+			oneRPrf.SndrAndRcvrIndex = [2]uint8{uint8(rslshValue[6].Int64()), uint8(rslshValue[7].Int64())}
+
+			if rslshValue[0].Cmp(schcomm.BigZero) == 0 {
+				oneRPrf.BecauseSndr = false
+			} else {
+				oneRPrf.BecauseSndr = true
+			}
+
+			polyLen := int(rslshValue[8].Int64())
+
+			rslshBytes, err := mpcResult.GetByteValue(key)
+			if err != nil {
+				log.SyslogErr("getMpcResult", "GetByteValue error,key", key, "error", err.Error())
+				return nil, err
+			}
+			oneRPrf.PolyCM = rslshBytes[0 : 65*polyLen]
+			sr.GrpId = rslshBytes[65*polyLen:]
+
+			sr.RSlsh = append(sr.RSlsh, oneRPrf)
+		}
+
+	}
+	return sr, nil
+
+}
+
+func (mpcCtx *MpcContext) buildSSlsh(sr *mpcprotocol.SignedResult) (interface{}, error) {
+	mpcResult := mpcCtx.mpcResult
+	// build S slash proof
+	sr.ResultType = sSlsh
+
+	keyErrNum := mpcprotocol.MPCSSlshProofNum
+	errNum, _ := mpcResult.GetValue(keyErrNum)
+	errNumInt64 := errNum[0].Int64()
+	for i := 0; i < int(errNumInt64); i++ {
+		key := mpcprotocol.SSlshProof + strconv.Itoa(int(i))
+		sslshValue, _ := mpcResult.GetValue(key)
+
+		if len(sslshValue) != 7 {
+			log.SyslogErr("getMpcResult sslsh format error.", "len(sslshValue)", len(sslshValue))
+			return nil, errors.New("getMpcResult sslsh format error.")
+		} else {
+
+			oneRPrf := mpcprotocol.SSlshPrf{}
+			oneRPrf.M = sslshValue[1].Bytes()
+			oneRPrf.PolyData = sslshValue[2].Bytes()
+			oneRPrf.PolyDataR = sslshValue[3].Bytes()
+			oneRPrf.PolyDataS = sslshValue[4].Bytes()
+
+			oneRPrf.SndrAndRcvrIndex = [2]uint8{uint8(sslshValue[5].Int64()), uint8(sslshValue[6].Int64())}
+
+			if sslshValue[0].Cmp(schcomm.BigZero) == 0 {
+				oneRPrf.BecauseSndr = false
+			} else {
+				oneRPrf.BecauseSndr = true
+			}
+
+			rslshBytes, err := mpcResult.GetByteValue(key)
+			if err != nil {
+				log.SyslogErr("getMpcResult", "GetByteValue error,key", key, "error", err.Error())
+				return nil, err
+			}
+
+			oneRPrf.RPKShare = rslshBytes[0:65]
+			oneRPrf.GPKShare = rslshBytes[65 : 65*2]
+			sr.GrpId = rslshBytes[65*2:]
+
+			sr.SSlsh = append(sr.SSlsh, oneRPrf)
+
+			log.SyslogInfo("...........................................getMpcResult", "oneSPrf", oneRPrf)
+		}
+
+	}
+	fmt.Printf("getMpcResult%#v", sr)
+	log.SyslogInfo("getMpcResult", " sr", sr)
+
+	return sr, nil
+}
+
+func (mpcCtx *MpcContext) buildRNW(sr *mpcprotocol.SignedResult) (interface{}, error) {
+	sr.ResultType = rNW
+	mpcResult := mpcCtx.mpcResult
+	grpId, grpIdString, _ := osmconf.GetGrpId(mpcResult)
+	log.SyslogInfo("getMpcResult", "grpIdString", grpIdString)
+
+	RNOIndex, _ := mpcResult.GetValue(mpcprotocol.RNOIndex)
+
+	log.SyslogInfo("getMpcResult", "RNOIndex", RNOIndex)
+
+	retBig, _ := osmconf.BuildDataByIndexes(&RNOIndex)
+	sr.RNW = retBig.Bytes()
+	sr.GrpId = grpId
+
+	log.SyslogInfo("getMpcResult", "RNW", hexutil.Encode(sr.RNW))
+
+	return sr, nil
+}
+
+func (mpcCtx *MpcContext) buildSNW(sr *mpcprotocol.SignedResult) (interface{}, error) {
+	sr.ResultType = sNW
+	mpcResult := mpcCtx.mpcResult
+	grpId, grpIdString, _ := osmconf.GetGrpId(mpcResult)
+	log.SyslogInfo("getMpcResult", "grpIdString", grpIdString)
+
+	SNOIndex, _ := mpcResult.GetValue(mpcprotocol.SNOIndex)
+
+	log.SyslogInfo("getMpcResult", "SNOIndex", SNOIndex)
+
+	retBig, _ := osmconf.BuildDataByIndexes(&SNOIndex)
+	sr.SNW = retBig.Bytes()
+	sr.GrpId = grpId
+
+	log.SyslogInfo("getMpcResult", "SNW", hexutil.Encode(sr.IncntData))
+
+	return sr, nil
+}
+
+func (mpcCtx *MpcContext) buildNormalErr(err error) (interface{}, error) {
+	return nil, err
+}
+
 func (mpcCtx *MpcContext) getMpcResult(err error) (interface{}, error) {
 
 	sr := mpcprotocol.SignedResult{}
-	mpcResult := mpcCtx.mpcResult
+	sr.CurveType = mpcCtx.curveType
 
 	if err == nil {
-		sr.ResultType = success
-		value, err := mpcCtx.mpcResult.GetByteValue(mpcprotocol.MpcContextResult)
-
-		grpId, grpIdString, _ := osmconf.GetGrpId(mpcResult)
-
-		log.SyslogInfo("getMpcResult", "grpIdString", grpIdString)
-
-		okIndexes, _ := mpcResult.GetValue(mpcprotocol.SOKIndex)
-
-		OkIndexesStr, _ := osmconf.BuildStrByIndexes(&okIndexes)
-		log.SyslogInfo("getMpcResult", "okIndexes", OkIndexesStr)
-
-		retBig, _ := osmconf.BuildDataByIndexes(&okIndexes)
-		sr.IncntData = retBig.Bytes()
-		log.SyslogInfo("getMpcResult", "IncntData", hexutil.Encode(sr.IncntData))
-
-		if err != nil {
-			return nil, err
-		} else {
-			sr.R = value[0:65]
-			sr.S = value[65:]
-			sr.GrpId = grpId
-
-			//sr.IncntData
-			return sr, nil
-		}
-	}
-
-	if err != mpcprotocol.ErrRSlsh &&
-		err != mpcprotocol.ErrSSlsh &&
-		err != mpcprotocol.ErrRNW &&
-		err != mpcprotocol.ErrSNW {
-		return nil, err
+		return mpcCtx.buildSucc(&sr)
 	}
 
 	if err == mpcprotocol.ErrRSlsh {
-		//build R slash proof
-		sr.ResultType = rSlsh
-
-		keyErrNum := mpcprotocol.RSlshProofNum
-		errNum, err := mpcResult.GetValue(keyErrNum)
-		if err != nil {
-			log.SyslogErr("getMpcResult", "RSlshProofNum mpcResult.GetValue error:", err.Error(), "key", keyErrNum)
-			return nil, err
-		}
-		errNumInt64 := errNum[0].Int64()
-		for i := 0; i < int(errNumInt64); i++ {
-			key := mpcprotocol.RSlshProof + strconv.Itoa(int(i))
-			rslshValue, err := mpcResult.GetValue(key)
-			if err != nil {
-				log.SyslogErr("getMpcResult", "RSlshProof mpcResult.GetValue error:", err.Error())
-				return nil, err
-			}
-
-			if len(rslshValue) != 9 {
-				log.SyslogErr("getMpcResult rslshValue format error.", "len(rslshValue)", len(rslshValue))
-				return nil, err
-			} else {
-
-				oneRPrf := mpcprotocol.RSlshPrf{}
-				oneRPrf.PolyCMR = rslshValue[1].Bytes()
-				oneRPrf.PolyCMS = rslshValue[2].Bytes()
-				oneRPrf.PolyData = rslshValue[3].Bytes()
-				oneRPrf.PolyDataR = rslshValue[4].Bytes()
-				oneRPrf.PolyDataS = rslshValue[5].Bytes()
-				oneRPrf.SndrAndRcvrIndex = [2]uint8{uint8(rslshValue[6].Int64()), uint8(rslshValue[7].Int64())}
-
-				if rslshValue[0].Cmp(schcomm.BigZero) == 0 {
-					oneRPrf.BecauseSndr = false
-				} else {
-					oneRPrf.BecauseSndr = true
-				}
-
-				polyLen := int(rslshValue[8].Int64())
-
-				rslshBytes, err := mpcResult.GetByteValue(key)
-				if err != nil {
-					log.SyslogErr("getMpcResult", "GetByteValue error,key", key, "error", err.Error())
-					return nil, err
-				}
-				oneRPrf.PolyCM = rslshBytes[0 : 65*polyLen]
-				sr.GrpId = rslshBytes[65*polyLen:]
-
-				sr.RSlsh = append(sr.RSlsh, oneRPrf)
-			}
-
-		}
-		return sr, nil
+		return mpcCtx.buildRSlsh(&sr)
 	}
+
 	if err == mpcprotocol.ErrSSlsh {
-		// build S slash proof
-		sr.ResultType = sSlsh
-
-		keyErrNum := mpcprotocol.MPCSSlshProofNum
-		errNum, _ := mpcResult.GetValue(keyErrNum)
-		errNumInt64 := errNum[0].Int64()
-		for i := 0; i < int(errNumInt64); i++ {
-			key := mpcprotocol.SSlshProof + strconv.Itoa(int(i))
-			sslshValue, _ := mpcResult.GetValue(key)
-
-			if len(sslshValue) != 7 {
-				log.SyslogErr("getMpcResult sslsh format error.", "len(sslshValue)", len(sslshValue))
-				return nil, err
-			} else {
-
-				oneRPrf := mpcprotocol.SSlshPrf{}
-				oneRPrf.M = sslshValue[1].Bytes()
-				oneRPrf.PolyData = sslshValue[2].Bytes()
-				oneRPrf.PolyDataR = sslshValue[3].Bytes()
-				oneRPrf.PolyDataS = sslshValue[4].Bytes()
-
-				oneRPrf.SndrAndRcvrIndex = [2]uint8{uint8(sslshValue[5].Int64()), uint8(sslshValue[6].Int64())}
-
-				if sslshValue[0].Cmp(schcomm.BigZero) == 0 {
-					oneRPrf.BecauseSndr = false
-				} else {
-					oneRPrf.BecauseSndr = true
-				}
-
-				rslshBytes, err := mpcResult.GetByteValue(key)
-				if err != nil {
-					log.SyslogErr("getMpcResult", "GetByteValue error,key", key, "error", err.Error())
-					return nil, err
-				}
-
-				oneRPrf.RPKShare = rslshBytes[0:65]
-				oneRPrf.GPKShare = rslshBytes[65 : 65*2]
-				sr.GrpId = rslshBytes[65*2:]
-
-				sr.SSlsh = append(sr.SSlsh, oneRPrf)
-
-				log.SyslogInfo("...........................................getMpcResult", "oneSPrf", oneRPrf)
-			}
-
-		}
-		fmt.Printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^getMpcResult%#v", sr)
-		log.SyslogInfo("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^getMpcResult", " sr", sr)
-		return sr, nil
+		return mpcCtx.buildSSlsh(&sr)
 	}
 
 	if err == mpcprotocol.ErrRNW {
-		sr.ResultType = rNW
-		grpId, grpIdString, _ := osmconf.GetGrpId(mpcResult)
-		log.SyslogInfo("getMpcResult", "grpIdString", grpIdString)
-
-		RNOIndex, _ := mpcResult.GetValue(mpcprotocol.RNOIndex)
-
-		log.SyslogInfo("getMpcResult", "RNOIndex", RNOIndex)
-
-		retBig, _ := osmconf.BuildDataByIndexes(&RNOIndex)
-		sr.RNW = retBig.Bytes()
-		sr.GrpId = grpId
-
-		log.SyslogInfo("getMpcResult", "RNW", hexutil.Encode(sr.RNW))
-
-		return sr, nil
+		return mpcCtx.buildRNW(&sr)
 	}
 
 	if err == mpcprotocol.ErrSNW {
-		sr.ResultType = sNW
-
-		grpId, grpIdString, _ := osmconf.GetGrpId(mpcResult)
-		log.SyslogInfo("getMpcResult", "grpIdString", grpIdString)
-
-		SNOIndex, _ := mpcResult.GetValue(mpcprotocol.SNOIndex)
-
-		log.SyslogInfo("getMpcResult", "SNOIndex", SNOIndex)
-
-		retBig, _ := osmconf.BuildDataByIndexes(&SNOIndex)
-		sr.SNW = retBig.Bytes()
-		sr.GrpId = grpId
-
-		log.SyslogInfo("getMpcResult", "SNW", hexutil.Encode(sr.IncntData))
-
-		return sr, nil
+		return mpcCtx.buildSNW(&sr)
 	}
 
-	return nil, nil
+	return mpcCtx.buildNormalErr(err)
 }
 
 func (mpcCtx *MpcContext) getMessage(PeerID *discover.NodeID,

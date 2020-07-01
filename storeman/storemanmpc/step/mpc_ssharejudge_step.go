@@ -252,8 +252,6 @@ func (ssj *MpcSSahreJudgeStep) saveSlshProof(isSnder bool,
 	smpcer := ssj.schnorrMpcer
 	// rpkShare, gpkShare, grpId
 	var sslshByte bytes.Buffer
-	//sslshByte.Write(crypto.FromECDSAPub(rpkShare))
-	//sslshByte.Write(crypto.FromECDSAPub(gpkShare))
 	rpkShareBytes, err := smpcer.MarshPt(rpkShare)
 	if err != nil {
 		log.SyslogErr("MpcSSahreJudgeStep", "MarshPt(rpkShare) err ", err.Error())

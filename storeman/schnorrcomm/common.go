@@ -11,6 +11,8 @@ import (
 var BigOne = big.NewInt(1)
 var BigZero = big.NewInt(0)
 
+var PocTest = true
+
 func SignInternalData(prv *ecdsa.PrivateKey, hash []byte) (r, s *big.Int, err error) {
 	return ecdsa.Sign(Rand.Reader, prv, hash[:])
 }

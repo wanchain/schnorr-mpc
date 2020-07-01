@@ -14,7 +14,7 @@ import (
 	"math/big"
 )
 
-const PkLength = 65
+const pkLength = 65
 
 type SkSchnorrMpc struct {
 }
@@ -24,14 +24,17 @@ func NewSkSchnorrMpc() *SkSchnorrMpc {
 }
 
 func (ssm *SkSchnorrMpc) RandPoly(degree int, constant big.Int) mpcprotocol.Polynomial {
+	log.SyslogDebug("Entering SK RandPoly")
 	return randPoly(degree, constant)
 }
 
 func (ssm *SkSchnorrMpc) EvaluatePoly(f mpcprotocol.Polynomial, x *big.Int, degree int) big.Int {
+	log.SyslogDebug("Entering SK EvaluatePoly")
 	return evaluatePoly(f, x, degree)
 }
 
 func (ssm *SkSchnorrMpc) Equal(left, right mpcprotocol.CurvePointer) bool {
+	log.SyslogDebug("Entering BN Equal")
 	ptLeft, ok := left.(*ecdsa.PublicKey)
 	if !ok {
 		fmt.Println("It's not ok for type ecdsa.PublicKey")
@@ -52,6 +55,7 @@ func (ssm *SkSchnorrMpc) Equal(left, right mpcprotocol.CurvePointer) bool {
 }
 
 func (ssm *SkSchnorrMpc) IsOnCurve(pt mpcprotocol.CurvePointer) bool {
+	log.SyslogDebug("Entering SK IsOnCurve")
 	ptTemp, ok := pt.(*ecdsa.PublicKey)
 	if !ok {
 		errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
@@ -70,10 +74,12 @@ func (ssm *SkSchnorrMpc) IsOnCurve(pt mpcprotocol.CurvePointer) bool {
 }
 
 func (ssm *SkSchnorrMpc) SkG(sk *big.Int) (mpcprotocol.CurvePointer, error) {
+	log.SyslogDebug("Entering SK SkG")
 	return skG(sk)
 }
 
 func (ssm *SkSchnorrMpc) MulPK(sk *big.Int, pk mpcprotocol.CurvePointer) (mpcprotocol.CurvePointer, error) {
+	log.SyslogDebug("Entering SK MulPK")
 	pt, ok := pk.(*ecdsa.PublicKey)
 	if !ok {
 		errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
@@ -84,6 +90,7 @@ func (ssm *SkSchnorrMpc) MulPK(sk *big.Int, pk mpcprotocol.CurvePointer) (mpcpro
 }
 
 func (ssm *SkSchnorrMpc) Add(left, right mpcprotocol.CurvePointer) (mpcprotocol.CurvePointer, error) {
+	log.SyslogDebug("Entering SK Add")
 
 	ptLeft, ok := left.(*ecdsa.PublicKey)
 	if !ok {
@@ -107,6 +114,7 @@ func (ssm *SkSchnorrMpc) Add(left, right mpcprotocol.CurvePointer) (mpcprotocol.
 }
 
 func (ssm *SkSchnorrMpc) NewPt() (mpcprotocol.CurvePointer, error) {
+	log.SyslogDebug("Entering SK NewPt")
 	sG := new(ecdsa.PublicKey)
 	sG.Curve = crypto.S256()
 	sG.X, sG.Y = crypto.S256().ScalarBaseMult(schcomm.BigOne.Bytes())
@@ -114,6 +122,7 @@ func (ssm *SkSchnorrMpc) NewPt() (mpcprotocol.CurvePointer, error) {
 }
 
 func (ssm *SkSchnorrMpc) MarshPt(pt mpcprotocol.CurvePointer) ([]byte, error) {
+	log.SyslogDebug("Entering SK MarshPt")
 	ptTemp, ok := pt.(*ecdsa.PublicKey)
 	if !ok {
 		errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
@@ -124,10 +133,12 @@ func (ssm *SkSchnorrMpc) MarshPt(pt mpcprotocol.CurvePointer) ([]byte, error) {
 }
 
 func (ssm *SkSchnorrMpc) UnMarshPt(b []byte) (mpcprotocol.CurvePointer, error) {
+	log.SyslogDebug("Entering SK UnMarshPt")
 	return crypto.ToECDSAPub(b), nil
 }
 
 func (ssm *SkSchnorrMpc) PtToHexString(pt mpcprotocol.CurvePointer) string {
+	log.SyslogDebug("Entering SK PtToHexString")
 	b, err := ssm.MarshPt(pt)
 	if err != nil {
 		return ""
@@ -137,18 +148,22 @@ func (ssm *SkSchnorrMpc) PtToHexString(pt mpcprotocol.CurvePointer) string {
 }
 
 func (ssm *SkSchnorrMpc) PtByteLen() int {
-	return PkLength
+	log.SyslogDebug("Entering SK PtByteLen")
+	return pkLength
 }
 
 func (ssm *SkSchnorrMpc) GetMod() *big.Int {
+	log.SyslogDebug("Entering SK GetMod")
 	return crypto.S256().Params().N
 }
 
 func (ssm *SkSchnorrMpc) StringToPt(str string) (mpcprotocol.CurvePointer, error) {
+	log.SyslogDebug("Entering SK StringToPt")
 	return StringtoPk(str)
 }
 
 func (ssm *SkSchnorrMpc) SplitPksFromBytes(buf []byte) ([]mpcprotocol.CurvePointer, error) {
+	log.SyslogDebug("Entering SK SplitPksFromBytes")
 	ret := make([]mpcprotocol.CurvePointer, 0)
 	ret1, err := splitPksFromBytes(buf[:])
 	for _, pt := range ret1 {
@@ -158,6 +173,7 @@ func (ssm *SkSchnorrMpc) SplitPksFromBytes(buf []byte) ([]mpcprotocol.CurvePoint
 }
 
 func (ssm *SkSchnorrMpc) EvalByPolyG(pts []mpcprotocol.CurvePointer, degree uint16, xvalue *big.Int) (mpcprotocol.CurvePointer, error) {
+	log.SyslogDebug("Entering SK EvalByPolyG")
 	pks := make([]*ecdsa.PublicKey, 0)
 	for _, pt := range pts {
 		ptTemp, ok := pt.(*ecdsa.PublicKey)
@@ -173,14 +189,17 @@ func (ssm *SkSchnorrMpc) EvalByPolyG(pts []mpcprotocol.CurvePointer, degree uint
 }
 
 func (ssm *SkSchnorrMpc) SchnorrSign(psk big.Int, r big.Int, m big.Int) big.Int {
+	log.SyslogDebug("Entering SK SchnorrSign")
 	return schnorrSign(psk, r, m)
 }
 
 func (ssm *SkSchnorrMpc) Lagrange(f []big.Int, x []big.Int, degree int) big.Int {
+	log.SyslogDebug("Entering SK Lagrange")
 	return lagrange(f, x, degree)
 }
 
 func (ssm *SkSchnorrMpc) LagrangeECC(sig []mpcprotocol.CurvePointer, x []big.Int, degree int) mpcprotocol.CurvePointer {
+	log.SyslogDebug("Entering SK LagrangeECC")
 
 	sigSec256 := make([]*ecdsa.PublicKey, 0)
 	for _, oneSig := range sig {
@@ -348,7 +367,7 @@ func validatePublicKey(k *ecdsa.PublicKey) bool {
 }
 
 func PkToAddress(PkBytes []byte) (common.Address, error) {
-	if len(PkBytes) != PkLength {
+	if len(PkBytes) != pkLength {
 		return common.Address{}, errors.New("invalid pk address")
 	}
 	pk := crypto.ToECDSAPub(PkBytes[:])
@@ -370,7 +389,7 @@ func StringtoPk(str string) (*ecdsa.PublicKey, error) {
 		return nil, err
 	}
 
-	if len(pkBytes) != PkLength {
+	if len(pkBytes) != pkLength {
 		return nil, errors.New(fmt.Sprintf("len(pkBytes)= %v error. ", len(pkBytes)))
 	}
 	pk := crypto.ToECDSAPub(pkBytes)
@@ -399,13 +418,13 @@ func skMul(pk *ecdsa.PublicKey, s *big.Int) (*ecdsa.PublicKey, error) {
 
 //
 func splitPksFromBytes(buf []byte) ([]*ecdsa.PublicKey, error) {
-	if len(buf) < PkLength {
+	if len(buf) < pkLength {
 		return nil, errors.New(fmt.Sprintf("SplitPksFromBytes len(buf) = %v", len(buf)))
 	}
-	nPk := len(buf) / PkLength
+	nPk := len(buf) / pkLength
 	ret := make([]*ecdsa.PublicKey, nPk)
 	for i := 0; i < nPk; i++ {
-		onePkBytes := buf[i*PkLength : (i+1)*PkLength]
+		onePkBytes := buf[i*pkLength : (i+1)*pkLength]
 		onePk := crypto.ToECDSAPub(onePkBytes[:])
 		ret[i] = onePk
 	}

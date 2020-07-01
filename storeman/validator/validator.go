@@ -24,7 +24,8 @@ func ValidateData(data *mpcprotocol.SendData) (bool, error) {
 
 	log.SyslogInfo("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& ValidateData, begin",
 		"pk", hexutil.Encode(data.PKBytes),
-		"data", hexutil.Encode([]byte(data.Data)))
+		"data", hexutil.Encode([]byte(data.Data)),
+		"curveType", hexutil.Encode(data.Curve))
 
 	sdb, err := GetDB()
 	if err != nil {
@@ -199,11 +200,11 @@ func approveOneData(approveData mpcprotocol.SendData) error {
 }
 func addOneValidData(approveData mpcprotocol.SendData) error {
 
-
 	sdb, err := GetDB()
 	if err != nil {
 		log.SyslogErr("addOneValidData, getting storeman database fail", "err", err.Error())
-		return err	}
+		return err
+	}
 
 	key := buildKeyFromData(&approveData, mpcprotocol.MpcApproved)
 	exist, err := sdb.Has(key)
@@ -345,6 +346,7 @@ func buildKeyFromData(data *mpcprotocol.SendData, status string) []byte {
 	var buffer bytes.Buffer
 	buffer.Write(data.PKBytes[:])
 	buffer.Write([]byte(data.Data[:]))
+	buffer.Write(data.Curve)
 	//buffer.Write([]byte(data.Extern[:]))
 	buffer.Write([]byte(status))
 
