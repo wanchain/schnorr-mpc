@@ -397,6 +397,37 @@ func TestBnSchnorrMpc_StringToPt2(t *testing.T) {
 		t.Error(err.Error())
 	}
 	fmt.Println(smpcer.PtToHexString(pt))
+
+	//rpk+m*gpk
+	ptLeft, err := smpcer.StringToPt("0x163f69727c44bf76538bf4bfce3d77246915f2cd3098deb26234093f672903e606a9568c50b8bcd5c4f4333c313092bb98add44159448d91e3d3b850a4fb1ff9")
+	//sg
+	ptRight, err := smpcer.StringToPt("0x13375930578a8f7b4f4549d7d012175e65d7e0a59b7b5c70708740cf5491ef561656b8453cea7e65dfeb1b8156cd5adc73d3a6bfc4624c7e71686e2042b793f4")
+
+	ret := smpcer.Equal(ptLeft, ptRight)
+	if ret {
+		fmt.Println("equal")
+	} else {
+		fmt.Println("Not equal")
+	}
+	fmt.Println("------------------------")
+	ptLeftTemp, _ := ptLeft.(*bn256.G1)
+	ptRightTemp, _ := ptRight.(*bn256.G1)
+
+	fmt.Println("ptLeft", ptLeftTemp.String())
+	fmt.Println("ptRight", ptRightTemp.String())
+
+	fmt.Println("------------------------")
+	fmt.Println("ptLeft", *ptLeftTemp)
+	fmt.Println("ptRight", *ptRightTemp)
+
+	fmt.Println("------------------------")
+	fmt.Printf("left %#v\n", *ptLeftTemp)
+	fmt.Printf("right %#v\n", *ptRightTemp)
+
+	fmt.Println("------------------------")
+	fmt.Println("ptLeft", smpcer.PtToHexString(ptLeft))
+	fmt.Println("ptRight", smpcer.PtToHexString(ptRight))
+
 }
 
 func TestBnSchnorrMpc_SkG(t *testing.T) {

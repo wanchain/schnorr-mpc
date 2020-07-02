@@ -429,3 +429,22 @@ func TestAdd3(t *testing.T) {
 	pt, _ := smpcer.Add(pk1, pk2)
 	fmt.Println(pt)
 }
+
+func TestSkSchnorrMpc_SkG(t *testing.T) {
+	prv0 := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0xa5420177f0aac28eea347cd492f716f98ca3d6493ac966fb5f82aa85f9553c18")))
+	prv1 := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0xd4da82196907e3489ca4c9f44fc63a577874d193ed6d1fcfdb95d91494d177ae")))
+	prv2 := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x67ecb53e17beb3f1b6085001644d02009bf405ed358dc09b615b96b4aa477eb4")))
+	prv3 := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x179c4640ad957738b68d5c562daf2f4d7cfa697df46c9c28405501e1ec991926")))
+
+	smpcer := NewSkSchnorrMpc()
+
+	pt1, _ := smpcer.SkG(prv0)
+	pt2, _ := smpcer.SkG(prv1)
+	pt3, _ := smpcer.SkG(prv2)
+	pt4, _ := smpcer.SkG(prv3)
+
+	fmt.Println(smpcer.PtToHexString(pt1))
+	fmt.Println(smpcer.PtToHexString(pt2))
+	fmt.Println(smpcer.PtToHexString(pt3))
+	fmt.Println(smpcer.PtToHexString(pt4))
+}

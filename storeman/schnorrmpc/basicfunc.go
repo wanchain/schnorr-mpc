@@ -43,7 +43,7 @@ func (ssm *SkSchnorrMpc) Equal(left, right mpcprotocol.CurvePointer) bool {
 		return false
 	}
 
-	ptRight, ok := left.(*ecdsa.PublicKey)
+	ptRight, ok := right.(*ecdsa.PublicKey)
 	if !ok {
 		errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
 		log.SyslogErr(errStr)

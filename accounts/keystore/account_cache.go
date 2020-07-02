@@ -311,7 +311,7 @@ func (fc *fileCache) scanFiles(keyDir string) (set.Interface, set.Interface, set
 	fc.mtime = newMtime
 	fc.mu.Unlock()
 	t3 := time.Now()
-	log.Debug("FS scan times", "list", t1.Sub(t0), "set", t2.Sub(t1), "diff", t3.Sub(t2))
+	log.Trace("FS scan times", "list", t1.Sub(t0), "set", t2.Sub(t1), "diff", t3.Sub(t2))
 	return newFiles, missing, modified, nil
 }
 

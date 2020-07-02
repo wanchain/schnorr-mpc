@@ -304,7 +304,7 @@ func (msStep *MpcSStep) getm() (*big.Int, error) {
 	buffer.Write(rpkBytes)
 	mTemp := sha256.Sum256(buffer.Bytes())
 	m := new(big.Int).SetBytes(mTemp[:])
-
+	m = m.Mod(m, msStep.schnorrMpcer.GetMod())
 	return m, nil
 }
 

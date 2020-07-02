@@ -420,7 +420,6 @@ loop:
 	close(tab.closed)
 }
 
-
 // doRefresh performs a lookup for a random target to keep buckets
 // full. seed nodes are inserted if the table is empty (initial
 // bootstrap or discarded faulty peers).
@@ -485,7 +484,7 @@ func (tab *Table) doRevalidate(done chan<- struct{}) {
 	b := tab.buckets[bi]
 	if err == nil {
 		// The node responded, move it to the front.
-		log.Debug("Revalidated node", "b", bi, "id", last.ID)
+		log.Trace("Revalidated node", "b", bi, "id", last.ID)
 		b.bump(last)
 		return
 	}

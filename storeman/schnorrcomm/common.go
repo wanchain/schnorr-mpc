@@ -13,6 +13,8 @@ var BigZero = big.NewInt(0)
 
 var PocTest = true
 
+//var PocTest = false
+
 func SignInternalData(prv *ecdsa.PrivateKey, hash []byte) (r, s *big.Int, err error) {
 	return ecdsa.Sign(Rand.Reader, prv, hash[:])
 }

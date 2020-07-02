@@ -44,12 +44,15 @@ func (bsm *BnSchnorrMpc) Equal(left, right mpcprotocol.CurvePointer) bool {
 		return false
 	}
 
-	ptRight, ok := left.(*bn256.G1)
+	ptRight, ok := right.(*bn256.G1)
 	if !ok {
 		errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
 		log.SyslogErr(errStr)
 		return false
 	}
+
+	fmt.Println("ptLeft", ptLeft.String())
+	fmt.Println("ptRight", ptRight.String())
 	return compareG1(ptLeft, ptRight)
 }
 

@@ -64,6 +64,7 @@ func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcpr
 
 	mBytes := sha256.Sum256(buffer.Bytes())
 	m := new(big.Int).SetBytes(mBytes[:])
+	m = m.Mod(m, smpcer.GetMod())
 
 	rskShare, err := result.GetValue(mpcprotocol.RSkShare)
 	if err != nil {
