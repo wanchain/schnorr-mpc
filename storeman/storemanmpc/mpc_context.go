@@ -76,11 +76,20 @@ func (mpcCtx *MpcContext) buildSucc(sr *mpcprotocol.SignedResult) (interface{}, 
 	sr.IncntData = retBig.Bytes()
 	log.SyslogInfo("buildSuccSR.getMpcResult", "IncntData", hexutil.Encode(sr.IncntData))
 
+	var smpcer mpcprotocol.SchnorrMPCer
+	switch int(mpcCtx.curveType) {
+	case mpcprotocol.SK256Curve:
+		smpcer = schnorrmpc.NewSkSchnorrMpc()
+	case mpcprotocol.BN256Curve:
+		smpcer = schnorrmpcbn.NewBnSchnorrMpc()
+	default:
+		smpcer = schnorrmpc.NewSkSchnorrMpc()
+	}
 	if err != nil {
 		return nil, err
 	} else {
-		sr.R = value[0:65]
-		sr.S = value[65:]
+		sr.R = value[0:smpcer.PtByteLen()]
+		sr.S = value[smpcer.PtByteLen():]
 		sr.GrpId = grpId
 
 		return *sr, nil
@@ -154,11 +163,14 @@ func (mpcCtx *MpcContext) buildSSlsh(sr *mpcprotocol.SignedResult) (interface{},
 	errNumInt64 := errNum[0].Int64()
 	for i := 0; i < int(errNumInt64); i++ {
 		key := mpcprotocol.SSlshProof + strconv.Itoa(int(i))
-		sslshValue, _ := mpcResult.GetValue(key)
-
+		sslshValue, err := mpcResult.GetValue(key)
+		if err != nil {
+			log.SyslogErr("buildSSlsh mpcResult.GetValue", "key", key, "err", err.Error())
+			return nil, err
+		}
 		if len(sslshValue) != 7 {
 			log.SyslogErr("getMpcResult sslsh format error.", "len(sslshValue)", len(sslshValue))
-			return nil, errors.New("getMpcResult sslsh format error.")
+			return nil, errors.New("getMpcResult sslsh format error")
 		} else {
 
 			oneRPrf := mpcprotocol.SSlshPrf{}

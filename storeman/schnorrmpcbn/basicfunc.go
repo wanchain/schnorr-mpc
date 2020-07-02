@@ -126,8 +126,7 @@ func (bsm *BnSchnorrMpc) UnMarshPt(b []byte) (mpcprotocol.CurvePointer, error) {
 	_, err := ptRet.Unmarshal(b)
 	if err != nil {
 		errStr := fmt.Sprintf("From byte to pt, error:%s", err.Error())
-		log.SyslogErr(errStr)
-		return nil, err
+		return nil, errors.New(errStr)
 	}
 	return ptRet, nil
 }

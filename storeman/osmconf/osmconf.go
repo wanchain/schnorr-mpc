@@ -591,7 +591,7 @@ func (cnf *OsmConf) GetInxByNodeId(grpId string, id *discover.NodeID) (uint16, e
 	panic(fmt.Sprintf("GetInxByNodeId not find index by nodeId, id:%v", id.String()))
 }
 
-func (cnf *OsmConf) GetXValueByNodeId(grpId string, id *discover.NodeID) (*big.Int, error) {
+func (cnf *OsmConf) GetXValueByNodeId(grpId string, id *discover.NodeID, smpcer mpcprotocol.SchnorrMPCer) (*big.Int, error) {
 	// get pk
 	// get pkhash
 	// get x = hash(pk)
@@ -604,7 +604,7 @@ func (cnf *OsmConf) GetXValueByNodeId(grpId string, id *discover.NodeID) (*big.I
 	}
 	cnf.checkGrpId(grpId)
 	index, _ := cnf.GetInxByNodeId(grpId, id)
-	return cnf.GetXValueByIndex(grpId, index)
+	return cnf.GetXValueByIndex(grpId, index, smpcer)
 }
 
 func (cnf *OsmConf) GetNodeIdByIndex(grpId string, index uint16) (*discover.NodeID, error) {
@@ -626,7 +626,7 @@ func (cnf *OsmConf) GetNodeIdByIndex(grpId string, index uint16) (*discover.Node
 	panic(fmt.Sprintf("node id not found, grpId = %v, index = %v", grpId, index))
 }
 
-func (cnf *OsmConf) GetXValueByIndex(grpId string, index uint16) (*big.Int, error) {
+func (cnf *OsmConf) GetXValueByIndex(grpId string, index uint16, smpcer mpcprotocol.SchnorrMPCer) (*big.Int, error) {
 	// get pk
 	// get pkhash
 	// get x = hash(pk)
@@ -639,7 +639,8 @@ func (cnf *OsmConf) GetXValueByIndex(grpId string, index uint16) (*big.Int, erro
 	if err != nil {
 		return big.NewInt(0), err
 	} else {
-		return ge.XValue, nil
+		//return ge.XValue.Mod(ge.XValue, smpcer.GetMod()), nil
+		return big.NewInt(0).Mod(ge.XValue, smpcer.GetMod()), nil
 	}
 }
 

@@ -181,7 +181,7 @@ func (mars *MpcAckRSStep) verifyRS(result mpcprotocol.MpcResultInterface) error 
 	buffer.Write(rpkBytes)
 	mTemp := sha256.Sum256(buffer.Bytes())
 	m := new(big.Int).SetBytes(mTemp[:])
-
+	m = m.Mod(m, smpcer.GetMod())
 	// check ssG = rpk + m*gpk
 	ssG, err := smpcer.SkG(&mars.mpcS)
 	if err != nil {

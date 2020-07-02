@@ -1,6 +1,7 @@
 package step
 
 import (
+	"fmt"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
@@ -106,7 +107,8 @@ func (step *BaseStep) HandleMessage(msger mpcprotocol.GetMessageInterface) error
 			log.SyslogInfo("BaseStep get a quit msg")
 			return mpcprotocol.ErrQuit
 		} else {
-			log.SyslogDebug("BaseStep HandleMessage", "msg get from step.msgChan", msg)
+			msgStr := fmt.Sprintf("%#v", msg)
+			log.SyslogDebug("BaseStep HandleMessage", "msg get from step.msgChan", msgStr)
 		}
 
 		if msg.StepId != step.GetStepId() {

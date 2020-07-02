@@ -84,6 +84,16 @@ func (rss *MpcRSKShare_Step) FinishStep(result mpcprotocol.MpcResultInterface, m
 		return err
 	}
 
+	rpkShareTemp, err := rss.schnorrMpcer.UnMarshPt(rpkShareBytes)
+	if err != nil {
+		log.SyslogDebug("rss.schnorrMpcer.UnMarshPt", "error", err.Error())
+	}
+	if rss.schnorrMpcer.IsOnCurve(rpkShareTemp) {
+		log.SyslogDebug("rss.schnorrMpcer.IsOnCurve", "rpkShareBytes", hexutil.Encode(rpkShareBytes))
+	} else {
+		log.SyslogDebug("rss.schnorrMpcer.IsOnCurve Not on Curve", "rpkShareBytes", hexutil.Encode(rpkShareBytes))
+	}
+
 	log.SyslogInfo("@@@@@@@@@@@@@@@@@@@MpcRSKShare_Step",
 		"rpkShare", hexutil.Encode(rpkShareBytes),
 		"rskShare", hexutil.Encode((*skpv.result).Bytes()))
@@ -157,7 +167,7 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 
 	// 2. check sij*G=si+a[i][0]*X+a[i][1]*X^2+...+a[i][n]*x^(n-1)
 	selfNodeId, _ := osmconf.GetOsmConf().GetSelfNodeId()
-	xValue, err := osmconf.GetOsmConf().GetXValueByNodeId(grpIdString, selfNodeId)
+	xValue, err := osmconf.GetOsmConf().GetXValueByNodeId(grpIdString, selfNodeId, rss.schnorrMpcer)
 	if err != nil {
 		log.SyslogErr("MpcRSKShare_Step", "GetXValueByNodeId", err.Error())
 	}

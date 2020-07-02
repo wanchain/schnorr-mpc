@@ -85,7 +85,7 @@ func (rsj *MpcRSkJudgeStep) FinishStep(result mpcprotocol.MpcResultInterface, mp
 		log.SyslogErr("MpcRSkJudgeStep", "FinishStep err ", err.Error())
 		return err
 	}
-
+	log.SyslogInfo("MpcRSkJudgeStep", ":-(:-(:-(FinishStep RSlshCount", rsj.RSlshCount)
 	if rsj.RSlshCount > 0 {
 		return mpcprotocol.ErrRSlsh
 	}
@@ -124,12 +124,10 @@ func (rsj *MpcRSkJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	pgBytes, _ := rsj.mpcResult.GetByteValue(keyPolyCMG)
 	sigs, _ := rsj.mpcResult.GetValue(keyPolyCMG)
 
-	xValue, err := osmconf.GetOsmConf().GetXValueByIndex(grpIdString, uint16(rcvIndex))
+	xValue, err := osmconf.GetOsmConf().GetXValueByIndex(grpIdString, uint16(rcvIndex), rsj.schnorrMpcer)
 	if err != nil {
 		log.SyslogErr("MpcRSkJudgeStep", "HandleMessage.GetXValueByIndex", err.Error())
 	}
-
-	xValue.Mod(xValue, rsj.schnorrMpcer.GetMod())
 	//split the pk list
 	pks, _ := rsj.schnorrMpcer.SplitPksFromBytes(pgBytes[:])
 	sijgEval, _ := rsj.schnorrMpcer.EvalByPolyG(pks, uint16(len(pks)-1), xValue)
@@ -145,12 +143,11 @@ func (rsj *MpcRSkJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		log.SyslogErr("MpcRSkJudgeStep", "bSnderWrong", bSnderWrong, "bContentCheck", bContentCheck)
 		bSnderWrong = false
 	}
+	// when receive challenge data, there must be one wrong. either send wrong, or receiver wrong.
 
-	if !bContentCheck || !bVerifySig {
-		rsj.RSlshCount++
-		log.SyslogErr("MpcRSkJudgeStep", "bContentCheck", bContentCheck, "bVerifySig", bVerifySig, "rsj.RSlshCount", rsj.RSlshCount)
-		rsj.saveSlshProof(bSnderWrong, &sigs[0], &sigs[1], &sij, &r, &s, senderIndex, rcvIndex, int(rsj.RSlshCount), grpId, pgBytes, uint16(len(pks)))
-	}
+	rsj.RSlshCount++
+	log.SyslogErr("MpcRSkJudgeStep", "bContentCheck", bContentCheck, "bVerifySig", bVerifySig, "rsj.RSlshCount", rsj.RSlshCount)
+	rsj.saveSlshProof(bSnderWrong, &sigs[0], &sigs[1], &sij, &r, &s, senderIndex, rcvIndex, int(rsj.RSlshCount), grpId, pgBytes, uint16(len(pks)))
 
 	return true
 }

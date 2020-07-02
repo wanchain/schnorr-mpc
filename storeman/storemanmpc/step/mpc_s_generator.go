@@ -114,7 +114,7 @@ func (msg *mpcSGenerator) calculateResult() error {
 	sigshares := make([]big.Int, 0)
 	for nodeId, value := range msg.message {
 		// get seeds, need sort seeds, and make seeds as a key of map, and check the map's count??
-		xValue, err := osmconf.GetOsmConf().GetXValueByNodeId(msg.grpIdString, &nodeId)
+		xValue, err := osmconf.GetOsmConf().GetXValueByNodeId(msg.grpIdString, &nodeId, msg.smpcer)
 		if err != nil {
 			log.SyslogErr("mpcSGenerator", "calculateResult.GetXValueByNodeId", err.Error())
 		}

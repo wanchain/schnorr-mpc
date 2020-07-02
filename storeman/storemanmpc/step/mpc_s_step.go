@@ -114,10 +114,25 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 
 		log.SyslogInfo("===================================MpcSStep", " senderIndex", senderIndex, "selfIndex", selfIndex)
 
-		rpkShare, _ := msStep.getRPkShare(senderIndex)
-		gpkShare, _ := msStep.getGPKShare(senderIndex)
-		m, _ := msStep.getm()
-		bContentCheck, _ := msStep.checkContent(&sshare, m, rpkShare, gpkShare)
+		rpkShare, err := msStep.getRPkShare(senderIndex)
+		if err != nil {
+			log.SyslogErr("msStep.getRPkShare", " error", err.Error())
+		}
+
+		gpkShare, err := msStep.getGPKShare(senderIndex)
+		if err != nil {
+			log.SyslogErr("msStep.getGPKShare", " error", err.Error())
+		}
+
+		m, err := msStep.getm()
+		if err != nil {
+			log.SyslogErr("msStep.getm", " error", err.Error())
+		}
+
+		bContentCheck, err := msStep.checkContent(&sshare, m, rpkShare, gpkShare)
+		if err != nil {
+			log.SyslogErr("msStep.checkContent", " error", err.Error())
+		}
 
 		if bContentCheck {
 			log.SyslogInfo("check content of sshare successfully", " senderIndex", senderIndex)
@@ -264,7 +279,7 @@ func (msStep *MpcSStep) getRPkShare(index uint16) (mpcprotocol.CurvePointer, err
 	if err != nil {
 		log.SyslogErr("getRPkShare", "err", err.Error())
 	}
-
+	log.SyslogDebug("MpcSStep getRPkShare", "pkBytes", hexutil.Encode(pkBytes))
 	return msStep.schnorrMpcer.UnMarshPt(pkBytes)
 }
 

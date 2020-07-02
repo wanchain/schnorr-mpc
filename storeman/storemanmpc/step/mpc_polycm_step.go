@@ -49,6 +49,7 @@ func (req *MpcPolycmStep) InitStep(result mpcprotocol.MpcResultInterface) error 
 	threshold, _ := osmconf.GetOsmConf().GetThresholdNum(grpIdString)
 	degree := threshold - 1
 	smpcer := req.schnorrMpcer
+
 	s, err := rand.Int(rand.Reader, smpcer.GetMod())
 	if err != nil {
 		log.SyslogErr("MpcPolycmStep::InitStep", "rand.Int fail. err", err.Error())

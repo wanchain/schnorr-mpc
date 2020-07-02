@@ -34,7 +34,7 @@ func (ssm *SkSchnorrMpc) EvaluatePoly(f mpcprotocol.Polynomial, x *big.Int, degr
 }
 
 func (ssm *SkSchnorrMpc) Equal(left, right mpcprotocol.CurvePointer) bool {
-	log.SyslogDebug("Entering BN Equal")
+	log.SyslogDebug("Entering SK Equal")
 	ptLeft, ok := left.(*ecdsa.PublicKey)
 	if !ok {
 		fmt.Println("It's not ok for type ecdsa.PublicKey")
@@ -50,7 +50,10 @@ func (ssm *SkSchnorrMpc) Equal(left, right mpcprotocol.CurvePointer) bool {
 		return false
 	}
 
-	ret, _ := pkEqual(ptLeft, ptRight)
+	ret, err := pkEqual(ptLeft, ptRight)
+	if err != nil {
+		return false
+	}
 	return ret
 }
 
@@ -467,6 +470,16 @@ func evalByPolyG(pks []*ecdsa.PublicKey, degree uint16, x *big.Int) (*ecdsa.Publ
 
 func pkEqual(pk1, pk2 *ecdsa.PublicKey) (bool, error) {
 	// check input parameters
+	err := checkPK(pk1)
+	if err != nil {
+		return false, err
+	}
+
+	err = checkPK(pk2)
+	if err != nil {
+		return false, err
+	}
+
 	return pk1.X.Cmp(pk2.X) == 0 && pk1.Y.Cmp(pk2.Y) == 0, nil
 }
 

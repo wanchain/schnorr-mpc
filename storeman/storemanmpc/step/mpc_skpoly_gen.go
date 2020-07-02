@@ -62,7 +62,7 @@ func (poly *RandomPolynomialGen) initialize(peers *[]mpcprotocol.PeerInfo,
 	// get x = hash(pk)
 	for i := 0; i < len(poly.polyValue); i++ {
 		nodeId := &(*peers)[i].PeerID
-		xValue, err := osmconf.GetOsmConf().GetXValueByNodeId(grpIdString, nodeId)
+		xValue, err := osmconf.GetOsmConf().GetXValueByNodeId(grpIdString, nodeId, poly.smpcer)
 		if err != nil {
 			log.SyslogErr("RandomPolynomialGen", "initialize.GetXValueByNodeId", err.Error())
 		}

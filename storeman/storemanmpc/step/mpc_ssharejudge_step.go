@@ -88,6 +88,7 @@ func (ssj *MpcSSahreJudgeStep) FinishStep(result mpcprotocol.MpcResultInterface,
 		return err
 	}
 
+	log.SyslogInfo("MpcSSahreJudgeStep", ":-(:-(:-(FinishStep SSlshCount", ssj.SSlshCount)
 	if ssj.SSlshCount > 0 {
 		return mpcprotocol.ErrSSlsh
 	}
@@ -115,6 +116,7 @@ func (ssj *MpcSSahreJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool 
 
 	bSnderWrong := true
 	if !bVerifySig {
+		log.SyslogDebug("MpcSSahreJudgeStep check sig fail")
 		log.SyslogErr("MpcSSahreJudgeStep", "senderIndex", senderIndex,
 			"rcvIndex", rcvIndex,
 			"sshare", hex.EncodeToString(sshare.Bytes()),
@@ -122,6 +124,8 @@ func (ssj *MpcSSahreJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool 
 			"s", hex.EncodeToString(s.Bytes()))
 
 		bSnderWrong = true
+	} else {
+		log.SyslogDebug("MpcSSahreJudgeStep check sig successfully")
 	}
 
 	// 2. check s content
@@ -131,22 +135,25 @@ func (ssj *MpcSSahreJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool 
 	bContentCheck, _ := ssj.checkContent(&sshare, m, rpkShare, gpkShare)
 
 	if !bContentCheck {
+		log.SyslogDebug("MpcSSahreJudgeStep check content fail")
 		log.SyslogErr("MpcSSahreJudgeStep", "senderIndex", senderIndex,
 			"rcvIndex", rcvIndex,
 			"content error. bSnderWrong:", bSnderWrong)
 		bSnderWrong = true
 	} else {
+		log.SyslogDebug("MpcSSahreJudgeStep check content successfully")
 		log.SyslogErr("MpcSSahreJudgeStep", "senderIndex", senderIndex,
 			"rcvIndex", rcvIndex,
 			"content error. bSnderWrong:", bSnderWrong)
 		bSnderWrong = false
 	}
 
-	if !bContentCheck || !bVerifySig {
-		ssj.SSlshCount += 1
+	log.SyslogDebug("MpcSSahreJudgeStep check result", "checkSig", bVerifySig, "checkContent", bContentCheck)
+	// when receive challenge data, there must be one wrong. either send wrong, or receiver wrong.
 
-		ssj.saveSlshProof(bSnderWrong, m, &sshare, &r, &s, senderIndex, rcvIndex, int(ssj.SSlshCount), rpkShare, gpkShare, grpId)
-	}
+	ssj.SSlshCount += 1
+
+	ssj.saveSlshProof(bSnderWrong, m, &sshare, &r, &s, senderIndex, rcvIndex, int(ssj.SSlshCount), rpkShare, gpkShare, grpId)
 
 	return true
 }

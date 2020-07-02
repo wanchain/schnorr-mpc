@@ -389,7 +389,7 @@ func TestBnSchnorrMpc_StringToPt(t *testing.T) {
 func TestBnSchnorrMpc_StringToPt2(t *testing.T) {
 	// right string
 	//ptStr := "0x12bb068ad8a169ce0eb77f186db2a2f545dfbca94fe5df77d4292936bda012f92ac4e753ad1b549c64645d23f0696ad49e5b6d621a1a3508c87ca82a75a02469"
-	ptStr := "0x2a6dadf03c8874725d25954036f1532bda57282e2208cc96ba42abe00283f4ce11f6c561bff016df3a8c6197193cdc73034d0397ee308933b9ed2457f0491854"
+	ptStr := "0x144e37ab4cbaa930a0b9fead55f234daec6fe406330754c940a579e448bb0d82013857d03e4460d856935757a864931f2ddff9be14235eb4f961b7174189a5a4"
 	smpcer := NewBnSchnorrMpc()
 
 	pt, err := smpcer.StringToPt(ptStr)
@@ -397,4 +397,23 @@ func TestBnSchnorrMpc_StringToPt2(t *testing.T) {
 		t.Error(err.Error())
 	}
 	fmt.Println(smpcer.PtToHexString(pt))
+}
+
+func TestBnSchnorrMpc_SkG(t *testing.T) {
+	prv0 := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x6934315acd94b49ecdff3c85b8e28191e3e98444e144a9e96d9057de5ddd74f1")))
+	prv1 := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x74deabccc1bd2a0f26a4f13bd7db2e2d1aaf739065620d835548a7e84cb59395")))
+	prv2 := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x83a65e1cbf9f059841e7fb672f7dcefedace8043f4fa035828f70901f735f814")))
+	prv3 := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x83a5311e7e22376d66d96f34f64ddb9c18a71fb12c2b9a008f255efa3467c63c")))
+
+	smpcer := NewBnSchnorrMpc()
+
+	pt1, _ := smpcer.SkG(prv0)
+	pt2, _ := smpcer.SkG(prv1)
+	pt3, _ := smpcer.SkG(prv2)
+	pt4, _ := smpcer.SkG(prv3)
+
+	fmt.Println(smpcer.PtToHexString(pt1))
+	fmt.Println(smpcer.PtToHexString(pt2))
+	fmt.Println(smpcer.PtToHexString(pt3))
+	fmt.Println(smpcer.PtToHexString(pt4))
 }

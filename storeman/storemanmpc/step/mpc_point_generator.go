@@ -74,10 +74,7 @@ func (point *mpcPointGenerator) calculateResult() error {
 	//gpkshares := make([]ecdsa.PublicKey, 0)
 	gpkshares := make([]mpcprotocol.CurvePointer, 0)
 	for nodeId, value := range point.message {
-
-		xValue, err := osmconf.GetOsmConf().GetXValueByNodeId(point.grpIdString, &nodeId)
-		xValue.Mod(xValue, point.smcer.GetMod())
-
+		xValue, err := osmconf.GetOsmConf().GetXValueByNodeId(point.grpIdString, &nodeId, point.smcer)
 		if err != nil {
 			log.SyslogErr("mpcPointGenerator", "calculateResult", err.Error())
 			return err
