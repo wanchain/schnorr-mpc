@@ -109,7 +109,7 @@ func (ptStep *MpcRRcvInterStep) HandleMessage(msg *mpcprotocol.StepMessage) bool
 func (ptStep *MpcRRcvInterStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mpcprotocol.StoremanManager) error {
 	log.SyslogInfo("MpcRRcvInterStep.FinishStep begin")
 
-	// compute the intersec and save
+	// compute the inter section and save
 	err := ptStep.BaseStep.FinishStep()
 	if err != nil {
 		return err

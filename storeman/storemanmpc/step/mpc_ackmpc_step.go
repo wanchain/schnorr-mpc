@@ -53,8 +53,5 @@ func (ack *AckMpcStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mpc
 }
 
 func (ack *AckMpcStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
-	// 1. add signed data to local db
-	// 2. and set the approved status to false
-	// 3. wait follow node to update the approved status to true.
 	return true
 }

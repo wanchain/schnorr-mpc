@@ -175,8 +175,6 @@ func (ssj *MpcSSahreJudgeStep) getRPkShare(index uint16) (mpcprotocol.CurvePoint
 
 	key := mpcprotocol.RPkShare + strconv.Itoa(int(index))
 	pkBytes, _ := ssj.mpcResult.GetByteValue(key)
-
-	//return crypto.ToECDSAPub(pkBytes), nil
 	return ssj.schnorrMpcer.UnMarshPt(pkBytes)
 }
 

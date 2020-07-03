@@ -297,7 +297,6 @@ func lagrangeECC(sig []*ecdsa.PublicKey, x []big.Int, degree int) *ecdsa.PublicK
 }
 
 func schnorrSign(psk big.Int, r big.Int, m big.Int) big.Int {
-	// sshare = rskshare + m*gskSahre
 	sum := big.NewInt(1)
 	sum.Mul(&psk, &m)
 	sum.Mod(sum, crypto.S256().Params().N)
@@ -341,10 +340,6 @@ func lagrange(f []big.Int, x []big.Int, degree int) big.Int {
 		s.Mod(s, crypto.S256().Params().N)
 	}
 	return *s
-}
-
-func validatePublicKey(k *ecdsa.PublicKey) bool {
-	return k != nil && k.X != nil && k.Y != nil && k.X.Sign() != 0 && k.Y.Sign() != 0
 }
 
 func PkToAddress(PkBytes []byte) (common.Address, error) {
@@ -447,7 +442,6 @@ func evalByPolyG(pks []*ecdsa.PublicKey, degree uint16, x *big.Int) (*ecdsa.Publ
 }
 
 func pkEqual(pk1, pk2 *ecdsa.PublicKey) (bool, error) {
-	// check input parameters
 	err := checkPK(pk1)
 	if err != nil {
 		return false, err

@@ -33,7 +33,6 @@ func (rss *MpcRSKShare_Step) CreateMessage() []mpcprotocol.StepMessage {
 		message[i].Data = make([]big.Int, 3)
 		message[i].Data[0] = skpv.polyValue[i]
 
-		// add sig for s[i][j]
 		message[i].Data[1] = *skpv.polyValueSigR[i]
 		message[i].Data[2] = *skpv.polyValueSigS[i]
 		//message[i].Data[2] = *schnorrmpc.BigOne		// used to simulate R stage malice
@@ -120,11 +119,6 @@ func (rss *MpcRSKShare_Step) FinishStep(result mpcprotocol.MpcResultInterface, m
 }
 
 func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
-	// todo
-	// check s[i][j]
-	// 1. check sig of s[i][j]
-	// 2. check value of s[i]]j] with the poly commit
-	// 3. if error , send to leader to judge
 
 	_, grpIdString, _ := osmconf.GetGrpId(rss.mpcResult)
 
@@ -170,11 +164,10 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		log.SyslogErr("MpcRSKShare_Step", "GetXValueByNodeId", err.Error())
 	}
 
-	// get send poly commit
+	// get sender poly commit
 	keyPolyCMG := mpcprotocol.RPolyCMG + strconv.Itoa(int(senderIndex))
 	pgBytes, _ := rss.mpcResult.GetByteValue(keyPolyCMG)
 
-	//split the pk list
 	pks, err := rss.schnorrMpcer.SplitPksFromBytes(pgBytes[:])
 	if err != nil {
 		log.SyslogErr("MpcRSKShare_Step::HandleMessage",
@@ -211,9 +204,7 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 
 		rss.RSkErrNum += 1
 
-		// 3. write error s[i][j]
-		// 3.1 write error count
-		// 3.2 write error info
+		//error s[i][j]
 		log.SyslogInfo("RSkErr Info", "ErrNum", rss.RSkErrNum)
 		if rss.RSkErrNum >= 1 {
 			rskErrInfo := make([]big.Int, 5)

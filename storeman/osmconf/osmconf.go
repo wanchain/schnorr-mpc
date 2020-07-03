@@ -30,10 +30,9 @@ const EmptyString = ""
 var osmConf *OsmConf
 
 type GrpElem struct {
-	Inx       uint16
-	WorkingPk *ecdsa.PublicKey
-	NodeId    *discover.NodeID
-	//PkShare      *ecdsa.PublicKey
+	Inx          uint16
+	WorkingPk    *ecdsa.PublicKey
+	NodeId       *discover.NodeID
 	PkShareBytes hexutil.Bytes
 	XValue       *big.Int
 }
@@ -148,7 +147,6 @@ func (cnf *OsmConf) LoadCnf(confPath string) error {
 
 			Inx, _ := strconv.Atoi(ge.Inx)
 			gii.ArrGrpElems[i].Inx = uint16(Inx)
-			//gii.ArrGrpElems[i].PkShare = crypto.ToECDSAPub(ge.PkShare)
 			gii.ArrGrpElems[i].PkShareBytes = ge.PkShare
 			gii.ArrGrpElems[i].WorkingPk = crypto.ToECDSAPub(ge.WorkingPk)
 
@@ -202,8 +200,6 @@ func (cnf *OsmConf) GetTotalNum(grpId string) (uint16, error) {
 	return cnf.GrpInfoMap[grpId].TotalNum, nil
 }
 
-//-----------------------get pk ---------------------------------
-
 // get working pk
 func (cnf *OsmConf) GetPK(grpId string, smInx uint16) (*ecdsa.PublicKey, error) {
 	defer cnf.wrLock.RUnlock()
@@ -240,23 +236,6 @@ func (cnf *OsmConf) GetPKByNodeId(grpId string, nodeId *discover.NodeID) (*ecdsa
 }
 
 // get gpk share (public share)
-//func (cnf *OsmConf) GetPKShare(grpId string, smInx uint16) (*ecdsa.PublicKey, error) {
-//	defer cnf.wrLock.RUnlock()
-//
-//	cnf.wrLock.RLock()
-//
-//	cnf.checkGrpId(grpId)
-//	arrGrpElem := cnf.GrpInfoMap[grpId].ArrGrpElems
-//	for _, value := range arrGrpElem {
-//		if value.Inx == smInx {
-//			return value.PkShare, nil
-//		}
-//	}
-//
-//	panic(fmt.Sprintf("GetPKShare:Not find storeman, smInx %v", smInx))
-//}
-
-// get gpk share (public share)
 func (cnf *OsmConf) GetPKShareBytes(grpId string, smInx uint16) ([]byte, error) {
 	defer cnf.wrLock.RUnlock()
 
@@ -272,25 +251,6 @@ func (cnf *OsmConf) GetPKShareBytes(grpId string, smInx uint16) ([]byte, error) 
 
 	panic(fmt.Sprintf("GetPKShare:Not find storeman, smInx %v", smInx))
 }
-
-//func (cnf *OsmConf) GetPKShareByNodeId(grpId string, nodeId *discover.NodeID) (*ecdsa.PublicKey, error) {
-//	defer cnf.wrLock.RUnlock()
-//
-//	cnf.wrLock.RLock()
-//
-//	cnf.checkGrpId(grpId)
-//	if nodeId == nil {
-//		log.SyslogErr("GetPKShareByNodeId, nodeId is null")
-//		panic("GetPKShareByNodeId, nodeId is null")
-//	}
-//	arrGrpElem := cnf.GrpInfoMap[grpId].ArrGrpElems
-//	for _, value := range arrGrpElem {
-//		if *value.NodeId == *nodeId {
-//			return value.PkShare, nil
-//		}
-//	}
-//	panic(fmt.Sprintf("GetPKShareByNodeId:Not find storeman, nodeId %v", *nodeId))
-//}
 
 //-----------------------get self---------------------------------
 
@@ -388,16 +348,6 @@ func (cnf *OsmConf) SetSelfNodeId(id *discover.NodeID) error {
 
 	return nil
 }
-
-//func (cnf *OsmConf) SetGpkPassword(pwd string) error {
-//	cnf.GpkPassword = pwd
-//	return nil
-//}
-//
-//func (cnf *OsmConf) SetWkPassword(pwd string) error {
-//	cnf.WorkingPassword = pwd
-//	return nil
-//}
 
 func (cnf *OsmConf) SetAccountManger(accMng *accounts.Manager) error {
 
@@ -554,20 +504,6 @@ func (cnf *OsmConf) getPkHash(grpId string, smInx uint16) (common.Hash, error) {
 	return h, nil
 }
 
-// compute f(x) x=hash(pk) bigInt s[i][j]
-//func (cnf *OsmConf) GetPkToBigInt(grpId string, smInx uint16) (*big.Int, error) {
-//	defer cnf.wrLock.RUnlock()
-//
-//	cnf.wrLock.RLock()
-//
-//	cnf.checkGrpId(grpId)
-//	h, err := cnf.getPkHash(grpId, smInx)
-//	if err != nil {
-//		return big.NewInt(0), err
-//	}
-//	return big.NewInt(0).SetBytes(h.Bytes()), nil
-//}
-
 func (cnf *OsmConf) GetInxByNodeId(grpId string, id *discover.NodeID) (uint16, error) {
 	defer cnf.wrLock.RUnlock()
 
@@ -589,9 +525,6 @@ func (cnf *OsmConf) GetInxByNodeId(grpId string, id *discover.NodeID) (uint16, e
 }
 
 func (cnf *OsmConf) GetXValueByNodeId(grpId string, id *discover.NodeID, smpcer mpcprotocol.SchnorrMPCer) (*big.Int, error) {
-	// get pk
-	// get pkhash
-	// get x = hash(pk)
 	defer cnf.wrLock.RUnlock()
 
 	cnf.wrLock.RLock()
@@ -605,9 +538,6 @@ func (cnf *OsmConf) GetXValueByNodeId(grpId string, id *discover.NodeID, smpcer 
 }
 
 func (cnf *OsmConf) GetNodeIdByIndex(grpId string, index uint16) (*discover.NodeID, error) {
-	// get pk
-	// get pkhash
-	// get x = hash(pk)
 	defer cnf.wrLock.RUnlock()
 
 	cnf.wrLock.RLock()
@@ -624,9 +554,6 @@ func (cnf *OsmConf) GetNodeIdByIndex(grpId string, index uint16) (*discover.Node
 }
 
 func (cnf *OsmConf) GetXValueByIndex(grpId string, index uint16, smpcer mpcprotocol.SchnorrMPCer) (*big.Int, error) {
-	// get pk
-	// get pkhash
-	// get x = hash(pk)
 	defer cnf.wrLock.RUnlock()
 
 	cnf.wrLock.RLock()

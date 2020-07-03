@@ -22,10 +22,8 @@ func (*MpcCtxFactory) CreateContext(ctxType int,
 	for i := 0; i < len(preSetValue); i++ {
 		if preSetValue[i].Key != mpcprotocol.MpcPrivateShare {
 			if preSetValue[i].Value != nil {
-				//log.Info("preSetValue", "key", preSetValue[i].Key, "value", preSetValue[i].Value)
 				log.SyslogInfo("preSetValue", "key", preSetValue[i].Key, "value", hexutil.Encode(preSetValue[i].Value[0].Bytes()))
 			} else if preSetValue[i].ByteValue != nil {
-				//log.Info("preSetValue", "key", preSetValue[i].Key, "bytevalue", preSetValue[i].ByteValue)
 				log.SyslogInfo("preSetValue", "key", preSetValue[i].Key, "bytevalue", hexutil.Encode(preSetValue[i].ByteValue))
 			}
 		}
@@ -35,16 +33,13 @@ func (*MpcCtxFactory) CreateContext(ctxType int,
 	log.Info("\n\n\n")
 
 	switch ctxType {
-	//case mpcprotocol.MpcGPKLeader:
-	//	return reqGPKMpc(mpcID, peers, preSetValue...)
-	//case mpcprotocol.MpcGPKPeer:
-	//	return ackGPKMpc(mpcID, peers, preSetValue...)
 
 	case mpcprotocol.MpcSignLeader:
 		return reqSignMpc(mpcID, peers, peerCurCount, curveType, preSetValue...)
 	case mpcprotocol.MpcSignPeer:
 		return ackSignMpc(mpcID, peers, peerCurCount, curveType, preSetValue...)
+	default:
+		return nil, mpcprotocol.ErrContextType
 	}
-
 	return nil, mpcprotocol.ErrContextType
 }

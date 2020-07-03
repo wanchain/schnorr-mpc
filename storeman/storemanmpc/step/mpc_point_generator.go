@@ -12,13 +12,6 @@ import (
 )
 
 type mpcPointGenerator struct {
-	//seed        ecdsa.PublicKey
-	//message     map[discover.NodeID]ecdsa.PublicKey
-	//result      ecdsa.PublicKey
-	//preValueKey string
-	//grpIdString string
-	//smcer       mpcprotocol.SchnorrMPCer
-
 	seed        mpcprotocol.CurvePointer
 	message     map[discover.NodeID]mpcprotocol.CurvePointer
 	result      mpcprotocol.CurvePointer
@@ -56,7 +49,6 @@ func (point *mpcPointGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result
 		return err
 	}
 
-	//point.seed = *crypto.ToECDSAPub(value)
 	point.seed, err = point.smcer.UnMarshPt(value)
 	if err != nil {
 		log.SyslogErr("mpcPointGenerator", "UnMarshPt", err.Error())
@@ -71,7 +63,6 @@ func (point *mpcPointGenerator) calculateResult() error {
 	log.SyslogInfo("mpcPointGenerator.calculateResult begin")
 
 	seeds := make([]big.Int, 0)
-	//gpkshares := make([]ecdsa.PublicKey, 0)
 	gpkshares := make([]mpcprotocol.CurvePointer, 0)
 	for nodeId, value := range point.message {
 		xValue, err := osmconf.GetOsmConf().GetXValueByNodeId(point.grpIdString, &nodeId, point.smcer)
@@ -80,16 +71,6 @@ func (point *mpcPointGenerator) calculateResult() error {
 			return err
 		}
 		seeds = append(seeds, *xValue)
-
-		// build PK[]
-		//var gpkshare ecdsa.PublicKey
-		//gpkshare.Curve = crypto.S256()
-		//
-		//gpkshare.X = value.X
-		//gpkshare.Y = value.Y
-		//
-		//gpkshares = append(gpkshares, gpkshare)
-
 		gpkshares = append(gpkshares, value)
 
 	}
@@ -115,19 +96,7 @@ func (point *mpcPointGenerator) calculateResult() error {
 	}
 
 	smpcer := point.smcer
-	//result := schnorrmpc.LagrangeECC(gpkshares, seeds[:], int(degree))
-	//
-	//if !schnorrmpc.ValidatePublicKey(result) {
-	//	log.SyslogErr("mpcPointGenerator::calculateResult", "mpcPointGenerator.ValidatePublicKey fail. err", mpcprotocol.ErrPointZero.Error())
-	//	return mpcprotocol.ErrPointZero
-	//}
-
 	result := smpcer.LagrangeECC(gpkshares, seeds[:], int(degree))
-
-	//if !schnorrmpc.ValidatePublicKey(result) {
-	//	log.SyslogErr("mpcPointGenerator::calculateResult", "mpcPointGenerator.ValidatePublicKey fail. err", mpcprotocol.ErrPointZero.Error())
-	//	return mpcprotocol.ErrPointZero
-	//}
 
 	if !smpcer.IsOnCurve(result) {
 		log.SyslogErr("mpcPointGenerator::calculateResult", "mpcPointGenerator.ValidatePublicKey fail. err", mpcprotocol.ErrPointZero.Error())

@@ -282,7 +282,6 @@ func (mpcCtx *MpcContext) getMpcResult(err error) (interface{}, error) {
 func (mpcCtx *MpcContext) getMessage(PeerID *discover.NodeID,
 	msg *mpcprotocol.MpcMessage,
 	peers *[]mpcprotocol.PeerInfo) error {
-	//log.SyslogInfo(".....Entering MpcContext.getMessage", "peerId", PeerID.String())
 	mpcCtx.MapStepChan[msg.StepID] <- &mpcprotocol.StepMessage{MsgCode: 0,
 		PeerID:    PeerID,
 		Peers:     peers,
@@ -346,13 +345,6 @@ func (mpcCtx *MpcContext) quit(err error) {
 func (mpcCtx *MpcContext) mainMPCProcess(StoremanManager mpcprotocol.StoremanManager) error {
 	log.SyslogInfo("mainMPCProcess begin", "ctxid", mpcCtx.ContextID)
 	mpcErr := error(nil)
-	//for _, mpcCt := range mpcCtx.MpcSteps {
-	//	err := mpcCt.InitMessageLoop(mpcCt)
-	//	if err != nil {
-	//		mpcErr = err
-	//		break
-	//	}
-	//}
 
 	peerIDs := make([]discover.NodeID, 0)
 	for _, item := range mpcCtx.peers {
@@ -360,8 +352,7 @@ func (mpcCtx *MpcContext) mainMPCProcess(StoremanManager mpcprotocol.StoremanMan
 	}
 
 	if mpcErr == nil {
-		// todo need think over
-		//mpcCtx.mpcResult.Initialize()
+
 		for i := 0; i < len(mpcCtx.MpcSteps); i++ {
 			err := mpcCtx.MpcSteps[i].InitStep(mpcCtx.mpcResult)
 			if err != nil {
@@ -369,7 +360,6 @@ func (mpcCtx *MpcContext) mainMPCProcess(StoremanManager mpcprotocol.StoremanMan
 				break
 			}
 
-			// todo need think over. should initmessageLoop here or above??
 			err = mpcCtx.MpcSteps[i].InitMessageLoop(mpcCtx.MpcSteps[i])
 			if err != nil {
 				mpcErr = err
@@ -386,7 +376,6 @@ func (mpcCtx *MpcContext) mainMPCProcess(StoremanManager mpcprotocol.StoremanMan
 						StepID:    uint64(i),
 						Data:      item.Data,
 						BytesData: item.BytesData}
-					//StoremanManager.SetMessagePeers(mpcMsg, item.Peers)
 					if item.PeerID != nil {
 						StoremanManager.P2pMessage(item.PeerID, item.MsgCode, mpcMsg)
 						log.SyslogDebug("step send a p2p msg", "ctxid", mpcCtx.ContextID, "stepId", i)

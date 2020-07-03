@@ -16,9 +16,8 @@ type MpcAckRSStep struct {
 	remoteMpcR map[discover.NodeID]mpcprotocol.CurvePointer // R
 	remoteMpcS map[discover.NodeID]big.Int                  // S
 	accType    string
-	//mpcR       [2]big.Int
-	mpcR mpcprotocol.CurvePointer
-	mpcS big.Int
+	mpcR       mpcprotocol.CurvePointer
+	mpcS       big.Int
 }
 
 func CreateAckMpcRSStep(peers *[]mpcprotocol.PeerInfo, accType string) *MpcAckRSStep {
@@ -176,7 +175,6 @@ func (mars *MpcAckRSStep) verifyRS(result mpcprotocol.MpcResultInterface) error 
 	}
 	// Forming the m: hash(message||rpk)
 	var buffer bytes.Buffer
-	//buffer.Write(M[:])
 	buffer.Write(hashMBytes[:])
 	buffer.Write(rpkBytes)
 	mTemp := sha256.Sum256(buffer.Bytes())
@@ -195,7 +193,7 @@ func (mars *MpcAckRSStep) verifyRS(result mpcprotocol.MpcResultInterface) error 
 		log.SyslogErr("MpcAckRSStep::verifyRS", "MulPK err", err.Error())
 		return err
 	}
-	//// rpk + m*gpk
+	// rpk + m*gpk
 	temp, err := smpcer.Add(mgpk, mars.mpcR)
 	if err != nil {
 		log.SyslogErr("MpcAckRSStep::verifyRS", "Add err", err.Error())

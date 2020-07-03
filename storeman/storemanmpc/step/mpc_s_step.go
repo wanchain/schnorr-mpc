@@ -32,8 +32,6 @@ func CreateMpcSStep(peers *[]mpcprotocol.PeerInfo, preValueKeys []string, result
 	mpc := &MpcSStep{*CreateBaseMpcStep(peers, signNum), resultKeys, signNum, 0,
 		make([]uint16, 0), make([]uint16, 0), make([]uint16, 0)}
 
-	//	MpcPrivateShare
-	//  MpcS
 	for i := 0; i < signNum; i++ {
 		mpc.messages[i] = createSGenerator(preValueKeys[i], mpc.schnorrMpcer)
 	}
@@ -44,12 +42,10 @@ func CreateMpcSStep(peers *[]mpcprotocol.PeerInfo, preValueKeys []string, result
 func (msStep *MpcSStep) CreateMessage() []mpcprotocol.StepMessage {
 	log.SyslogInfo("MpcSStep.CreateMessage begin")
 	// sshare, sig of sshare
-	// only send to leader??
 
 	message := make([]mpcprotocol.StepMessage, 1)
 	message[0].MsgCode = mpcprotocol.MPCMessage
 	message[0].PeerID = nil
-	//message[0].PeerID = leaderNodeId
 
 	for i := 0; i < msStep.signNum; i++ {
 		pointer := msStep.messages[i].(*mpcSGenerator)
@@ -99,11 +95,6 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		if !bVerifySig {
 			// save error and send judge info to leader
 			log.SyslogErr("MpcPointStep::HandleMessage", " check sig fail")
-			// save error for check data of s
-
-			//todo think it over
-			//key := mpcprotocol.RPkShare + strconv.Itoa(int(senderIndex))
-			//msStep.mpcResult.SetByteValue(key, msg.BytesData[i])
 
 		} else {
 			log.SyslogInfo("check sig of sshare successfully", " senderIndex", senderIndex)
@@ -263,11 +254,6 @@ func (msStep *MpcSStep) checkContent(sshare, m *big.Int, rpkShare, gpkShare mpcp
 		return false, errors.New("rpkShare or gpkShare is invalid pk or gpkShare is invalid pk")
 	}
 
-	//log.SyslogDebug("!!!!!!!!MpcSStep.checkContent", "sshare", hexutil.Encode(sshare.Bytes()))
-	//log.SyslogDebug("!!!!!!!!MpcSStep.checkContent", "m", hexutil.Encode(m.Bytes()))
-	//log.SyslogDebug("!!!!!!!!MpcSStep.checkContent", "rpkShare", smpcer.PtToHexString(rpkShare))
-	//log.SyslogDebug("!!!!!!!!MpcSStep.checkContent", "gpkShare", smpcer.PtToHexString(gpkShare))
-
 	sshareG, _ := smpcer.SkG(sshare)
 	mPkShare, _ := smpcer.MulPK(m, gpkShare)
 
@@ -324,17 +310,11 @@ func (msStep *MpcSStep) getm() (*big.Int, error) {
 }
 
 func (msStep *MpcSStep) getGPKShare(index uint16) (mpcprotocol.CurvePointer, error) {
-	//
 
 	_, grpIdString, err := osmconf.GetGrpId(msStep.mpcResult)
 	if err != nil {
 		return nil, err
 	}
-
-	//gpkShare, err := osmconf.GetOsmConf().GetPKShare(grpIdString, index)
-	//if err != nil {
-	//	return nil, err
-	//}
 
 	gpkShareBytes, err := osmconf.GetOsmConf().GetPKShareBytes(grpIdString, index)
 	if err != nil {

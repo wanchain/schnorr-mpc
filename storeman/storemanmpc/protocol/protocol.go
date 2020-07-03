@@ -7,12 +7,6 @@ import (
 	"time"
 )
 
-//var (
-//	MpcSchnrThr        = 26 // MpcSchnrThr >= number(storeman )/2 +1
-//	MPCDegree          = MpcSchnrThr - 1
-//	MpcSchnrNodeNumber = 50 // At least MpcSchnrNodeNumber MPC nodes
-//)
-
 const (
 	MpcGPKLeader = iota + 0
 	MpcGPKPeer

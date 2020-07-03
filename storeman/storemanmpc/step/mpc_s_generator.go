@@ -27,25 +27,12 @@ func createSGenerator(preValueKey string, smpcer mpcprotocol.SchnorrMPCer) *mpcS
 
 func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcprotocol.MpcResultInterface) error {
 	log.SyslogInfo("mpcSGenerator.initialize begin")
-
-	//	MpcPrivateShare
-	//  MpcS
-
-	// rgpk R
-	//rgpkValue, err := result.GetValue(mpcprotocol.RPk)
 	rgpkBytes, err := result.GetByteValue(mpcprotocol.RPk)
 	if err != nil {
 		log.SyslogErr("mpcSGenerator.initialize get RPk fail")
 		return err
 	}
 	smpcer := msg.smpcer
-
-	//rgpk := *crypto.ToECDSAPub(rgpkBytes)
-	//rgpk, err := smpcer.UnMarshPt(rgpkBytes)
-	//if err != nil {
-	//	log.SyslogErr("mpcSGenerator.initialize UnMarshPt fail", "err", err.Error())
-	//	return err
-	//}
 
 	// M
 	MBytes, err := result.GetByteValue(mpcprotocol.MpcM)
@@ -98,13 +85,6 @@ func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcpr
 		"gpkShare", smpcer.PtToHexString(gpkShare),
 		"rpkShare", smpcer.PtToHexString(rpkShare))
 
-	//log.Info("!!!!!!!!!! SchnorrSign @@@@@@@@@@@@@@",
-	//	"sshare", hexutil.Encode(sigShare.Bytes()))
-	//log.Info("!!!!!!!!!! SchnorrSign @@@@@@@@@@@@@@",
-	//	"gskShare[0]", hexutil.Encode(gskShare[0].Bytes()))
-	//log.Info("!!!!!!!!!! SchnorrSign @@@@@@@@@@@@@@",
-	//	"rskShare[0]", hexutil.Encode(rskShare[0].Bytes()))
-
 	_, grpIdString, _ := osmconf.GetGrpId(result)
 
 	msg.grpIdString = grpIdString
@@ -119,14 +99,12 @@ func (msg *mpcSGenerator) calculateResult() error {
 	seeds := make([]big.Int, 0)
 	sigshares := make([]big.Int, 0)
 	for nodeId, value := range msg.message {
-		// get seeds, need sort seeds, and make seeds as a key of map, and check the map's count??
 		xValue, err := osmconf.GetOsmConf().GetXValueByNodeId(msg.grpIdString, &nodeId, msg.smpcer)
 		if err != nil {
 			log.SyslogErr("mpcSGenerator", "calculateResult.GetXValueByNodeId", err.Error())
 		}
 
 		seeds = append(seeds, *xValue)
-		// sigshares
 		sigshares = append(sigshares, value)
 	}
 
@@ -137,7 +115,6 @@ func (msg *mpcSGenerator) calculateResult() error {
 	}
 	degree := threshold - 1
 
-	// Lagrange
 	log.SyslogInfo("all signature share",
 		"Need nodes number:", threshold,
 		"Now nodes number:", len(sigshares))

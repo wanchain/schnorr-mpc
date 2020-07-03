@@ -63,7 +63,6 @@ func (mpcStep *BaseMpcStep) ShowNotArriveNodes(hash common.Hash, selfNodeId *dis
 	if len(mpcStep.notRecvPeers) != 0 {
 		for peerId, _ := range mpcStep.notRecvPeers {
 			if peerId != *selfNodeId {
-				//log.SyslogErr(fmt.Sprintf("Not received data from %v", peerId.String()))
 				log.SyslogErr("ShowNotArriveNodes", "hash(signedData)", hash.String(), "Not received data from ", peerId.String())
 			}
 		}
@@ -72,7 +71,6 @@ func (mpcStep *BaseMpcStep) ShowNotArriveNodes(hash common.Hash, selfNodeId *dis
 
 func (mpcStep *BaseMpcStep) GetSignedDataHash(result mpcprotocol.MpcResultInterface) (error, common.Hash) {
 	var retHash = common.Hash{}
-	// check signVerify
 	M, err := result.GetByteValue(mpcprotocol.MpcM)
 	if err != nil {
 		log.SyslogErr("GetSignedDataHash . err", err.Error())

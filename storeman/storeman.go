@@ -70,18 +70,6 @@ func New(cfg *Config, accountManager *accounts.Manager, aKID, secretKey, region 
 		peersPort:  make(map[discover.NodeID]string),
 	}
 
-	//mpcprotocol.MpcSchnrThr = cfg.SchnorrThreshold
-	//mpcprotocol.MpcSchnrNodeNumber = cfg.SchnorrTotalNodes
-	//mpcprotocol.MPCDegree = mpcprotocol.MpcSchnrThr - 1
-	//
-	//if mpcprotocol.MpcSchnrNodeNumber < mpcprotocol.MpcSchnrThr {
-	//	log.SyslogErr("should: SchnorrTotalNodes >= SchnorrThreshold")
-	//	os.Exit(1)
-	//}
-	//log.Info("=========New storeman", "SchnorrThreshold", mpcprotocol.MpcSchnrThr)
-	//log.Info("=========New storeman", "SchnorrTotalNodes", mpcprotocol.MpcSchnrNodeNumber)
-	//mpcprotocol.MPCDegree = mpcprotocol.MpcSchnrThr - 1
-
 	storeman.mpcDistributor = storemanmpc.CreateMpcDistributor(accountManager,
 		storeman,
 		aKID,
@@ -155,91 +143,6 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 
 		switch packet.Code {
 
-		//case mpcprotocol.GetPeersInfo:
-		//	var peerGeting StrmanGetPeers
-		//	err := rlp.Decode(packet.Payload, &peerGeting)
-		//	if err != nil {
-		//		log.SyslogErr("failed decode peers getting info", "err", err.Error())
-		//		return err
-		//	}
-		//
-		//	sm.peerMu.Lock()
-		//
-		//	sm.peersPort[p.ID()] = peerGeting.LocalPort
-		//	if err != nil {
-		//		log.SyslogErr("failed decode port info", "err", err.Error())
-		//		return err
-		//	}
-		//
-		//	log.Debug("adding peer","",peerGeting.LocalPort)
-		//
-		//	allp := &StrmanAllPeers{make([]string, 0),make([]string,0),make([]string,0)}
-		//
-		//
-		//	for _, smpr := range sm.peers {
-		//
-		//		if sm.peersPort[smpr.Peer.ID()] == "" ||
-		//			smpr.Peer.ID().String() == sm.cfg.StoremanNodes[0].ID.String(){
-		//			continue
-		//		}
-		//
-		//		n :=  smpr.Peer.Info()
-		//
-		//		addr,err := net.ResolveTCPAddr("tcp",n.Network.RemoteAddress)
-		//		if err != nil {
-		//			log.SyslogErr("failed get address for peer", "err", err.Error())
-		//			return err
-		//		}
-		//
-		//		splits := strings.Split(addr.String(),":")
-		//
-		//		allp.Ip = append(allp.Ip,splits[0])
-		//
-		//
-		//		allp.Port = append(allp.Port, sm.peersPort[smpr.Peer.ID()])
-		//		allp.Nodeid = append(allp.Nodeid,smpr.ID().String())
-		//
-		//		log.Debug("append peer addrs,port",splits[0],sm.peersPort[smpr.ID()])
-		//	}
-		//	sm.peerMu.Unlock()
-		//
-		//	if len(allp.Port)>0 {
-		//		log.Debug("send all peers from leader, count","",len(allp.Port))
-		//		p.sendAllpeers(allp)
-		//	}
-		//
-		//
-		//case mpcprotocol.AllPeersInfo:
-		//
-		//	var allp StrmanAllPeers
-		//	err := rlp.Decode(packet.Payload, &allp)
-		//	if err != nil {
-		//		log.SyslogErr("failed decode all peers info", "err", err.Error())
-		//		return err
-		//	}
-		//
-		//
-		//	for i:= 0;i<len(allp.Port);i++ {
-		//
-		//		if allp.Nodeid[i] == sm.server.Self().ID.String() ||
-		//		   allp.Nodeid[i] == sm.cfg.StoremanNodes[0].ID.String() 	{
-		//			continue
-		//		}
-		//
-		//		//if allready exist,check next
-		//		url := "enode://" + allp.Nodeid[i] + "@" + allp.Ip[i] + ":" + allp.Port[i]
-		//
-		//		log.Debug("got peer, url=","",url)
-		//
-		//		nd, err := discover.ParseNode(url)
-		//		if err != nil {
-		//			log.SyslogErr("failed parse peer url", "err", err.Error())
-		//			return err
-		//		}
-		//
-		//		sm.server.AddPeer(nd)
-		//	}
-
 		default:
 
 			log.SyslogInfo("runMessageLoop, received a msg", "peer", p.Peer.ID().String(), "packet size", packet.Size)
@@ -296,10 +199,6 @@ func (sm *Storeman) Start(server *p2p.Server) error {
 		sm.mpcDistributor.StoreManGroup[i] = item
 		sm.storemanPeers[item] = true
 	}
-
-	//sm.mpcDistributor.InitStoreManGroup()
-
-	//go sm.checkPeerInfo()
 
 	return nil
 
@@ -429,29 +328,7 @@ func (sa *StoremanAPI) Peers(ctx context.Context) []*p2p.PeerInfo {
 	return ps
 }
 
-//func (sa *StoremanAPI) CreateGPK(ctx context.Context) (pk hexutil.Bytes, err error) {
-//
-//	log.SyslogInfo("CreateGPK begin")
-//	log.SyslogInfo("CreateGPK begin", "peers", len(sa.sm.peers), "storeman peers", len(sa.sm.storemanPeers))
-//
-//	if len(sa.sm.storemanPeers)+1 < mpcprotocol.MpcSchnrThr {
-//		return []byte{}, mpcprotocol.ErrTooLessStoreman
-//	}
-//
-//	gpk, err := sa.sm.mpcDistributor.CreateRequestGPK()
-//	if err == nil {
-//		log.SyslogInfo("CreateGPK end", "gpk", hexutil.Encode(gpk))
-//	} else {
-//		log.SyslogErr("CreateGPK end", "err", err.Error())
-//	}
-//
-//	return gpk, err
-//}
-
 func (sa *StoremanAPI) SignDataByApprove(ctx context.Context, data mpcprotocol.SendData) (result interface{}, err error) {
-	//if len(sa.sm.storemanPeers)+1 < mpcprotocol.MpcSchnrThr {
-	//	return mpcprotocol.SignedResult{R: []byte{}, S: []byte{}}, mpcprotocol.ErrTooLessStoreman
-	//}
 
 	sa.sm.mpcDistributor.SetCurPeerCount(uint16(len(sa.sm.peers)))
 	PKBytes := data.PKBytes
@@ -471,9 +348,6 @@ func (sa *StoremanAPI) SignDataByApprove(ctx context.Context, data mpcprotocol.S
 }
 
 func (sa *StoremanAPI) SignData(ctx context.Context, data mpcprotocol.SendData) (result interface{}, err error) {
-	//if len(sa.sm.storemanPeers)+1 < mpcprotocol.MpcSchnrThr {
-	//	return mpcprotocol.SignedResult{R: []byte{}, S: []byte{}}, mpcprotocol.ErrTooLessStoreman
-	//}
 
 	PKBytes := data.PKBytes
 	CurveBytes := data.Curve

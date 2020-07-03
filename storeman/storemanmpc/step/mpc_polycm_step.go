@@ -123,7 +123,6 @@ func (req *MpcPolycmStep) CreateMessage() []mpcprotocol.StepMessage {
 		msg.BytesData[index] = ptBytes
 	}
 
-	//prv,_ := osmconf.GetOsmConf().GetSelfPrvKey()
 	h := sha256.Sum256(buf.Bytes())
 	prv, _ := osmconf.GetOsmConf().GetSelfPrvKey()
 	r, s, _ := schcomm.SignInternalData(prv, h[:])

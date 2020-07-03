@@ -19,7 +19,6 @@ func init() {
 
 }
 
-// TODO add ValidateData
 func ValidateData(data *mpcprotocol.SendData) (bool, error) {
 
 	log.SyslogInfo("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& ValidateData, begin",
@@ -45,13 +44,6 @@ func ValidateData(data *mpcprotocol.SendData) (bool, error) {
 		log.SyslogErr("ValidateData, sdb.Get has fail", "err", err.Error())
 		return false, mpcprotocol.ErrGetApproved
 	}
-
-	//var byteDb []byte
-	//err = json.Unmarshal(value, &byteDb)
-	//if err != nil {
-	//	log.SyslogErr("ValidateData, json.Unmarshal has fail", "err", err.Error())
-	//	return false
-	//}
 
 	var byteRev []byte
 	byteRev, err = json.Marshal(&data)
@@ -340,14 +332,11 @@ func addKeyValueToDB(key, value []byte) error {
 
 // status: approving || approved
 func buildKeyFromData(data *mpcprotocol.SendData, status string) []byte {
-	// data || status
-
 	// build the key.
 	var buffer bytes.Buffer
 	buffer.Write(data.PKBytes[:])
 	buffer.Write([]byte(data.Data[:]))
 	buffer.Write(data.Curve)
-	//buffer.Write([]byte(data.Extern[:]))
 	buffer.Write([]byte(status))
 
 	return crypto.Keccak256(buffer.Bytes())
@@ -446,5 +435,3 @@ func addApprovedData(data *mpcprotocol.SendData) error {
 func AddValidData(data *mpcprotocol.SendData) error {
 	return addOneValidData(*data)
 }
-
-//TODO need delete the approved data when signature complete successfully.

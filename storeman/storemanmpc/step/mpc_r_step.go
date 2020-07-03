@@ -54,7 +54,6 @@ func (addStep *MpcRStep) CreateMessage() []mpcprotocol.StepMessage {
 
 	prv, _ := osmconf.GetOsmConf().GetSelfPrvKey()
 	r, s, _ := schcomm.SignInternalData(prv, h[:])
-	// send rpkshare, sig of rpkshare
 	message[0].Data = make([]big.Int, 2)
 	message[0].Data[0] = *r
 	message[0].Data[1] = *s
@@ -105,9 +104,8 @@ func (addStep *MpcRStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	bVerifySig := schcomm.VerifyInternalData(senderPk, h[:], &r, &s)
 
 	if bVerifySig {
-		//pointer.message[*msg.PeerID] = *pointPk
-		pointer.message[*msg.PeerID] = pointPk
 
+		pointer.message[*msg.PeerID] = pointPk
 		// save rpkshare for check data of s
 		key := mpcprotocol.RPkShare + strconv.Itoa(int(senderIndex))
 		addStep.mpcResult.SetByteValue(key, msg.BytesData[0])
@@ -118,9 +116,6 @@ func (addStep *MpcRStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		log.SyslogErr("MpcPointStep::HandleMessage", " check sig fail")
 		addStep.rpkshareKOIndex = append(addStep.rpkshareKOIndex, uint16(senderIndex))
 	}
-
-	// update no work indexes.
-
 	return true
 }
 

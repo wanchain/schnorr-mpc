@@ -21,13 +21,6 @@ type SignedResult struct {
 	R hexutil.Bytes `json:"R"`
 	S hexutil.Bytes `json:"S"`
 
-	// -1: internal error
-	// 0: success
-	// 1: rNW
-	// 2: sNW
-	// 3. rSlsh
-	// 4. sSlsh
-
 	ResultType uint8
 	CurveType  uint8
 	GrpId      hexutil.Bytes `json:"GrpId"`

@@ -221,17 +221,6 @@ func (mpcServer *MpcDistributor) GetMessage(PeerID discover.NodeID, rw p2p.MsgRe
 	return nil
 }
 
-func (mpcServer *MpcDistributor) InitStoreManGroup() {
-	//log.SyslogInfo("Entering MpcDistributor InitStoreManGroup......")
-	//sort.Sort(mpcprotocol.SliceStoremanGroup(mpcServer.StoreManGroup))
-	//mpcServer.storeManIndex = make(map[discover.NodeID]byte)
-	//for i := 0; i < len(mpcServer.StoreManGroup); i++ {
-	//	mpcServer.storeManIndex[mpcServer.StoreManGroup[i]] = byte(i)
-	//}
-	//log.SyslogInfo("InitStoreManGroup......","mpcServer.StoreManGroup",mpcServer.StoreManGroup)
-	//log.SyslogInfo("InitStoreManGroup......","storeManIndex",mpcServer.storeManIndex)
-}
-
 func (mpcServer *MpcDistributor) CreateRequestGPK() (interface{}, error) {
 	log.SyslogInfo("CreateRequestGPK begin")
 
@@ -314,25 +303,9 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 				break
 			}
 		}
-		// peers1: the peers which are used to create the group public key, used to build the sign data.
 
 		if schcomm.PocTest {
 			b, _ := osmconf.GetOsmConf().GetPrivateShare(curveType)
-			//log.SyslogInfo("!!!!!!!!!!!MpcDistributor createRequestMpcContext GetPrivateShare",
-			//	"group private Share", hexutil.Encode(b.Bytes()),
-			//)
-			//var smpcer mpcprotocol.SchnorrMPCer
-			//switch int(curveType) {
-			//case mpcprotocol.SK256Curve:
-			//	smpcer = schnorrmpc.NewSkSchnorrMpc()
-			//case mpcprotocol.BN256Curve:
-			//	smpcer = schnorrmpcbn.NewBnSchnorrMpc()
-			//default:
-			//	smpcer = schnorrmpc.NewSkSchnorrMpc()
-			//}
-			//pt, _ := smpcer.SkG(&b)
-			//log.SyslogInfo("!!!!!!!!!!!MpcDistributor createRequestMpcContext GetPrivateShare",
-			//	"group public Share", smpcer.PtToHexString(pt))
 
 			value := &MpcValue{mpcprotocol.MpcPrivateShare, []big.Int{b}, nil}
 			// mpc private share
@@ -388,7 +361,6 @@ func (mpcServer *MpcDistributor) loadStoremanAddress(curveType uint8, gpkStr str
 	var err error
 	if !exist {
 		ks := mpcServer.AccountManager.Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
-		//key, _, err = GetPrivateShare(ks, *address, mpcServer.enableAwsKms, &mpcServer.kmsInfo, mpcServer.password)
 		key, _, err = GetPrivateShare(ks, *address, mpcServer.enableAwsKms, &mpcServer.kmsInfo, password)
 		if err != nil {
 			return nil, err
@@ -512,7 +484,6 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 		preSetValue = append(preSetValue, MpcValue{mpcprotocol.MpcCurve, nil, curveTypeBytes})
 		preSetValue = append(preSetValue, *MpcPrivateShare)
 
-		//receivedData := &mpcprotocol.SendData{PKBytes: address, Data: mpcM[:], Extern: string(mpcExt[:])}
 		receivedData := &mpcprotocol.SendData{PKBytes: address, Data: mpcM[:], Curve: curveTypeBytes, Extern: string(mpcExt[:])}
 
 		if nByApprove != 0 {
@@ -531,7 +502,6 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 					peerIDs = append(peerIDs, item.PeerID)
 				}
 
-				//mpcServer.BroadcastMessage(peerIDs, mpcprotocol.MPCError, mpcMsg)
 				mpcServer.P2pMessage(&mpcServer.Self.ID, mpcprotocol.MPCError, mpcMsg)
 
 				log.SyslogErr("createMpcContext, AddApprovingData  fail",
@@ -545,8 +515,7 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 		if !verifyResult {
 			mpcMsg := &mpcprotocol.MpcMessage{ContextID: mpcMessage.ContextID,
 				StepID: 0,
-				//Peers:  []byte(mpcprotocol.ErrFailedDataVerify.Error())}
-				Peers: []byte(err.Error())}
+				Peers:  []byte(err.Error())}
 			peerInfo, err := osmconf.GetOsmConf().GetPeersByGrpId(grpId)
 			if err != nil {
 				log.SyslogErr("createMpcContext", "GetPeersByGrpId", err.Error())
@@ -557,17 +526,13 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 				peerIDs = append(peerIDs, item.PeerID)
 			}
 
-			//mpcServer.BroadcastMessage(peerIDs, mpcprotocol.MPCError, mpcMsg)
 			mpcServer.P2pMessage(&mpcServer.Self.ID, mpcprotocol.MPCError, mpcMsg)
-
 			log.SyslogErr("createMpcContext, verify data fail", "ContextID", mpcMessage.ContextID)
-			//return mpcprotocol.ErrFailedDataVerify
 			return err
 		}
 
 	} else if ctxType == mpcprotocol.MpcGPKPeer {
-		//ToDo add log info
-		//ToDo change reqMPC message sent
+		log.SyslogInfo("createMpcCtx", "ctxType", ctxType)
 	}
 
 	msgPeers, err := osmconf.GetOsmConf().GetPeersByGrpId(grpId)
@@ -623,7 +588,6 @@ func (mpcServer *MpcDistributor) getMpcMessage(PeerID *discover.NodeID, mpcMessa
 	mpc, exist := mpcServer.mpcMap[mpcMessage.ContextID]
 	mpcServer.mu.RUnlock()
 	if exist {
-		//return mpc.getMessage(PeerID, mpcMessage, mpcServer.getMessagePeers(mpcMessage))
 		return mpc.getMessage(PeerID, mpcMessage, nil)
 	}
 
@@ -638,6 +602,8 @@ func (mpcServer *MpcDistributor) getOwnerP2pMessage(PeerID *discover.NodeID, cod
 		mpcServer.getMpcMessage(PeerID, mpcMessage)
 	case mpcprotocol.RequestMPCNonce:
 		// do nothing
+	default:
+		return nil
 	}
 
 	return nil
@@ -661,7 +627,6 @@ func (mpcServer *MpcDistributor) P2pMessage(peerID *discover.NodeID, code uint64
 }
 
 func (mpcServer *MpcDistributor) BroadcastMessage(peers []discover.NodeID, code uint64, msg interface{}) error {
-	// todo should broadcase message in the same group
 	// peers get from mpc context, and mpc context has build peersInfo by groupID.
 	if peers == nil {
 		log.Info("Entering BroadcastMessage using mpcServer.StoreManGroup")
@@ -728,7 +693,6 @@ func (mpcServer *MpcDistributor) CreateKeystore(result mpcprotocol.MpcResultInte
 
 	result1 := new(ecdsa.PublicKey)
 	result1.Curve = crypto.S256()
-	//result1.X = &point[0]
 	result1.X = big.NewInt(0).SetBytes(point[0].Bytes())
 	result1.Y = big.NewInt(0).SetBytes(point[1].Bytes())
 	seed := make([]uint64, len(*peers))

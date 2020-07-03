@@ -478,11 +478,6 @@ func TestBnSchnorrMpc_MulPK(t *testing.T) {
 	fmt.Println(pkTemp.(*bn256.G1).String())
 }
 
-/*
-ptLeft bn256.G1(19567b5dd54d410b53960a3c80b262cf03ac6f51229c54c005e1fedb5c6d7f71, 279af59fd8d2f90983becfe05c4a871dd831adf677d803d5705916c113b72c16)
-ptRight bn256.G1(00af4e11252a42022eeff8fb983fa4bee7e1087762b12999c85669a557011b6e, 0466d47beb5169f1307729c25085f7dac71160b976e0eaac7fdff73c733416f2)
-*/
-
 func TestCurveMod(t *testing.T) {
 	pBig0 := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x6934315acd94b49ecdff3c85b8e28191e3e98444e144a9e96d9057de5ddd74f1")))
 	pBigRet := big.NewInt(0).Mod(pBig0, bn256.Order)
@@ -492,10 +487,7 @@ func TestCurveMod(t *testing.T) {
 }
 
 func TestBnSchnorrMpc_SchnorrSign(t *testing.T) {
-	// compute s  s = rskshare + m*gskShare
 
-	// compute sg
-	// compute rpk+m*gpkShare
 	m := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x017d11cab3e1fd0907aef0f92e6f259e4525d69bd3bb90b5ed4cda7eb3726391")))
 	rskShare := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x245f002dcbec5eeda87ccfacd8d33cacd2f49ad78b5654d4628c3bb5923f0934")))
 	gskShare := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x83a65e1cbf9f059841e7fb672f7dcefedace8043f4fa035828f70901f735f814")))
@@ -606,19 +598,11 @@ func TestBnSchnorrMpc_SchnorrSign(t *testing.T) {
 }
 
 func TestBnSchnorrMpc_SchnorrSign1(t *testing.T) {
-	// compute s  s = rskshare + m*gskShare
 
-	// compute sg
-	// compute rpk+m*gpkShare
 	m := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x017d11cab3e1fd0907aef0f92e6f259e4525d69bd3bb90b5ed4cda7eb3726391")))
 	rskShare := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x245f002dcbec5eeda87ccfacd8d33cacd2f49ad78b5654d4628c3bb5923f0934")))
 	gskShare := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x83a65e1cbf9f059841e7fb672f7dcefedace8043f4fa035828f70901f735f814")))
 	sshare := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x1db26eaba26e3f85f5f058d2a9554226d37b440f4579d09b6c2e37696e85e0e8")))
-
-	//gpkShareStr := "0x0adf29eaa11da6cb58f84b0e0bcdf7501e81b115a401dffd05ccbfa3373adb7e2b0d612ed449b7194b3333b7620551ec5221334ba1a39c8df2ec604fce76ea0c"
-	//rpkShareStr := "0x0847b0f51bbb842c6c9b8b43badd4ad480c23b6f80364ca72cae8c590559c51f14a18578c674f634d1d7f41e1347d2b7e4f9295de43cd7b4d6d3c60e17dc4117"
-	//
-	//smpcer := NewBnSchnorrMpc()
 
 	bigSshareJacob := big.NewInt(1).Mul(m, gskShare)
 	bigSshareJacob = bigSshareJacob.Add(bigSshareJacob, rskShare)
@@ -651,19 +635,10 @@ func TestBnSchnorrMpc_SchnorrSign1(t *testing.T) {
 }
 
 func TestBnSchnorrMpc_SchnorrSign3(t *testing.T) {
-	// compute s  s = rskshare + m*gskShare
-
-	// compute sg
-	// compute rpk+m*gpkShare
 	m := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x017d11cab3e1fd0907aef0f92e6f259e4525d69bd3bb90b5ed4cda7eb3726391")))
 	rskShare := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x245f002dcbec5eeda87ccfacd8d33cacd2f49ad78b5654d4628c3bb5923f0934")))
 	gskShare := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x83a65e1cbf9f059841e7fb672f7dcefedace8043f4fa035828f70901f735f814")))
 	sshare := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x1db26eaba26e3f85f5f058d2a9554226d37b440f4579d09b6c2e37696e85e0e8")))
-
-	//gpkShareStr := "0x0adf29eaa11da6cb58f84b0e0bcdf7501e81b115a401dffd05ccbfa3373adb7e2b0d612ed449b7194b3333b7620551ec5221334ba1a39c8df2ec604fce76ea0c"
-	//rpkShareStr := "0x0847b0f51bbb842c6c9b8b43badd4ad480c23b6f80364ca72cae8c590559c51f14a18578c674f634d1d7f41e1347d2b7e4f9295de43cd7b4d6d3c60e17dc4117"
-	//
-	//smpcer := NewBnSchnorrMpc()
 
 	bigSshareJacob := big.NewInt(1).Mul(m, gskShare)
 	bigSshareJacob = bigSshareJacob.Add(bigSshareJacob, rskShare)
