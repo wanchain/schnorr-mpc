@@ -19,8 +19,6 @@ type MpcRSKShare_Step struct {
 
 func CreateMpcRSKShareStep(degree int, peers *[]mpcprotocol.PeerInfo) *MpcRSKShare_Step {
 	mpc := &MpcRSKShare_Step{*CreateBaseMpcStep(peers, 1), 0}
-
-	log.SyslogInfo("CreateMpcRSKShareStep", "mpc.schnorrMpcer", mpc.schnorrMpcer)
 	mpc.messages[0] = createSkPolyGen(degree, len(*peers), mpc.schnorrMpcer)
 	return mpc
 }
@@ -109,7 +107,7 @@ func (rss *MpcRSKShare_Step) FinishStep(result mpcprotocol.MpcResultInterface, m
 		log.SyslogErr("MpcRSKShare_Step", "wrRcvedCollection err", err.Error())
 		return err
 	}
-	log.SyslogInfo("\n@@@@@@@@@@@@@@@@@@@MpcRSKShare_Step save RcvedCollection",
+	log.SyslogInfo("@@@@@@@@@@@@@@@@@@@MpcRSKShare_Step save RcvedCollection",
 		" rcvCollection", hexutil.Encode(rcvCollection.Bytes()))
 
 	err = rss.wrSkSIJ()

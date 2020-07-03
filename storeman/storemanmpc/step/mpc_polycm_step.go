@@ -80,9 +80,9 @@ func (req *MpcPolycmStep) InitStep(result mpcprotocol.MpcResultInterface) error 
 	req.polycmGMap[selfIndex] = pg
 
 	for key, value := range req.polycmGMap {
-		log.SyslogDebug("-----------------key", "key index", key)
+		log.SyslogDebug("MpcPolycm Step.InitStep key", "key index", key)
 		for index, pk := range value {
-			log.SyslogDebug("-----------------G", "index", index, "G", smpcer.PtToHexString(pk))
+			log.SyslogDebug("MpcPolycm Step.InitStep G", "index", index, "G", smpcer.PtToHexString(pk))
 		}
 	}
 	return nil
@@ -92,7 +92,6 @@ func (req *MpcPolycmStep) CreateMessage() []mpcprotocol.StepMessage {
 	// broadcast self polynomialG
 	// grpId + threshold G + R + S
 	log.Info("MpcPolycmStep.CreateMessage.....")
-	log.Info("MpcPolycmStep", "CreateMessage peers", *req.peers)
 	msg := mpcprotocol.StepMessage{
 		MsgCode:   mpcprotocol.MPCMessage,
 		PeerID:    nil,
@@ -185,7 +184,7 @@ func (req *MpcPolycmStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc 
 		coff = append(coff, polyCmCoffItem)
 	}
 
-	log.SyslogInfo("======MpcPolycmStep:FinishStep save coff ", "len(coff)", len(coff))
+	log.SyslogInfo("MpcPolycmStep:FinishStep save coff ", "len(coff)", len(coff))
 
 	result.SetValue(key, coff[:])
 	return nil

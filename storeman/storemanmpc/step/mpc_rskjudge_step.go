@@ -85,8 +85,9 @@ func (rsj *MpcRSkJudgeStep) FinishStep(result mpcprotocol.MpcResultInterface, mp
 		log.SyslogErr("MpcRSkJudgeStep", "FinishStep err ", err.Error())
 		return err
 	}
-	log.SyslogInfo("MpcRSkJudgeStep", ":-(:-(:-(FinishStep RSlshCount", rsj.RSlshCount)
+
 	if rsj.RSlshCount > 0 {
+		log.SyslogWarning("MpcRSkJudgeStep", ":-(:-(:-(FinishStep RSlshCount", rsj.RSlshCount)
 		return mpcprotocol.ErrRSlsh
 	}
 	return nil
@@ -153,7 +154,9 @@ func (rsj *MpcRSkJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 }
 
 func (rsj *MpcRSkJudgeStep) saveSlshCount(slshCount int) error {
-	log.SyslogErr("MpcRSkJudgeStep saveSlshCount", "count", slshCount, "rsj.RSlshCount", rsj.RSlshCount)
+	if slshCount > 0 {
+		log.SyslogWarning("MpcRSkJudgeStep saveSlshCount", "count", slshCount, "rsj.RSlshCount", rsj.RSlshCount)
+	}
 	sslshValue := make([]big.Int, 1)
 	sslshValue[0] = *big.NewInt(0).SetInt64(int64(rsj.RSlshCount))
 
@@ -163,7 +166,9 @@ func (rsj *MpcRSkJudgeStep) saveSlshCount(slshCount int) error {
 		log.SyslogErr("MpcRSkJudgeStep save RSlshProofNum fail ", "err ", err.Error(), "key", key, "value", sslshValue)
 		return err
 	} else {
-		log.SyslogErr("MpcRSkJudgeStep save RSlshProofNum success", "key", key, "value", sslshValue)
+		if slshCount > 0 {
+			log.SyslogWarning("MpcRSkJudgeStep save RSlshProofNum success", "key", key, "value", sslshValue)
+		}
 	}
 
 	return nil

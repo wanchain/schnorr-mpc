@@ -352,7 +352,7 @@ func (sm *Storeman) SendToPeer(peerID *discover.NodeID, msgcode uint64, data int
 	if exist {
 		return p2p.Send(peer.ws, msgcode, data)
 	} else {
-		log.SyslogErr("peer not find", "peer", peerID.String())
+		log.SyslogWarning("peer not find", "peer", peerID.String())
 	}
 	return nil
 }

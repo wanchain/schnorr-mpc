@@ -1,7 +1,6 @@
 package step
 
 import (
-	"fmt"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
@@ -85,7 +84,7 @@ func (step *BaseStep) FinishStep() error {
 		step.msgChan <- nil
 		return err
 	case <-time.After(mpcprotocol.MPCTimeOut):
-		log.SyslogErr("BaseStep.FinishStep, wait step finish timeout")
+		log.SyslogWarning("BaseStep.FinishStep, wait step finish timeout")
 		step.msgChan <- nil
 
 		if !step.waitAll {
@@ -107,8 +106,8 @@ func (step *BaseStep) HandleMessage(msger mpcprotocol.GetMessageInterface) error
 			log.SyslogInfo("BaseStep get a quit msg")
 			return mpcprotocol.ErrQuit
 		} else {
-			msgStr := fmt.Sprintf("%#v", msg)
-			log.SyslogDebug("BaseStep HandleMessage", "msg get from step.msgChan", msgStr)
+			//msgStr := fmt.Sprintf("%#v", msg)
+			//log.SyslogDebug("BaseStep HandleMessage", "msg get from step.msgChan", msgStr)
 		}
 
 		if msg.StepId != step.GetStepId() {

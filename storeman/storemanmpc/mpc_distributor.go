@@ -210,7 +210,7 @@ func (mpcServer *MpcDistributor) GetMessage(PeerID discover.NodeID, rw p2p.MsgRe
 			return err
 		}
 
-		log.SyslogInfo("MpcDistributor.GetMessage, MPCMessage message received", "peer", PeerID.String())
+		//log.SyslogInfo("MpcDistributor.GetMessage, MPCMessage message received", "peer", PeerID.String())
 		go mpcServer.getMpcMessage(&PeerID, &mpcMessage)
 
 	default:
@@ -318,6 +318,22 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 
 		if schcomm.PocTest {
 			b, _ := osmconf.GetOsmConf().GetPrivateShare(curveType)
+			//log.SyslogInfo("!!!!!!!!!!!MpcDistributor createRequestMpcContext GetPrivateShare",
+			//	"group private Share", hexutil.Encode(b.Bytes()),
+			//)
+			//var smpcer mpcprotocol.SchnorrMPCer
+			//switch int(curveType) {
+			//case mpcprotocol.SK256Curve:
+			//	smpcer = schnorrmpc.NewSkSchnorrMpc()
+			//case mpcprotocol.BN256Curve:
+			//	smpcer = schnorrmpcbn.NewBnSchnorrMpc()
+			//default:
+			//	smpcer = schnorrmpc.NewSkSchnorrMpc()
+			//}
+			//pt, _ := smpcer.SkG(&b)
+			//log.SyslogInfo("!!!!!!!!!!!MpcDistributor createRequestMpcContext GetPrivateShare",
+			//	"group public Share", smpcer.PtToHexString(pt))
+
 			value := &MpcValue{mpcprotocol.MpcPrivateShare, []big.Int{b}, nil}
 			// mpc private share
 			preSetValue = append(preSetValue, *value)
@@ -615,7 +631,7 @@ func (mpcServer *MpcDistributor) getMpcMessage(PeerID *discover.NodeID, mpcMessa
 }
 
 func (mpcServer *MpcDistributor) getOwnerP2pMessage(PeerID *discover.NodeID, code uint64, msg interface{}) error {
-	log.SyslogInfo(".....Entering MpcDistributor.getOwnerP2pMessage", "peerId", PeerID.String())
+	log.SyslogInfo("......Entering MpcDistributor.getOwnerP2pMessage", "peerId", PeerID.String())
 	switch code {
 	case mpcprotocol.MPCMessage:
 		mpcMessage := msg.(*mpcprotocol.MpcMessage)

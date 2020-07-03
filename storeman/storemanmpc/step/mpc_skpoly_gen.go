@@ -68,11 +68,6 @@ func (poly *RandomPolynomialGen) initialize(peers *[]mpcprotocol.PeerInfo,
 		}
 		rcvIndex, _ := osmconf.GetOsmConf().GetInxByNodeId(grpIdString, nodeId)
 
-		log.Info("============RandomPolynomialGen::initialize poly ",
-			"len(poly.randCoefficient)", len(poly.randCoefficient),
-			"poly x seed", xValue,
-			"degree", degree)
-
 		poly.polyValue[i] = poly.smpcer.EvaluatePoly(poly.randCoefficient,
 			xValue,
 			degree)
@@ -85,13 +80,13 @@ func (poly *RandomPolynomialGen) initialize(peers *[]mpcprotocol.PeerInfo,
 		}
 
 		poly.polyValueSigR[i], poly.polyValueSigS[i], _ = schcomm.SignInternalData(prv, h[:])
-		log.Info("RandomPolynomialGen::initialize poly ",
+		log.SyslogDebug("RandomPolynomialGen::initialize poly ",
 			"group id", grpIdString,
 			"senderPk", hexutil.Encode(crypto.FromECDSAPub(&prv.PublicKey)),
 			"senderIndex", selfIndex,
 			"rcvIndex", rcvIndex,
 			"poly peerId", (*peers)[i].PeerID.String(),
-			"poly x seed", xValue,
+			"poly x seed", hexutil.Encode(xValue.Bytes()),
 			"sigR", hexutil.Encode(poly.polyValueSigR[i].Bytes()),
 			"sigS", hexutil.Encode(poly.polyValueSigS[i].Bytes()),
 			"h", hexutil.Encode(h[:]))

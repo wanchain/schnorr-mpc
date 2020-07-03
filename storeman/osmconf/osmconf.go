@@ -150,9 +150,6 @@ func (cnf *OsmConf) LoadCnf(confPath string) error {
 			gii.ArrGrpElems[i].Inx = uint16(Inx)
 			//gii.ArrGrpElems[i].PkShare = crypto.ToECDSAPub(ge.PkShare)
 			gii.ArrGrpElems[i].PkShareBytes = ge.PkShare
-			log.SyslogInfo("LoadCnf", "ge.WorkingPk", ge.WorkingPk)
-			log.SyslogInfo("LoadCnf", "ge.PkShare", ge.PkShare)
-
 			gii.ArrGrpElems[i].WorkingPk = crypto.ToECDSAPub(ge.WorkingPk)
 
 			nodeId := discover.NodeID{}
@@ -639,8 +636,9 @@ func (cnf *OsmConf) GetXValueByIndex(grpId string, index uint16, smpcer mpcproto
 	if err != nil {
 		return big.NewInt(0), err
 	} else {
-		//return ge.XValue.Mod(ge.XValue, smpcer.GetMod()), nil
-		return big.NewInt(0).Mod(ge.XValue, smpcer.GetMod()), nil
+		bigRet := big.NewInt(0).Mod(ge.XValue, smpcer.GetMod())
+		log.SyslogDebug("GetXValueByIndex bigRet", "ge.XValue", hexutil.Encode(bigRet.Bytes()))
+		return bigRet, nil
 	}
 }
 

@@ -88,8 +88,8 @@ func (ssj *MpcSSahreJudgeStep) FinishStep(result mpcprotocol.MpcResultInterface,
 		return err
 	}
 
-	log.SyslogInfo("MpcSSahreJudgeStep", ":-(:-(:-(FinishStep SSlshCount", ssj.SSlshCount)
 	if ssj.SSlshCount > 0 {
+		log.SyslogWarning("MpcSSahreJudgeStep", ":-(:-(:-(FinishStep SSlshCount", ssj.SSlshCount)
 		return mpcprotocol.ErrSSlsh
 	}
 	return nil
@@ -231,7 +231,9 @@ func (ssj *MpcSSahreJudgeStep) saveSlshCount(slshCount int) error {
 		log.SyslogErr("MpcSSahreJudgeStep", "save MPCSSlshProofNum", err.Error(), "key", key)
 		return err
 	} else {
-		log.SyslogErr("MpcSSahreJudgeStep", "save MPCSSlshProofNum success key", key)
+		if slshCount > 0 {
+			log.SyslogWarning("MpcSSahreJudgeStep", "save MPCSSlshProofNum success key", key, "slshCount", slshCount)
+		}
 	}
 
 	return nil

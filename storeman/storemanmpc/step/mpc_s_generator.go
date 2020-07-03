@@ -34,7 +34,6 @@ func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcpr
 	// rgpk R
 	//rgpkValue, err := result.GetValue(mpcprotocol.RPk)
 	rgpkBytes, err := result.GetByteValue(mpcprotocol.RPk)
-
 	if err != nil {
 		log.SyslogErr("mpcSGenerator.initialize get RPk fail")
 		return err
@@ -65,7 +64,6 @@ func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcpr
 	mBytes := sha256.Sum256(buffer.Bytes())
 	m := new(big.Int).SetBytes(mBytes[:])
 	m = m.Mod(m, smpcer.GetMod())
-
 	rskShare, err := result.GetValue(mpcprotocol.RSkShare)
 	if err != nil {
 		log.SyslogErr("mpcSGenerator.initialize get RSkShare fail")
@@ -94,11 +92,18 @@ func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcpr
 		return err
 	}
 
-	log.Info("@@@@@@@@@@@@@@ SchnorrSign @@@@@@@@@@@@@@",
+	log.Info("@@@@@@ SchnorrSign @@@@@@",
 		"M", hexutil.Encode(MBytes),
 		"m", hexutil.Encode(m.Bytes()),
 		"gpkShare", smpcer.PtToHexString(gpkShare),
 		"rpkShare", smpcer.PtToHexString(rpkShare))
+
+	//log.Info("!!!!!!!!!! SchnorrSign @@@@@@@@@@@@@@",
+	//	"sshare", hexutil.Encode(sigShare.Bytes()))
+	//log.Info("!!!!!!!!!! SchnorrSign @@@@@@@@@@@@@@",
+	//	"gskShare[0]", hexutil.Encode(gskShare[0].Bytes()))
+	//log.Info("!!!!!!!!!! SchnorrSign @@@@@@@@@@@@@@",
+	//	"rskShare[0]", hexutil.Encode(rskShare[0].Bytes()))
 
 	_, grpIdString, _ := osmconf.GetGrpId(result)
 

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"errors"
+	"fmt"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
@@ -99,8 +100,10 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 			// save error and send judge info to leader
 			log.SyslogErr("MpcPointStep::HandleMessage", " check sig fail")
 			// save error for check data of s
-			key := mpcprotocol.RPkShare + strconv.Itoa(int(senderIndex))
-			msStep.mpcResult.SetByteValue(key, msg.BytesData[i])
+
+			//todo think it over
+			//key := mpcprotocol.RPkShare + strconv.Itoa(int(senderIndex))
+			//msStep.mpcResult.SetByteValue(key, msg.BytesData[i])
 
 		} else {
 			log.SyslogInfo("check sig of sshare successfully", " senderIndex", senderIndex)
@@ -112,7 +115,7 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 			log.SyslogInfo("MpcSStep", " GetSelfInx", err.Error())
 		}
 
-		log.SyslogInfo("===================================MpcSStep", " senderIndex", senderIndex, "selfIndex", selfIndex)
+		log.SyslogInfo("MpcSStep", " senderIndex", senderIndex, "selfIndex", selfIndex)
 
 		rpkShare, err := msStep.getRPkShare(senderIndex)
 		if err != nil {
@@ -162,11 +165,14 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 			if err != nil {
 				log.SyslogErr("@@@@@msStep.mpcResult.SetValue save fail", " err", err.Error(), "key", keyErrInfo)
 			} else {
-				log.SyslogInfo("@@@@@msStep.mpcResult.SetValue save success", "key", keyErrInfo)
+				if msStep.SShareErrNum > 0 {
+					sshareErrInfoStr := fmt.Sprintf("%#v", sshareErrInfo)
+					log.SyslogWarning("@@@@@msStep.mpcResult.SetValue save success", "key", keyErrInfo, "value", sshareErrInfoStr)
+				}
 			}
 
 		} else {
-			log.SyslogInfo("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@check sshare successfully", " senderIndex", senderIndex)
+			log.SyslogInfo("@@@@check sshare successfully", " senderIndex", senderIndex)
 			msStep.sshareOKIndex = append(msStep.sshareOKIndex, senderIndex)
 
 		}
@@ -180,7 +186,10 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		if err != nil {
 			log.SyslogErr("@@@@@msStep.mpcResult.SetValue save fail", " err", err.Error(), "key", keyErrNum, "value", rskErrInfoNum)
 		} else {
-			log.SyslogInfo("@@@@@msStep.mpcResult.SetValue save success", "key", keyErrNum, "value", rskErrInfoNum)
+			if msStep.SShareErrNum > 0 {
+				log.SyslogWarning("@@@@@msStep.mpcResult.SetValue save success", "key", keyErrNum,
+					"value", hexutil.Encode(rskErrInfoNum[0].Bytes()))
+			}
 		}
 	}
 
@@ -253,6 +262,12 @@ func (msStep *MpcSStep) checkContent(sshare, m *big.Int, rpkShare, gpkShare mpcp
 	if !smpcer.IsOnCurve(rpkShare) || !smpcer.IsOnCurve(gpkShare) {
 		return false, errors.New("rpkShare or gpkShare is invalid pk or gpkShare is invalid pk")
 	}
+
+	//log.SyslogDebug("!!!!!!!!MpcSStep.checkContent", "sshare", hexutil.Encode(sshare.Bytes()))
+	//log.SyslogDebug("!!!!!!!!MpcSStep.checkContent", "m", hexutil.Encode(m.Bytes()))
+	//log.SyslogDebug("!!!!!!!!MpcSStep.checkContent", "rpkShare", smpcer.PtToHexString(rpkShare))
+	//log.SyslogDebug("!!!!!!!!MpcSStep.checkContent", "gpkShare", smpcer.PtToHexString(gpkShare))
+
 	sshareG, _ := smpcer.SkG(sshare)
 	mPkShare, _ := smpcer.MulPK(m, gpkShare)
 

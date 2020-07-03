@@ -111,7 +111,7 @@ func (addStep *MpcRStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 		// save rpkshare for check data of s
 		key := mpcprotocol.RPkShare + strconv.Itoa(int(senderIndex))
 		addStep.mpcResult.SetByteValue(key, msg.BytesData[0])
-		log.SyslogInfo("@@@@@@@@@@@@save rpkshare", "key", key, "rpkshare", hexutil.Encode(msg.BytesData[0]))
+		log.SyslogInfo("@@save rpkshare", "key", key, "rpkshare", hexutil.Encode(msg.BytesData[0]))
 
 		addStep.rpkshareOKIndex = append(addStep.rpkshareOKIndex, uint16(senderIndex))
 	} else {
@@ -147,7 +147,7 @@ func (addStep *MpcRStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc m
 		return err
 	}
 
-	log.SyslogInfo("@@@@@@@@@@@@save RPK", "key", mpcprotocol.RPk, "RPK")
+	log.SyslogInfo("@@@@save RPK", "key", mpcprotocol.RPk, "RPK", hexutil.Encode(resultBytes))
 
 	_, grpIdString, _ := osmconf.GetGrpId(addStep.mpcResult)
 
@@ -155,10 +155,10 @@ func (addStep *MpcRStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc m
 	tempIndex := osmconf.Difference(*allIndex, addStep.rpkshareOKIndex)
 	addStep.rpkshareNOIndex = osmconf.Difference(tempIndex, addStep.rpkshareKOIndex)
 
-	log.Info(">>>>>>MpcPointStep", "allIndex", allIndex)
-	log.Info(">>>>>>MpcPointStep", "rpkshareOKIndex", addStep.rpkshareOKIndex)
-	log.Info(">>>>>>MpcPointStep", "rpkshareKOIndex", addStep.rpkshareKOIndex)
-	log.Info(">>>>>>MpcPointStep", "rpkshareNOIndex", addStep.rpkshareNOIndex)
+	log.SyslogDebug(">>>>>>MpcPointStep", "allIndex", allIndex)
+	log.SyslogDebug(">>>>>>MpcPointStep", "rpkshareOKIndex", addStep.rpkshareOKIndex)
+	log.SyslogDebug(">>>>>>MpcPointStep", "rpkshareKOIndex", addStep.rpkshareKOIndex)
+	log.SyslogDebug(">>>>>>MpcPointStep", "rpkshareNOIndex", addStep.rpkshareNOIndex)
 
 	okIndex := make([]big.Int, len(addStep.rpkshareOKIndex))
 	koIndex := make([]big.Int, len(addStep.rpkshareKOIndex))

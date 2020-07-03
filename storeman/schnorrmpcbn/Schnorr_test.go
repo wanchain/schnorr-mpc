@@ -229,9 +229,13 @@ func TestSchnorrCreateGpk4NodesBN(t *testing.T) {
 
 	// Fix the evaluation point: Hash(Pub[1]), Hash(Pub[2]), ..., Hash(Pub[Nr])
 	x := make([]big.Int, Nstm)
+	y := make([]big.Int, Nstm)
 	for i := 0; i < Nstm; i++ {
 		h := sha256.Sum256(crypto.FromECDSAPub(Pubkey[i]))
+
+		y[i].SetBytes(h[:])
 		x[i].SetBytes(h[:])
+
 		x[i].Mod(&x[i], bn256.Order)
 	}
 
@@ -284,7 +288,9 @@ func TestSchnorrCreateGpk4NodesBN(t *testing.T) {
 	fmt.Printf("gpk: %v \n", hexutil.Encode(gpk.Marshal()))
 
 	for i := 0; i < Nstm; i++ {
+		fmt.Printf("workingPk[%v]:%v\n", i, hexutil.Encode(crypto.FromECDSAPub(Pubkey[i])))
 		fmt.Printf("x[%v]: %v \n", i, hexutil.Encode(x[i].Bytes()))
+		fmt.Printf("y[%v] before mod: %v \n", i, hexutil.Encode(y[i].Bytes()))
 		fmt.Printf("gpkshare[%v]: %v \n", i, hexutil.Encode(gpkshare[i].Marshal()))
 		fmt.Printf("gskshare[%v]: %v \n\n", i, hexutil.Encode(gskshare[i].Bytes()))
 	}
@@ -447,4 +453,242 @@ func TestBnSchnorrMpc_SkG(t *testing.T) {
 	fmt.Println(smpcer.PtToHexString(pt2))
 	fmt.Println(smpcer.PtToHexString(pt3))
 	fmt.Println(smpcer.PtToHexString(pt4))
+}
+
+func TestBnSchnorrMpc_MulPK(t *testing.T) {
+	m := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x2d80340b58fdf74dc3f1e77051b6475d1df2ab0772f2360919923735d7aa1a3d")))
+
+	smpcer := NewBnSchnorrMpc()
+
+	gpkShare, err := smpcer.StringToPt("0x0adf29eaa11da6cb58f84b0e0bcdf7501e81b115a401dffd05ccbfa3373adb7e2b0d612ed449b7194b3333b7620551ec5221334ba1a39c8df2ec604fce76ea0c")
+	rpkShare, err := smpcer.StringToPt("0x0ff360597812ad3f641e77e53ccdf219ca849eb2d03a22ed3d84ea8294214de923ef4706c272c766cb3abc7554703e76b1d8e373e5aed472e5d013bb06ef047a")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	sshare := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x2f9ce2b689d859ff9436f6e7e763dc44fa0e7951dc86e167eac969bc51f69eac")))
+
+	SSG, _ := smpcer.SkG(sshare)
+
+	mgpk, _ := smpcer.MulPK(m, gpkShare)
+
+	pkTemp, _ := smpcer.Add(rpkShare, mgpk)
+
+	fmt.Println(SSG.(*bn256.G1).String())
+	fmt.Println(pkTemp.(*bn256.G1).String())
+}
+
+/*
+ptLeft bn256.G1(19567b5dd54d410b53960a3c80b262cf03ac6f51229c54c005e1fedb5c6d7f71, 279af59fd8d2f90983becfe05c4a871dd831adf677d803d5705916c113b72c16)
+ptRight bn256.G1(00af4e11252a42022eeff8fb983fa4bee7e1087762b12999c85669a557011b6e, 0466d47beb5169f1307729c25085f7dac71160b976e0eaac7fdff73c733416f2)
+*/
+
+func TestCurveMod(t *testing.T) {
+	pBig0 := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x6934315acd94b49ecdff3c85b8e28191e3e98444e144a9e96d9057de5ddd74f1")))
+	pBigRet := big.NewInt(0).Mod(pBig0, bn256.Order)
+
+	fmt.Println(hexutil.Encode(pBig0.Bytes()))
+	fmt.Println(hexutil.Encode(pBigRet.Bytes()))
+}
+
+func TestBnSchnorrMpc_SchnorrSign(t *testing.T) {
+	// compute s  s = rskshare + m*gskShare
+
+	// compute sg
+	// compute rpk+m*gpkShare
+	m := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x017d11cab3e1fd0907aef0f92e6f259e4525d69bd3bb90b5ed4cda7eb3726391")))
+	rskShare := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x245f002dcbec5eeda87ccfacd8d33cacd2f49ad78b5654d4628c3bb5923f0934")))
+	gskShare := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x83a65e1cbf9f059841e7fb672f7dcefedace8043f4fa035828f70901f735f814")))
+	sshare := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x1db26eaba26e3f85f5f058d2a9554226d37b440f4579d09b6c2e37696e85e0e8")))
+
+	gpkShareStr := "0x0adf29eaa11da6cb58f84b0e0bcdf7501e81b115a401dffd05ccbfa3373adb7e2b0d612ed449b7194b3333b7620551ec5221334ba1a39c8df2ec604fce76ea0c"
+	rpkShareStr := "0x0847b0f51bbb842c6c9b8b43badd4ad480c23b6f80364ca72cae8c590559c51f14a18578c674f634d1d7f41e1347d2b7e4f9295de43cd7b4d6d3c60e17dc4117"
+
+	smpcer := NewBnSchnorrMpc()
+
+	gpkShare, err := smpcer.StringToPt(gpkShareStr)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	rpkShare, err := smpcer.StringToPt(rpkShareStr)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	gpkShare1, err := smpcer.SkG(gskShare)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	rpkShare1, err := smpcer.SkG(rskShare)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	fmt.Println("---------------------------------gpkShare1 compare")
+	if smpcer.Equal(gpkShare1, gpkShare) {
+		fmt.Println("gpkShare1 equal")
+	} else {
+		fmt.Println("gpkShare1 Not equal")
+	}
+
+	fmt.Println("---------------------------------rpkShare1 compare")
+	if smpcer.Equal(rpkShare1, rpkShare) {
+		fmt.Println("rpkShare1 equal")
+	} else {
+		fmt.Println("rpkShare1 Not equal")
+	}
+
+	fmt.Println("m", hexutil.Encode(m.Bytes()))
+
+	big1 := big.NewInt(1).Mul(m, gskShare)
+	bigmgsk := big1.Mod(big1, bn256.Order)
+
+	sshare1 := big.NewInt(0).Add(rskShare, big1)
+	sshare1.Mod(sshare1, bn256.Order)
+
+	sshare2 := schnorrSign(*gskShare, *rskShare, *m)
+
+	fmt.Println("---------------------------------sshare compare")
+	fmt.Println("sshare1", hexutil.Encode(sshare1.Bytes()))
+	fmt.Println("sshare2", hexutil.Encode(sshare2.Bytes()))
+	fmt.Println("sshare", hexutil.Encode(sshare.Bytes()))
+	fmt.Println("bigmgsk", hexutil.Encode(bigmgsk.Bytes()))
+	fmt.Println("big1", hexutil.Encode(big1.Bytes()))
+
+	if sshare1.Cmp(sshare) == 0 {
+		fmt.Println("sshare1 equal")
+	} else {
+		fmt.Println("sshare1 not equal")
+
+	}
+
+	SSG, err := smpcer.SkG(sshare1)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	mgpk, err := smpcer.MulPK(m, gpkShare)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	mgpk1, err := smpcer.SkG(big1)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	fmt.Println("---------------------------------mgpk1 compare")
+	if smpcer.Equal(mgpk1, mgpk) {
+		fmt.Println("mgpk1 equal")
+	} else {
+		fmt.Println("mgpk1 NOT equal")
+	}
+
+	pkTemp, err := smpcer.Add(rpkShare, mgpk)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	fmt.Println("SSG(string)", SSG.(*bn256.G1).String())
+	fmt.Println("rpk+mgpk string", pkTemp.(*bn256.G1).String())
+	fmt.Println("---------------------------------after compute")
+	fmt.Println("after rpkShare", smpcer.PtToHexString(rpkShare))
+	fmt.Println("after gpkShare", smpcer.PtToHexString(gpkShare))
+	fmt.Println("after m", hexutil.Encode(m.Bytes()))
+
+	if smpcer.Equal(SSG, pkTemp) {
+		fmt.Println("sucess")
+	} else {
+		fmt.Println("fail")
+		t.Fatal("fail")
+	}
+
+}
+
+func TestBnSchnorrMpc_SchnorrSign1(t *testing.T) {
+	// compute s  s = rskshare + m*gskShare
+
+	// compute sg
+	// compute rpk+m*gpkShare
+	m := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x017d11cab3e1fd0907aef0f92e6f259e4525d69bd3bb90b5ed4cda7eb3726391")))
+	rskShare := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x245f002dcbec5eeda87ccfacd8d33cacd2f49ad78b5654d4628c3bb5923f0934")))
+	gskShare := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x83a65e1cbf9f059841e7fb672f7dcefedace8043f4fa035828f70901f735f814")))
+	sshare := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x1db26eaba26e3f85f5f058d2a9554226d37b440f4579d09b6c2e37696e85e0e8")))
+
+	//gpkShareStr := "0x0adf29eaa11da6cb58f84b0e0bcdf7501e81b115a401dffd05ccbfa3373adb7e2b0d612ed449b7194b3333b7620551ec5221334ba1a39c8df2ec604fce76ea0c"
+	//rpkShareStr := "0x0847b0f51bbb842c6c9b8b43badd4ad480c23b6f80364ca72cae8c590559c51f14a18578c674f634d1d7f41e1347d2b7e4f9295de43cd7b4d6d3c60e17dc4117"
+	//
+	//smpcer := NewBnSchnorrMpc()
+
+	bigSshareJacob := big.NewInt(1).Mul(m, gskShare)
+	bigSshareJacob = bigSshareJacob.Add(bigSshareJacob, rskShare)
+	bigSshareJacob.Mod(bigSshareJacob, bn256.Order)
+
+	if bigSshareJacob.Cmp(sshare) == 0 {
+		t.Log("sshare right")
+	} else {
+		t.Error("sshare Not right")
+	}
+
+	sgJacob := new(bn256.G1).ScalarBaseMult(bigSshareJacob)
+
+	gpkShare := new(bn256.G1).ScalarBaseMult(gskShare)
+	fmt.Println("gpkShare", gpkShare.String())
+	rpkShare := new(bn256.G1).ScalarBaseMult(rskShare)
+	fmt.Println("rpkShare", rpkShare.String())
+	mgpkShare := new(bn256.G1).ScalarMult(gpkShare, m)
+	fmt.Println("mgpkShare", mgpkShare.String())
+
+	sum := new(bn256.G1).ScalarBaseMult(big.NewInt(0))
+	sum = sum.Add(rpkShare, mgpkShare)
+	fmt.Println("sum", sum.String())
+	fmt.Println("sgJacob", sgJacob.String())
+	if sum.String() == sgJacob.String() {
+		t.Log("success")
+	} else {
+		t.Fatal("fail")
+	}
+}
+
+func TestBnSchnorrMpc_SchnorrSign3(t *testing.T) {
+	// compute s  s = rskshare + m*gskShare
+
+	// compute sg
+	// compute rpk+m*gpkShare
+	m := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x017d11cab3e1fd0907aef0f92e6f259e4525d69bd3bb90b5ed4cda7eb3726391")))
+	rskShare := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x245f002dcbec5eeda87ccfacd8d33cacd2f49ad78b5654d4628c3bb5923f0934")))
+	gskShare := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x83a65e1cbf9f059841e7fb672f7dcefedace8043f4fa035828f70901f735f814")))
+	sshare := big.NewInt(0).SetBytes(hexutil.MustDecode(string("0x1db26eaba26e3f85f5f058d2a9554226d37b440f4579d09b6c2e37696e85e0e8")))
+
+	//gpkShareStr := "0x0adf29eaa11da6cb58f84b0e0bcdf7501e81b115a401dffd05ccbfa3373adb7e2b0d612ed449b7194b3333b7620551ec5221334ba1a39c8df2ec604fce76ea0c"
+	//rpkShareStr := "0x0847b0f51bbb842c6c9b8b43badd4ad480c23b6f80364ca72cae8c590559c51f14a18578c674f634d1d7f41e1347d2b7e4f9295de43cd7b4d6d3c60e17dc4117"
+	//
+	//smpcer := NewBnSchnorrMpc()
+
+	bigSshareJacob := big.NewInt(1).Mul(m, gskShare)
+	bigSshareJacob = bigSshareJacob.Add(bigSshareJacob, rskShare)
+	bigSshareJacob.Mod(bigSshareJacob, bn256.Order)
+	if bigSshareJacob.Cmp(sshare) == 0 {
+		t.Log("sshare right")
+	} else {
+		t.Error("sshare Not right")
+	}
+
+	smpcer := NewBnSchnorrMpc()
+	rpkShare, _ := smpcer.SkG(rskShare)
+	gpkShare, _ := smpcer.SkG(gskShare)
+	fmt.Println("gpkShare", smpcer.PtToHexString(gpkShare))
+	mgpkShare, _ := smpcer.MulPK(m, gpkShare)
+	fmt.Println("rpkShare", smpcer.PtToHexString(rpkShare))
+	fmt.Println("mgpkShare", smpcer.PtToHexString(mgpkShare))
+
+	sum, _ := smpcer.Add(rpkShare, mgpkShare)
+	fmt.Println("sum", smpcer.PtToHexString(sum))
+	sgJacob, _ := smpcer.SkG(sshare)
+	fmt.Println("sgJacob", smpcer.PtToHexString(sgJacob))
+	if smpcer.Equal(sgJacob, sum) {
+		t.Log("success")
+	} else {
+		t.Fatal("fail")
+	}
 }
