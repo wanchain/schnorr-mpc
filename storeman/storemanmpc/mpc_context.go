@@ -1,6 +1,7 @@
 package storemanmpc
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
@@ -142,15 +143,32 @@ func (mpcCtx *MpcContext) buildRSlsh(sr *mpcprotocol.SignedResult) (interface{},
 				log.SyslogErr("getMpcResult", "GetByteValue error,key", key, "error", err.Error())
 				return nil, err
 			}
-			oneRPrf.PolyCM = rslshBytes[0 : 65*polyLen]
-			sr.GrpId = rslshBytes[65*polyLen:]
+			//oneRPrf.PolyCM = rslshBytes[0 : 65*polyLen]
+			//sr.GrpId = rslshBytes[65*polyLen:]
 
+			ptLen := mpcCtx.schnorrMPCer.PtByteLen()
+			oneRPrf.PolyCM = mpcCtx.trip04forPts(rslshBytes[0:ptLen*polyLen], ptLen)
+			sr.GrpId = rslshBytes[ptLen*polyLen:]
 			sr.RSlsh = append(sr.RSlsh, oneRPrf)
 		}
 
 	}
 	return sr, nil
 
+}
+
+func (mpcCtx *MpcContext) trip04forPts(b hexutil.Bytes, ptLen int) hexutil.Bytes {
+	CommonPKLength := 64
+	if ptLen == CommonPKLength {
+		return b
+	}
+	count := len(b) / ptLen
+	var ret bytes.Buffer
+	for i := 0; i < count; i++ {
+		onePtBytes := b[i*ptLen : ptLen]
+		ret.Write(onePtBytes[ptLen-CommonPKLength:])
+	}
+	return ret.Bytes()
 }
 
 func (mpcCtx *MpcContext) buildSSlsh(sr *mpcprotocol.SignedResult) (interface{}, error) {
@@ -193,9 +211,13 @@ func (mpcCtx *MpcContext) buildSSlsh(sr *mpcprotocol.SignedResult) (interface{},
 				return nil, err
 			}
 
-			oneRPrf.RPKShare = rslshBytes[0:65]
-			oneRPrf.GPKShare = rslshBytes[65 : 65*2]
-			sr.GrpId = rslshBytes[65*2:]
+			//oneRPrf.RPKShare = rslshBytes[0:65]
+			//oneRPrf.GPKShare = rslshBytes[65 : 65*2]
+			//sr.GrpId = rslshBytes[65*2:]
+			ptLen := mpcCtx.schnorrMPCer.PtByteLen()
+			oneRPrf.RPKShare = mpcCtx.trip04forPts(rslshBytes[0:ptLen], ptLen)
+			oneRPrf.GPKShare = mpcCtx.trip04forPts(rslshBytes[ptLen:ptLen*2], ptLen)
+			sr.GrpId = rslshBytes[ptLen*2:]
 
 			sr.SSlsh = append(sr.SSlsh, oneRPrf)
 
