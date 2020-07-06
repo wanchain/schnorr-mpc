@@ -301,12 +301,27 @@ func (sm *Storeman) checkPeerInfo() {
 	// Start the tickers for the updates
 	keepQuest := time.NewTicker(mpcprotocol.KeepaliveCycle * time.Second)
 
-	leaderid, err := discover.BytesID(sm.cfg.StoremanNodes[0].ID.Bytes())
+	leaderIndex := 0
+	for index, m := range sm.cfg.StoremanNodes {
+		leaderIndex = index
+		strip := m.IP.String()
+		if m.TCP != 0 && strip != "0.0.0.0" {
+			break
+		}
+	}
+
+	//leaderid, err := discover.BytesID(sm.cfg.StoremanNodes[0].ID.Bytes())
+	leaderid, err := discover.BytesID(sm.cfg.StoremanNodes[leaderIndex].ID.Bytes())
+
 	if err != nil {
 		log.Info("err decode leader node id from config")
 	}
 
-	if sm.cfg.StoremanNodes[0].ID.String() == sm.server.Self().ID.String() {
+	//if sm.cfg.StoremanNodes[0].ID.String() == sm.server.Self().ID.String() {
+	//	return
+	//}
+
+	if sm.cfg.StoremanNodes[leaderIndex].ID.String() == sm.server.Self().ID.String() {
 		return
 	}
 
@@ -323,7 +338,8 @@ func (sm *Storeman) checkPeerInfo() {
 				sm.SendToPeer(&leaderid, mpcprotocol.GetPeersInfo, StrmanGetPeers{splits[len(splits)-1]})
 			} else {
 				log.Info("leader is connecting...")
-				sm.server.AddPeer(sm.server.StoremanNodes[0])
+				//sm.server.AddPeer(sm.server.StoremanNodes[0])
+				sm.server.AddPeer(sm.server.StoremanNodes[leaderIndex])
 			}
 
 		}
