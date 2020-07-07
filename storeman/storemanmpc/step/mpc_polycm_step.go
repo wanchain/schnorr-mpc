@@ -131,9 +131,9 @@ func (req *MpcPolycmStep) CreateMessage() []mpcprotocol.StepMessage {
 	msg.Data[0] = *r
 	msg.Data[1] = *s
 
-	req.polycmGMSigMap[req.selfIndex] = make([]big.Int, 2)
-	req.polycmGMSigMap[req.selfIndex][0] = *r
-	req.polycmGMSigMap[req.selfIndex][0] = *s
+	//req.polycmGMSigMap[req.selfIndex] = make([]big.Int, 2)
+	//req.polycmGMSigMap[req.selfIndex][0] = *r
+	//req.polycmGMSigMap[req.selfIndex][1] = *s
 
 	return []mpcprotocol.StepMessage{msg}
 }

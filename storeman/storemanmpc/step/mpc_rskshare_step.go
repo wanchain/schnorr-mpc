@@ -31,11 +31,19 @@ func (rss *MpcRSKShare_Step) CreateMessage() []mpcprotocol.StepMessage {
 		message[i].MsgCode = mpcprotocol.MPCMessage
 		message[i].PeerID = &(*rss.peers)[i].PeerID
 		message[i].Data = make([]big.Int, 3)
-		message[i].Data[0] = skpv.polyValue[i]
+
+		if schcomm.MaliceRContent {
+			message[i].Data[0] = *schcomm.BigOne
+		} else {
+			message[i].Data[0] = skpv.polyValue[i]
+		}
 
 		message[i].Data[1] = *skpv.polyValueSigR[i]
-		message[i].Data[2] = *skpv.polyValueSigS[i]
-		//message[i].Data[2] = *schnorrmpc.BigOne		// used to simulate R stage malice
+		if schcomm.MaliceRSig {
+			message[i].Data[2] = *schcomm.BigOne // used to simulate R stage malice
+		} else {
+			message[i].Data[2] = *skpv.polyValueSigS[i]
+		}
 
 	}
 
@@ -145,9 +153,23 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 
 	bContent := true
 
+	if schcomm.MaliceRSigRcv && bVerifySig {
+		bVerifySig = false
+	}
+
 	if !bVerifySig {
 		log.SyslogErr("MpcRSKShare_Step::HandleMessage:VerifyInternalData",
 			" verify sk sig fail", msg.PeerID.String(),
+			"groupId", grpIdString,
+			"senderPK", hexutil.Encode(crypto.FromECDSAPub(senderPk)),
+			"senderIndex", senderIndex,
+			"recieverIndex", selfIndex,
+			"R", hexutil.Encode(r.Bytes()),
+			"S", hexutil.Encode(s.Bytes()),
+			"h[:]", hexutil.Encode(h[:]))
+	} else {
+		log.SyslogDebug("MpcRSKShare_Step::HandleMessage:VerifyInternalData",
+			" verify sk sig successfully", msg.PeerID.String(),
 			"groupId", grpIdString,
 			"senderPK", hexutil.Encode(crypto.FromECDSAPub(senderPk)),
 			"senderIndex", senderIndex,
@@ -193,6 +215,10 @@ func (rss *MpcRSKShare_Step) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 
 	sijg, _ := rss.schnorrMpcer.SkG(&sij)
 	if !rss.schnorrMpcer.Equal(sijg, sijgEval) {
+		bContent = false
+	}
+
+	if schcomm.MaliceRContentRcv && bContent {
 		bContent = false
 	}
 

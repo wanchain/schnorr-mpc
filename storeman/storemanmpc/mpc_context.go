@@ -149,6 +149,7 @@ func (mpcCtx *MpcContext) buildRSlsh(sr *mpcprotocol.SignedResult) (interface{},
 			ptLen := mpcCtx.schnorrMPCer.PtByteLen()
 			oneRPrf.PolyCM = mpcCtx.trip04forPts(rslshBytes[0:ptLen*polyLen], ptLen)
 			sr.GrpId = rslshBytes[ptLen*polyLen:]
+
 			sr.RSlsh = append(sr.RSlsh, oneRPrf)
 		}
 
@@ -163,9 +164,11 @@ func (mpcCtx *MpcContext) trip04forPts(b hexutil.Bytes, ptLen int) hexutil.Bytes
 		return b
 	}
 	count := len(b) / ptLen
+	log.SyslogDebug("MpcContext.trip04forPts", "b", hexutil.Encode(b), "count", count, "ptLen", ptLen)
 	var ret bytes.Buffer
 	for i := 0; i < count; i++ {
-		onePtBytes := b[i*ptLen : ptLen]
+		onePtBytes := b[i*ptLen : (i+1)*ptLen]
+		log.SyslogDebug("MpcContext.trip04forPts", "onePtBytes", hexutil.Encode(onePtBytes), "ptLen", ptLen, "CommonPKLength", CommonPKLength)
 		ret.Write(onePtBytes[ptLen-CommonPKLength:])
 	}
 	return ret.Bytes()

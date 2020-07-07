@@ -3,6 +3,8 @@ package step
 import (
 	"bytes"
 	"crypto/sha256"
+	"github.com/wanchain/schnorr-mpc/common/hexutil"
+	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
 	schcomm "github.com/wanchain/schnorr-mpc/storeman/schnorrcomm"
@@ -112,6 +114,11 @@ func (rsj *MpcRSkJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	h := sha256.Sum256(sij.Bytes())
 	bVerifySig := schcomm.VerifyInternalData(senderPk, h[:], &r, &s)
 	bSnderWrong := true
+
+	log.SyslogDebug("......MpcRSkJudgeStep", "h", hexutil.Encode(h[:]),
+		"r", hexutil.Encode(r.Bytes()),
+		"s", hexutil.Encode(s.Bytes()),
+		"senderPk", hexutil.Encode(crypto.FromECDSAPub(senderPk)))
 
 	if !bVerifySig {
 		log.SyslogErr("MpcRSkJudgeStep", "HandleMessage.bVerifySig", bVerifySig, "bSnderWrong", true)

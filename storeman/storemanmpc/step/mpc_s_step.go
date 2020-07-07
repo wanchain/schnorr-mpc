@@ -54,9 +54,21 @@ func (msStep *MpcSStep) CreateMessage() []mpcprotocol.StepMessage {
 		prv, _ := osmconf.GetOsmConf().GetSelfPrvKey()
 		r, s, _ := schcomm.SignInternalData(prv, h[:])
 
-		message[0].Data = append(message[0].Data, pointer.seed)
-		message[0].Data = append(message[0].Data, *r)
-		message[0].Data = append(message[0].Data, *s)
+		message[i].Data = make([]big.Int, 3)
+
+		if schcomm.MaliceSSig {
+			message[i].Data[0] = *schcomm.BigOne
+		} else {
+			message[i].Data[0] = pointer.seed
+		}
+
+		message[i].Data[1] = *r
+
+		if schcomm.MaliceSContent {
+			message[i].Data[2] = *schcomm.BigOne
+		} else {
+			message[i].Data[2] = *s
+		}
 	}
 
 	return message
@@ -134,6 +146,13 @@ func (msStep *MpcSStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 			log.SyslogErr("check content of sshare fail", " senderIndex", senderIndex)
 		}
 
+		if schcomm.MaliceSSigRcv && bVerifySig {
+			bVerifySig = false
+		}
+
+		if schcomm.MaliceSContentRcv && bContentCheck {
+			bContentCheck = false
+		}
 		// 3. write error sshare
 		// 3.1 write error count
 		// 3.2 write error info
