@@ -211,7 +211,7 @@ func (ssj *MpcSSahreJudgeStep) getGPKShare(index uint16) (mpcprotocol.CurvePoint
 		return nil, err
 	}
 
-	gpkShareBytes, err := osmconf.GetOsmConf().GetPKShareBytes(grpIdString, index)
+	gpkShareBytes, err := osmconf.GetOsmConf().GetPKShareBytes(grpIdString, index, ssj.CurveType())
 	if err != nil {
 		return nil, err
 	}

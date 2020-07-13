@@ -17,6 +17,7 @@ type BaseStep struct {
 	notRecvPeers map[discover.NodeID]*discover.NodeID
 	mpcResult    mpcprotocol.MpcResultInterface
 	schnorrMpcer mpcprotocol.SchnorrMPCer
+	curveType    uint16
 }
 
 func (step *BaseStep) InitStep(mpcResult mpcprotocol.MpcResultInterface) error {
@@ -173,4 +174,11 @@ func (step *BaseStep) SchnorrMpcer() mpcprotocol.SchnorrMPCer {
 
 func (step *BaseStep) GetMsgGens() []MpcMessageGenerator {
 	return nil
+}
+
+func (step *BaseStep) SetCurveType(ct uint16) {
+	step.curveType = ct
+}
+func (step *BaseStep) CurveType() uint16 {
+	return step.curveType
 }

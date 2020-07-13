@@ -335,7 +335,7 @@ func (msStep *MpcSStep) getGPKShare(index uint16) (mpcprotocol.CurvePointer, err
 		return nil, err
 	}
 
-	gpkShareBytes, err := osmconf.GetOsmConf().GetPKShareBytes(grpIdString, index)
+	gpkShareBytes, err := osmconf.GetOsmConf().GetPKShareBytes(grpIdString, index, msStep.CurveType())
 	if err != nil {
 		return nil, err
 	}

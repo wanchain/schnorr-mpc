@@ -46,6 +46,7 @@ type MpcStepFunc interface {
 	SetStepId(int)
 	SetSchnorrMpcer(mpcprotocol.SchnorrMPCer)
 	GetMsgGens() []step.MpcMessageGenerator
+	SetCurveType(uint16)
 }
 
 type MpcContext struct {

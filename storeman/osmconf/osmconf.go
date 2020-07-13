@@ -30,24 +30,35 @@ const EmptyString = ""
 var osmConf *OsmConf
 
 type GrpElem struct {
+	Inx       uint16
+	WorkingPk *ecdsa.PublicKey
+	NodeId    *discover.NodeID
+	XValue    *big.Int
+}
+type PkShare struct {
 	Inx          uint16
-	WorkingPk    *ecdsa.PublicKey
-	NodeId       *discover.NodeID
 	PkShareBytes hexutil.Bytes
-	XValue       *big.Int
+}
+
+type GrpCurve struct {
+	Gpk       hexutil.Bytes
+	CurveType string
+	PkShares  ArrayPkShare
 }
 
 type ArrayGrpElem []GrpElem
+type ArrayGrpCurve []GrpCurve
+type ArrayPkShare []PkShare
 
 type ArrayGrpElemsInx []uint16
 
 type GrpInfoItem struct {
 	GrpId        string
-	GrpGpkBytes  hexutil.Bytes
 	LeaderInx    uint16
 	TotalNum     uint16
 	ThresholdNum uint16
 	ArrGrpElems  ArrayGrpElem
+	ArrGrpCurves ArrayGrpCurve
 }
 
 type OsmConf struct {
@@ -63,20 +74,30 @@ type OsmConf struct {
 }
 
 //-----------------------configure content begin ---------------------------------
+type PkShareContent struct {
+	Inx     string        `json:"index"`
+	PkShare hexutil.Bytes `json:"pkShare"`
+}
+
 type GrpElemContent struct {
 	Inx       string        `json:"index"`
 	WorkingPk hexutil.Bytes `json:"workingPk"`
 	NodeId    hexutil.Bytes `json:"nodeId"`
-	PkShare   hexutil.Bytes `json:"pkShare"`
+}
+
+type GrpCurveContent struct {
+	Gpk       hexutil.Bytes    `json:"gpk"`
+	CurveType string           `json:"curveType"`
+	PkShares  []PkShareContent `json:"pkShares"`
 }
 
 type GrpInfoItemContent struct {
-	GrpId           string           `json:"grpId"`
-	GrpPk           hexutil.Bytes    `json:"grpPk"`
-	LeaderInx       string           `json:"leaderInx"`
-	TotalNumber     string           `json:"totalNumber"`
-	ThresholdNumber string           `json:"thresholdNumber"`
-	GrpElms         []GrpElemContent `json:"grpElms"`
+	GrpId           string            `json:"grpId"`
+	LeaderInx       string            `json:"leaderInx"`
+	TotalNumber     string            `json:"totalNumber"`
+	ThresholdNumber string            `json:"thresholdNumber"`
+	GrpElms         []GrpElemContent  `json:"grpElms"`
+	GrpCurves       []GrpCurveContent `json:"grpCurves"`
 }
 
 type OsmFileContent struct {
@@ -130,8 +151,6 @@ func (cnf *OsmConf) LoadCnf(confPath string) error {
 
 		gii.GrpId = grpInfo.GrpId
 
-		gii.GrpGpkBytes = grpInfo.GrpPk
-
 		leaderIndex, _ := strconv.Atoi(grpInfo.LeaderInx)
 		gii.LeaderInx = uint16(leaderIndex)
 
@@ -147,7 +166,6 @@ func (cnf *OsmConf) LoadCnf(confPath string) error {
 
 			Inx, _ := strconv.Atoi(ge.Inx)
 			gii.ArrGrpElems[i].Inx = uint16(Inx)
-			gii.ArrGrpElems[i].PkShareBytes = ge.PkShare
 			gii.ArrGrpElems[i].WorkingPk = crypto.ToECDSAPub(ge.WorkingPk)
 
 			nodeId := discover.NodeID{}
@@ -156,6 +174,24 @@ func (cnf *OsmConf) LoadCnf(confPath string) error {
 
 			h := sha256.Sum256(ge.WorkingPk)
 			gii.ArrGrpElems[i].XValue = big.NewInt(0).SetBytes(h[:])
+		}
+
+		gii.ArrGrpCurves = make(ArrayGrpCurve, len(grpInfo.GrpCurves))
+
+		for i, gc := range grpInfo.GrpCurves {
+
+			gcTemp := GrpCurve{}
+			gcTemp.Gpk = gc.Gpk
+			gcTemp.CurveType = gc.CurveType
+			gcTemp.PkShares = make(ArrayPkShare, len(gc.PkShares))
+
+			for j, pkShare := range gc.PkShares {
+				inx, _ := strconv.Atoi(pkShare.Inx)
+				gcTemp.PkShares[j].Inx = uint16(inx)
+				//copy(gcTemp.PkShares[j].PkShareBytes, pkShare.PkShare)
+				gcTemp.PkShares[j].PkShareBytes = pkShare.PkShare
+			}
+			gii.ArrGrpCurves[i] = gcTemp
 		}
 
 		cnf.GrpInfoMap[grpInfo.GrpId] = gii
@@ -236,16 +272,20 @@ func (cnf *OsmConf) GetPKByNodeId(grpId string, nodeId *discover.NodeID) (*ecdsa
 }
 
 // get gpk share (public share)
-func (cnf *OsmConf) GetPKShareBytes(grpId string, smInx uint16) ([]byte, error) {
+func (cnf *OsmConf) GetPKShareBytes(grpId string, smInx uint16, curveType uint16) ([]byte, error) {
 	defer cnf.wrLock.RUnlock()
 
 	cnf.wrLock.RLock()
 
 	cnf.checkGrpId(grpId)
-	arrGrpElem := cnf.GrpInfoMap[grpId].ArrGrpElems
-	for _, value := range arrGrpElem {
-		if value.Inx == smInx {
-			return value.PkShareBytes, nil
+	arrGrpCurve := cnf.GrpInfoMap[grpId].ArrGrpCurves
+	for _, value := range arrGrpCurve {
+		if strings.Compare(value.CurveType, strconv.Itoa(int(curveType))) == 0 {
+			for _, ps := range value.PkShares {
+				if ps.Inx == smInx {
+					return ps.PkShareBytes, nil
+				}
+			}
 		}
 	}
 
@@ -477,11 +517,11 @@ func (cnf *OsmConf) GetGrpInxByGpk(gpk hexutil.Bytes) (string, error) {
 	cnf.wrLock.RLock()
 
 	for index, value := range cnf.GrpInfoMap {
-
-		if bytes.Compare(value.GrpGpkBytes, gpk) == 0 {
-			return index, nil
+		for _, gc := range value.ArrGrpCurves {
+			if bytes.Compare(gc.Gpk, gpk) == 0 {
+				return index, nil
+			}
 		}
-
 	}
 	panic(fmt.Sprintf("GetGrpInxByGpk error. gpk = %v ", hexutil.Encode(gpk)))
 }

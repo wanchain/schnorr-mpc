@@ -383,6 +383,8 @@ func TestSchnorrCreateGpk4NodesBN(t *testing.T) {
 func TestBnSchnorrMpc_StringToPt(t *testing.T) {
 	// errorstring
 	ptStr := "0x0431c9258ad1f1600b80555476c88c23be67ddc8cc48e75951158b18f59cf7716e27509d200d819eb2195fe532329eea84239ddc8d0e71fdfb3b4e3d3aae9ae487"
+
+	//ptStr := "0x0f7e1b51909341beb13a7b6a3ea6162e610042b5797983ebe8671b4c526a45e20378b478b4ac1d9dd31d05cb80135622217bfa889a43f33c1057cbe5a8f1a6db"
 	smpcer := NewBnSchnorrMpc()
 
 	pt, err := smpcer.StringToPt(ptStr)
@@ -673,8 +675,16 @@ func TestBnSchnorrMpc_EvalByPolyG(t *testing.T) {
 	pk := "0x2ab2e3655ebd58b188f9ed3ba466e3ae39f4f6e9bcbe80e355be8f1ccd222f97175ebb6b000cb43a3aa6e69dd05d1710719559b17983a0067420de99f3c3cd9f"
 	ptsBytes := "0x0b4a75cd5ab9b0aea1cd75504797531f38134b17a6658bb52bcacb6c5a9a9bcf252d7799c95874e4e525e5647424153977a77c8824a50627db6f8b81f3fd891f0050e7fb3f430cf86b9f1befa71fb577f3970929012bb233817eb684491885eb135362ac772a861d80a9e5e787a82254d925c6201111ba1400206fad29aafd1e0bbd96f03ab2fa7454fe3b4f21245c4dfcc5bebd65bf2f91309ef9843d29f01b0ae491219423a2caad81acfaa3bff77022a0b604f0ee51091f0111b5ed6f79a4"
 
-	xvalue := big.NewInt(0).SetBytes(hexutil.MustDecode(pk))
+	fmt.Printf("pk:%s\n", pk)
+	fmt.Printf("ptsBytes:%s\n", ptsBytes)
+
+	pkBytes := hexutil.MustDecode(pk)
+	h := sha256.Sum256(pkBytes)
+	fmt.Printf("h:%s\n", hexutil.Encode(h[:]))
+
+	xvalue := big.NewInt(0).SetBytes(h[:])
 	xvalue = xvalue.Mod(xvalue, bn256.Order)
+	fmt.Printf("x:%s\n", hexutil.Encode(xvalue.Bytes()))
 
 	pts, err := smpcer.SplitPksFromBytes(hexutil.MustDecode(ptsBytes))
 	if err != nil {
@@ -687,5 +697,5 @@ func TestBnSchnorrMpc_EvalByPolyG(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 
-	fmt.Println(smpcer.PtToHexString(ret))
+	fmt.Printf("result:%s", smpcer.PtToHexString(ret))
 }
