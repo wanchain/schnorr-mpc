@@ -12,9 +12,11 @@ import (
 )
 
 const configFilePath = "/home/jacob/mpc_poc/groupInfo_multicurve.json"
+const KeystoreDir = "/home/jacob/mpc_poc/data1/keystore"
 
 //const selfNodeId = "0xed214e8ce499d92a2085e7e6041b4f081c7d29d8770057fc705a131d2918fcdb737e23980bdd11fa86f5d824ea1f8a35333ac6f99246464dd4d19adac9da21d1"
 const selfNodeId = "0xe6d15450a252e2209574a98585785a79c160746fa282a8ab9d4658c381093928eda1f03e70606dd4eee6402389c619ac9f725c63e5b80b947730d31152ce6612"
+const pwdPath = "/home/jacob/mpc_poc/data1/pwd"
 
 const pwd = "123456"
 
@@ -42,6 +44,8 @@ func Initialize() {
 
 	// set nodeId
 	osm.SetSelfNodeId(&nodeId)
+
+	osm.SetPwdPath(pwdPath)
 
 }
 func TestGetThresholdNum(t *testing.T) {
@@ -159,16 +163,28 @@ func TestGetSelfNodeId(t *testing.T) {
 	fmt.Printf("selfNodeId:%v\n", selfNodeId.String())
 }
 
-//func TestGetSelfPrvKey(t *testing.T) {
-//	Initialize()
-//	osm := GetOsmConf()
-//	prv, err := osm.GetSelfPrvKey()
-//	if err != nil {
-//		t.Fatalf("fail:%s", err.Error())
-//	}
-//
-//	fmt.Printf("prvKey:%v\n", hexutil.Encode(prv.D.Bytes()))
-//}
+func TestGetSelfPrvKey(t *testing.T) {
+	Initialize()
+	osm := GetOsmConf()
+
+	am, _, err := makeAccountManagerMock(KeystoreDir)
+	if err != nil {
+		t.Fatalf("fail:%s", err.Error())
+	}
+	osm.SetAccountManger(am)
+	selfNodeId := "0xed214e8ce499d92a2085e7e6041b4f081c7d29d8770057fc705a131d2918fcdb737e23980bdd11fa86f5d824ea1f8a35333ac6f99246464dd4d19adac9da21d1"
+
+	var nodeId discover.NodeID
+	copy(nodeId[:], hexutil.MustDecode(selfNodeId))
+	osm.SetSelfNodeId(&nodeId)
+
+	prv, err := osm.GetSelfPrvKey()
+	if err != nil {
+		t.Fatalf("fail:%s", err.Error())
+	}
+
+	fmt.Printf("prvKey:%v\n", hexutil.Encode(prv.D.Bytes()))
+}
 
 func TestGetGrpElemsInxes(t *testing.T) {
 	Initialize()

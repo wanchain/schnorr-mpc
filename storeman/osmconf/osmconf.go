@@ -842,4 +842,16 @@ func (cnf *OsmConf) GetPrivateShare(curveType uint8) (big.Int, error) {
 	return big.Int{}, nil
 }
 
+func makeAccountManagerMock(keydir string) (*accounts.Manager, string, error) {
+	scryptN := keystore.StandardScryptN
+	scryptP := keystore.StandardScryptP
+
+	// Assemble the account manager and supported backends
+	backends := []accounts.Backend{
+		keystore.NewKeyStore(keydir, scryptN, scryptP),
+	}
+
+	return accounts.NewManager(backends...), "", nil
+}
+
 //////////////// test only end///////////////
