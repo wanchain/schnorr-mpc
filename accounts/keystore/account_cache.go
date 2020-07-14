@@ -176,10 +176,10 @@ func (ac *accountCache) find(a accounts.Account) (accounts.Account, error) {
 	matches := ac.all
 	fmt.Printf("a.Address.String() = %v\n", a.Address.String())
 
-	for i := range matches {
-		fmt.Printf("matches[%v].URL = %v\n", i, matches[i].URL)
-		fmt.Printf("matches[%v].Address = %v\n", i, matches[i].Address.String())
-	}
+	//for i := range matches {
+	//	fmt.Printf("matches[%v].URL = %v\n", i, matches[i].URL)
+	//	fmt.Printf("matches[%v].Address = %v\n", i, matches[i].Address.String())
+	//}
 
 	if (a.Address != common.Address{}) {
 		matches = ac.byAddr[a.Address]

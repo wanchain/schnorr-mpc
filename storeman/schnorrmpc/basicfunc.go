@@ -1,6 +1,7 @@
 package schnorrmpc
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	Rand "crypto/rand"
 	"errors"
@@ -14,7 +15,7 @@ import (
 	"math/big"
 )
 
-const pkLength = 65
+const pkLength = 64
 
 type SkSchnorrMpc struct {
 }
@@ -118,11 +119,20 @@ func (ssm *SkSchnorrMpc) MarshPt(pt mpcprotocol.CurvePointer) ([]byte, error) {
 		log.SyslogErr(errStr)
 		return nil, mpcprotocol.ErrTypeAssertFail
 	}
-	return crypto.FromECDSAPub(ptTemp), nil
+	// public key 64 bytes
+	return crypto.FromECDSAPub(ptTemp)[1:], nil
 }
 
 func (ssm *SkSchnorrMpc) UnMarshPt(b []byte) (mpcprotocol.CurvePointer, error) {
-	return crypto.ToECDSAPub(b), nil
+	if len(b) != 64 && len(b) != 65 {
+		return nil, errors.New("can not UnMarshPt len error")
+	}
+	var ptBytes bytes.Buffer
+	if len(b) == 64 {
+		ptBytes.Write([]byte{4})
+	}
+	ptBytes.Write(b)
+	return crypto.ToECDSAPub(ptBytes.Bytes()), nil
 }
 
 func (ssm *SkSchnorrMpc) PtToHexString(pt mpcprotocol.CurvePointer) string {
@@ -411,7 +421,7 @@ func splitPksFromBytes(buf []byte) ([]*ecdsa.PublicKey, error) {
 	ret := make([]*ecdsa.PublicKey, nPk)
 	for i := 0; i < nPk; i++ {
 		onePkBytes := buf[i*pkLength : (i+1)*pkLength]
-		onePk := crypto.ToECDSAPub(onePkBytes[:])
+		onePk := crypto.ToECDSAPub(schcomm.Add04Prefix(onePkBytes[:]))
 		ret[i] = onePk
 	}
 	return ret, nil

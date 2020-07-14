@@ -334,10 +334,11 @@ func (msStep *MpcSStep) getGPKShare(index uint16) (mpcprotocol.CurvePointer, err
 	if err != nil {
 		return nil, err
 	}
-
+	log.SyslogInfo("..........MpcSStep getGPKShare", "grpIdString", grpIdString, "index", index, "CurveType", msStep.CurveType())
 	gpkShareBytes, err := osmconf.GetOsmConf().GetPKShareBytes(grpIdString, index, msStep.CurveType())
 	if err != nil {
 		return nil, err
 	}
+	log.SyslogInfo("..........MpcSStep getGPKShare", "gpkShareBytes", hexutil.Encode(gpkShareBytes))
 	return msStep.schnorrMpcer.UnMarshPt(gpkShareBytes)
 }

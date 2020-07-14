@@ -133,7 +133,7 @@ func TestGetPKShareBytes(t *testing.T) {
 		fmt.Printf("pk share :%s\n", smpc.PtToHexString(pk))
 	}
 
-	pkBytes, err = osm.GetPKShareBytes(grpId, 0, mpcprotocol.BN256Curve)
+	pkBytes, err = osm.GetPKShareBytes(grpId, 1, mpcprotocol.BN256Curve)
 	if err != nil {
 		t.Fatalf("fail:%s", err.Error())
 	}

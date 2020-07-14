@@ -461,3 +461,9 @@ func (mpcCtx *MpcContext) SetStepSchnorrMPCer() {
 		step.SetSchnorrMpcer(mpcCtx.schnorrMPCer)
 	}
 }
+
+func (mpcCtx *MpcContext) SetStepCurveType(ct uint16) {
+	for _, step := range mpcCtx.MpcSteps {
+		step.SetCurveType(ct)
+	}
+}

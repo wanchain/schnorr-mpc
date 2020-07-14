@@ -15,7 +15,6 @@ import (
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	schcomm "github.com/wanchain/schnorr-mpc/storeman/schnorrcomm"
-	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"io/ioutil"
 	"math/big"
@@ -122,8 +121,11 @@ func (cnf *OsmConf) LoadCnf(confPath string) error {
 
 	defer cnf.wrLock.Unlock()
 
+	var err error
 	if confPath == EmptyString {
-		panic("confPath is empty")
+		err = errors.New("confPath is empty")
+		log.SyslogErr(err.Error())
+		return err
 	}
 	ofcContent := OsmFileContent{}
 
@@ -134,13 +136,12 @@ func (cnf *OsmConf) LoadCnf(confPath string) error {
 	b, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		log.SyslogErr("LoadCnf.ReadFile", "error", err.Error())
-		panic(err.Error())
+		return err
 	}
 	errUnmarshal := json.Unmarshal(b, &ofcContent)
 	if errUnmarshal != nil {
 		log.SyslogErr("LoadCnf.Unmarshal", "error", errUnmarshal.Error())
-		fmt.Println(errUnmarshal.Error())
-		panic(errUnmarshal.Error())
+		return errUnmarshal
 	}
 
 	// save configure file content to the OsmConf struct.
@@ -166,7 +167,18 @@ func (cnf *OsmConf) LoadCnf(confPath string) error {
 
 			Inx, _ := strconv.Atoi(ge.Inx)
 			gii.ArrGrpElems[i].Inx = uint16(Inx)
-			gii.ArrGrpElems[i].WorkingPk = crypto.ToECDSAPub(ge.WorkingPk)
+
+			var wpkBytes []byte
+			if len(ge.WorkingPk) == 64 {
+				wpkBytes = schcomm.Add04Prefix(ge.WorkingPk)
+			} else {
+				if len(ge.WorkingPk) == 65 {
+					wpkBytes = ge.WorkingPk
+				}
+			}
+
+			gii.ArrGrpElems[i].WorkingPk = crypto.ToECDSAPub(wpkBytes)
+			//gii.ArrGrpElems[i].WorkingPk = crypto.ToECDSAPub(ge.WorkingPk)
 
 			nodeId := discover.NodeID{}
 			copy(nodeId[:], ge.NodeId[:])
@@ -201,7 +213,8 @@ func (cnf *OsmConf) LoadCnf(confPath string) error {
 
 func (cnf *OsmConf) FreshCnf(confPath string) error {
 	if confPath == EmptyString {
-		panic("confPath is empty")
+		log.SyslogErr("FreshCnf confPath is empty")
+		return errors.New("FreshCnf confPath is empty")
 	}
 	return cnf.LoadCnf(confPath)
 }
@@ -211,7 +224,10 @@ func (cnf *OsmConf) checkGrpId(grpId string) bool {
 	cnf.wrLock.RLock()
 
 	if _, ok := cnf.GrpInfoMap[grpId]; !ok {
-		panic(fmt.Sprintf("checkGrpId: groupId does not exist in storeman group. grpId %v", grpId))
+
+		errStr := fmt.Sprintf("checkGrpId: groupId does not exist in storeman group. grpId %v", grpId)
+		log.SyslogErr("checkGrpId", "err", errStr)
+		return false
 	} else {
 		return true
 	}
@@ -249,7 +265,9 @@ func (cnf *OsmConf) GetPK(grpId string, smInx uint16) (*ecdsa.PublicKey, error) 
 			return value.WorkingPk, nil
 		}
 	}
-	panic(fmt.Sprintf("GetPK:Not find storeman, smInx %v", smInx))
+	errStr := fmt.Sprintf("GetPK:Not find storeman, smInx %v", smInx)
+	log.SyslogErr("OsmConf.GetPK", "err", errStr)
+	return nil, errors.New(errStr)
 }
 
 func (cnf *OsmConf) GetPKByNodeId(grpId string, nodeId *discover.NodeID) (*ecdsa.PublicKey, error) {
@@ -258,8 +276,9 @@ func (cnf *OsmConf) GetPKByNodeId(grpId string, nodeId *discover.NodeID) (*ecdsa
 
 	cnf.checkGrpId(grpId)
 	if nodeId == nil {
-		log.SyslogErr("GetPKByNodeId, nodeId is null")
-		panic("GetPKByNodeId, nodeId is null")
+		errStr := fmt.Sprintf("GetPKByNodeId, nodeId is null")
+		log.SyslogErr("OsmConf.GetPKByNodeId", "err", errStr)
+		return nil, errors.New(errStr)
 	}
 	arrGrpElem := cnf.GrpInfoMap[grpId].ArrGrpElems
 	for _, value := range arrGrpElem {
@@ -267,8 +286,10 @@ func (cnf *OsmConf) GetPKByNodeId(grpId string, nodeId *discover.NodeID) (*ecdsa
 			return value.WorkingPk, nil
 		}
 	}
-	panic(fmt.Sprintf("GetPKByNodeId:Not find storeman, nodeId %v", *nodeId))
 
+	errStr := fmt.Sprintf("GetPKByNodeId:Not find storeman, nodeId %v", *nodeId)
+	log.SyslogErr("OsmConf.GetPKByNodeId", "err", errStr)
+	return nil, errors.New(errStr)
 }
 
 // get gpk share (public share)
@@ -289,7 +310,9 @@ func (cnf *OsmConf) GetPKShareBytes(grpId string, smInx uint16, curveType uint16
 		}
 	}
 
-	panic(fmt.Sprintf("GetPKShare:Not find storeman, smInx %v", smInx))
+	errStr := fmt.Sprintf("GetPKShare:Not find storeman, smInx %v", smInx)
+	log.SyslogErr("OsmConf.GetPKShareBytes", "err", errStr)
+	return nil, errors.New(errStr)
 }
 
 //-----------------------get self---------------------------------
@@ -306,7 +329,9 @@ func (cnf *OsmConf) getSelfPubKey() (*ecdsa.PublicKey, error) {
 			}
 		}
 	}
-	panic(fmt.Sprintf("GetSelfPubKey:Not find storeman, selfNodeId %v", *cnf.SelfNodeId))
+	errStr := fmt.Sprintf("GetSelfPubKey:Not find storeman, selfNodeId %v", *cnf.SelfNodeId)
+	log.SyslogErr("OsmConf.getSelfPubKey", "err", errStr)
+	return nil, errors.New(errStr)
 }
 
 func (cnf *OsmConf) GetSelfInx(grpId string) (uint16, error) {
@@ -332,6 +357,10 @@ func (cnf *OsmConf) GetSelfPrvKey() (*ecdsa.PrivateKey, error) {
 		log.SyslogErr("OsmConf", "GetSelfPrvKey.GetSelfPubKey", err.Error())
 		return nil, err
 	}
+	if pk == nil {
+		log.SyslogErr("OsmConf GetSelfPrvKey pk == nil")
+		return nil, err
+	}
 	err = schcomm.CheckPK(pk)
 	if err != nil {
 		log.SyslogErr("OsmConf", "GetSelfPrvKey.CheckPK", err.Error())
@@ -340,8 +369,11 @@ func (cnf *OsmConf) GetSelfPrvKey() (*ecdsa.PrivateKey, error) {
 	address, err := pkToAddr(crypto.FromECDSAPub(pk))
 	log.SyslogInfo("GetSelfPrvKey", "pk", hexutil.Encode(crypto.FromECDSAPub(pk)), "address", address.String())
 	if err != nil {
-		panic("Error in pk to address")
-		return nil, err
+
+		errStr := fmt.Sprintf("Error in pk to address")
+		log.SyslogErr("OsmConf.GetSelfPrvKey", "err", errStr)
+		return nil, errors.New(errStr)
+
 	}
 
 	ks := cnf.AccMng.Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
@@ -349,8 +381,11 @@ func (cnf *OsmConf) GetSelfPrvKey() (*ecdsa.PrivateKey, error) {
 	account, err = ks.Find(account)
 	if err != nil {
 		//find account from keystore fail
-		panic("find account from keystore fail")
-		return nil, err
+
+		errStr := fmt.Sprintf("find account from keystore fail")
+		log.SyslogErr("OsmConf.GetSelfPrvKey", "err", errStr)
+		return nil, errors.New(errStr)
+
 	}
 
 	var keyjson []byte
@@ -359,8 +394,9 @@ func (cnf *OsmConf) GetSelfPrvKey() (*ecdsa.PrivateKey, error) {
 
 	if err != nil {
 		// get account keyjson fail
-		panic("find account from keystore fail")
-		return nil, err
+		errStr := fmt.Sprintf("ReadFile keystore file fail")
+		log.SyslogErr("OsmConf.GetSelfPrvKey", "err", errStr)
+		return nil, errors.New(errStr)
 	}
 
 	wkPassword, _ := cnf.GetWkPwd(address.String())
@@ -368,9 +404,10 @@ func (cnf *OsmConf) GetSelfPrvKey() (*ecdsa.PrivateKey, error) {
 	key, err := keystore.DecryptKey(keyjson, wkPassword)
 	if err != nil {
 		// decrypt account keyjson fail
-		log.Info("GetSelfPrvKey", "DecryptKey err ", err)
-		panic("DecryptKey account from keystore fail")
-		return nil, err
+		errStr := fmt.Sprintf("DecryptKey keystore file fail error %s", err.Error())
+		log.SyslogErr("OsmConf.GetSelfPrvKey", "err", errStr)
+		return nil, errors.New(errStr)
+
 	}
 	return key.PrivateKey, nil
 }
@@ -380,8 +417,9 @@ func (cnf *OsmConf) SetSelfNodeId(id *discover.NodeID) error {
 	cnf.wrLock.Lock()
 
 	if id == nil {
-		log.SyslogErr("GetPKShareByNodeId, nodeId is null")
-		panic("SetSelfNodeId, nodeId is null")
+		errStr := fmt.Sprintf("SetSelfNodeId, nodeId is null")
+		log.SyslogErr("OsmConf.SetSelfNodeId", "err", errStr)
+		return errors.New(errStr)
 	}
 	log.SyslogInfo(fmt.Sprintf(">>>>>>>SetSelfNodeId %v \n", id.String()))
 	cnf.SelfNodeId = id
@@ -392,7 +430,9 @@ func (cnf *OsmConf) SetSelfNodeId(id *discover.NodeID) error {
 func (cnf *OsmConf) SetAccountManger(accMng *accounts.Manager) error {
 
 	if accMng == nil {
-		panic(fmt.Sprintf("SetAccountManger accMng is null"))
+		errStr := fmt.Sprintf("SetAccountManger accMng is null")
+		log.SyslogErr("OsmConf.SetAccountManger", "err", errStr)
+		return errors.New(errStr)
 	}
 	cnf.AccMng = accMng
 	return nil
@@ -400,7 +440,9 @@ func (cnf *OsmConf) SetAccountManger(accMng *accounts.Manager) error {
 
 func (cnf *OsmConf) SetFilePath(path string) error {
 	if path == EmptyString {
-		panic(fmt.Sprintf("SetFilePath path is empty"))
+		errStr := fmt.Sprintf("SetFilePath path is empty")
+		log.SyslogErr("OsmConf.SetFilePath", "err", errStr)
+		return errors.New(errStr)
 	}
 	cnf.confPath = path
 	return nil
@@ -422,15 +464,25 @@ func (cnf *OsmConf) GetWkPwd(address string) (string, error) {
 
 func (cnf *OsmConf) GetPwd(fileName string) (string, error) {
 	if fileName == "" {
-		panic(fmt.Sprintf("password file [:%v] is not existing", fileName))
+
+		errStr := fmt.Sprintf("password file [:%v] is not existing", fileName)
+		log.SyslogErr("OsmConf.GetPwd", "err", errStr)
+		return "", errors.New(errStr)
+
 	}
 	text, err := ioutil.ReadFile(fileName)
 	if err != nil {
-		panic(fmt.Sprintf("Failed to read password file:[%v]", fileName))
+		errStr := fmt.Sprintf("Failed to read password file:[%v]", fileName)
+		log.SyslogErr("OsmConf.GetPwd", "err", errStr)
+		return "", errors.New(errStr)
+
 	}
 	lines := strings.Split(string(text), "\n")
 	if len(lines) == 0 {
-		panic(fmt.Sprintf("empty password [%v]", fileName))
+		errStr := fmt.Sprintf("empty password [%v]", fileName)
+		log.SyslogErr("OsmConf.GetPwd", "err", errStr)
+		return "", errors.New(errStr)
+
 	}
 	// Sanitise DOS line endings.
 	for i := range lines {
@@ -441,7 +493,10 @@ func (cnf *OsmConf) GetPwd(fileName string) (string, error) {
 
 func (cnf *OsmConf) SetPwdPath(path string) error {
 	if path == EmptyString {
-		panic(fmt.Sprintf("SetFilePath path is empty"))
+
+		errStr := fmt.Sprintf("SetFilePath path is empty")
+		log.SyslogErr("OsmConf.SetPwdPath", "err", errStr)
+		return errors.New(errStr)
 	}
 	cnf.pwdPath = path
 	cnf.buildPwdMap(path)
@@ -508,7 +563,11 @@ func (cnf *OsmConf) getGrpItem(grpId string, smInx uint16) (*GrpElem, error) {
 			return &grpElem, nil
 		}
 	}
-	panic(fmt.Sprintf("getGrpItem error. grpId = %v,smInx=%v", grpId, smInx))
+
+	errStr := fmt.Sprintf("getGrpItem error. grpId = %v,smInx=%v", grpId, smInx)
+	log.SyslogErr("OsmConf.getGrpItem", "err", errStr)
+	return nil, errors.New(errStr)
+
 }
 
 func (cnf *OsmConf) GetGrpInxByGpk(gpk hexutil.Bytes) (string, error) {
@@ -523,7 +582,10 @@ func (cnf *OsmConf) GetGrpInxByGpk(gpk hexutil.Bytes) (string, error) {
 			}
 		}
 	}
-	panic(fmt.Sprintf("GetGrpInxByGpk error. gpk = %v ", hexutil.Encode(gpk)))
+
+	errStr := fmt.Sprintf("GetGrpInxByGpk error. gpk = %v ", hexutil.Encode(gpk))
+	log.SyslogErr("OsmConf.GetGrpInxByGpk", "err", errStr)
+	return EmptyString, errors.New(errStr)
 }
 
 //-----------------------others ---------------------------------
@@ -551,8 +613,11 @@ func (cnf *OsmConf) GetInxByNodeId(grpId string, id *discover.NodeID) (uint16, e
 
 	cnf.checkGrpId(grpId)
 	if id == nil {
-		log.SyslogInfo("GetInxByNodeId id is null")
-		panic("GetInxByNodeId id is null")
+
+		errStr := fmt.Sprintf("GetInxByNodeId id is null")
+		log.SyslogErr("OsmConf.GetInxByNodeId", "err", errStr)
+		return 0, errors.New(errStr)
+
 	}
 	arrGrpElem := cnf.GrpInfoMap[grpId].ArrGrpElems
 	for _, value := range arrGrpElem {
@@ -561,7 +626,10 @@ func (cnf *OsmConf) GetInxByNodeId(grpId string, id *discover.NodeID) (uint16, e
 		}
 	}
 
-	panic(fmt.Sprintf("GetInxByNodeId not find index by nodeId, id:%v", id.String()))
+	errStr := fmt.Sprintf("GetInxByNodeId not find index by nodeId, id:%v", id.String())
+	log.SyslogErr("OsmConf.GetInxByNodeId", "err", errStr)
+	return 0, errors.New(errStr)
+
 }
 
 func (cnf *OsmConf) GetXValueByNodeId(grpId string, id *discover.NodeID, smpcer mpcprotocol.SchnorrMPCer) (*big.Int, error) {
@@ -570,7 +638,11 @@ func (cnf *OsmConf) GetXValueByNodeId(grpId string, id *discover.NodeID, smpcer 
 	cnf.wrLock.RLock()
 	if id == nil {
 		log.SyslogInfo("GetXValueByNodeId id is null")
-		panic("GetXValueByNodeId id is null")
+
+		errStr := fmt.Sprintf("GetXValueByNodeId id is null")
+		log.SyslogErr("OsmConf.GetXValueByNodeId", "err", errStr)
+		return nil, errors.New(errStr)
+
 	}
 	cnf.checkGrpId(grpId)
 	index, _ := cnf.GetInxByNodeId(grpId, id)
@@ -590,7 +662,10 @@ func (cnf *OsmConf) GetNodeIdByIndex(grpId string, index uint16) (*discover.Node
 		}
 	}
 
-	panic(fmt.Sprintf("node id not found, grpId = %v, index = %v", grpId, index))
+	errStr := fmt.Sprintf("node id not found, grpId = %v, index = %v", grpId, index)
+	log.SyslogErr("OsmConf.GetNodeIdByIndex", "err", errStr)
+	return nil, errors.New(errStr)
+
 }
 
 func (cnf *OsmConf) GetXValueByIndex(grpId string, index uint16, smpcer mpcprotocol.SchnorrMPCer) (*big.Int, error) {
@@ -709,7 +784,7 @@ func Difference(slice1, slice2 []uint16) []uint16 {
 }
 
 func pkToAddr(PkBytes []byte) (common.Address, error) {
-	if len(PkBytes) != schnorrmpc.NewSkSchnorrMpc().PtByteLen() {
+	if len(PkBytes) != 65 {
 		return common.Address{}, errors.New("invalid pk address in osmconf.go")
 	}
 	pk := crypto.ToECDSAPub(PkBytes[:])

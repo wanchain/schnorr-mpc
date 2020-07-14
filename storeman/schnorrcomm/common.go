@@ -1,6 +1,7 @@
 package schnorrcomm
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	Rand "crypto/rand"
 	"github.com/wanchain/schnorr-mpc/common"
@@ -75,4 +76,11 @@ func UintRand(MaxValue uint64) (uint64, error) {
 func BytesToAdd(pubBytes []byte) (common.Address, error) {
 	addr := common.BytesToAddress(crypto.Keccak256(pubBytes[0:])[12:])
 	return addr, nil
+}
+
+func Add04Prefix(b []byte) []byte {
+	var ret bytes.Buffer
+	ret.Write([]byte{4})
+	ret.Write(b)
+	return ret.Bytes()
 }

@@ -287,15 +287,15 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 		}
 	}
 
-	//var smpc mpcprotocol.SchnorrMPCer
-	//switch int(curveType) {
-	//case mpcprotocol.SK256Curve:
-	//	smpc = schnorrmpc.NewSkSchnorrMpc()
-	//case mpcprotocol.BN256Curve:
-	//	smpc = schnorrmpcbn.NewBnSchnorrMpc()
-	//default:
-	//	smpc = schnorrmpc.NewSkSchnorrMpc()
-	//}
+	var smpc mpcprotocol.SchnorrMPCer
+	switch int(curveType) {
+	case mpcprotocol.SK256Curve:
+		smpc = schnorrmpc.NewSkSchnorrMpc()
+	case mpcprotocol.BN256Curve:
+		smpc = schnorrmpcbn.NewBnSchnorrMpc()
+	default:
+		smpc = schnorrmpc.NewSkSchnorrMpc()
+	}
 
 	var address common.Address
 	var gpkString string
@@ -303,9 +303,14 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 		for _, item := range preSetValue {
 			if item.Key == mpcprotocol.MpcGpkBytes {
 				//todo for bn256
+				pt, err := smpc.UnMarshPt(item.ByteValue)
+				if err != nil {
+					if !schcomm.PocTest {
+						return []byte{}, err
+					}
+				}
 				//address, err = schnorrmpc.PkToAddress(item.ByteValue)
-
-				address, err = schcomm.BytesToAdd(item.ByteValue)
+				address, err = smpc.PtToAddress(pt)
 				if err != nil {
 					if !schcomm.PocTest {
 						return []byte{}, err
@@ -462,7 +467,24 @@ func (mpcServer *MpcDistributor) createMpcCtx(mpcMessage *mpcprotocol.MpcMessage
 		//add := common.Address{}
 		//copy(add[:], address)
 
-		add, err := schnorrmpc.PkToAddress(address[:])
+		var smpc mpcprotocol.SchnorrMPCer
+		switch int(curveType) {
+		case mpcprotocol.SK256Curve:
+			smpc = schnorrmpc.NewSkSchnorrMpc()
+		case mpcprotocol.BN256Curve:
+			smpc = schnorrmpcbn.NewBnSchnorrMpc()
+		default:
+			smpc = schnorrmpc.NewSkSchnorrMpc()
+		}
+
+		pt, err := smpc.UnMarshPt(address[:])
+		if err != nil {
+			if !schcomm.PocTest {
+				return err
+			}
+		}
+
+		add, err := smpc.PtToAddress(pt)
 		if err != nil {
 			if !schcomm.PocTest {
 				return err
