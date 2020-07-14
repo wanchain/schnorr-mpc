@@ -231,7 +231,7 @@ func TestSchnorrCreateGpk4NodesBN(t *testing.T) {
 	x := make([]big.Int, Nstm)
 	y := make([]big.Int, Nstm)
 	for i := 0; i < Nstm; i++ {
-		h := sha256.Sum256(crypto.FromECDSAPub(Pubkey[i]))
+		h := sha256.Sum256(crypto.FromECDSAPub(Pubkey[i])[1:])
 
 		y[i].SetBytes(h[:])
 		x[i].SetBytes(h[:])

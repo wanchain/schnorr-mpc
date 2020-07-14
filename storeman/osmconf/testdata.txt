@@ -1,0 +1,137 @@
+sec 256   		
+    		
+=== RUN   TestSchnorrCreateGpk4Nodes
+gpk: 0x82e5d4ad633e9e028b283e52338e4fe4c5467091fd4f5d9aec74cb78c25738be1154a9b1cff44b7fe935e774da7a9fad873b76323573138bc361a9cfdb6a20d2 
+x[0]: 0x46f79b62a5e10f3c607ffebb23cbcfc83c12eb804907b44d583486cf53ae71f3 
+gpkshare[0]: 0x04f716e789cd79d106343b8e9c3ac494865d02241337cf6ce8df4df6548ec1eccc900963c639664b1667df09d322a8e5c8a9185a09742f96b204b4fcc59dae7fab 
+gskshare[0]: 0x09f49a365fea55e3d8241510d97a4e1e68582db38719d88dcf497a15731cf151 
+
+x[1]: 0x0f9e72ae0f668e7cf1ae475db8b4ebea7e207c419f01f5d1ca32010ef6caeb3b 
+gpkshare[1]: 0x04d4c19e1b392d4bf86eaae5ff0df5a36a6f356945fc4bbe1550bb6676a4c857027481164e1cc5e2c82e0c94327d359c25010ea4761e626409249f11ef78917e2d 
+gskshare[1]: 0xd7a1fd5acd23d2bd8b0ec0526686623c9b1d9d6d083b52f6dbc730b60db99cf8 
+
+x[2]: 0x8f0e7d167cb4a1b16015c9c7b42c22a345db9fd8d0e9feb9e0654ba06c47d04a 
+gpkshare[2]: 0x04a20a1ea3930da9ef5205323b57e80e04a790e744e5cb9fd20889f5f4f845d1d506c7c429747987048ec8801b35a6949736cc5b24c06fd2c151e650e4d166cefc 
+gskshare[2]: 0x5f5df44ef5540f264f1d15172ab19218ce90ab23821f38715b3d040fcc44fbca 
+
+x[3]: 0x4c4f6f7701b999896659a3218b7dcbd9c960c90eb24e4ce152f398ee69b7784b 
+gpkshare[3]: 0x047b5707c17c1e7e181c99e028370d79cf80dc83e4ce7ed9d18807b5d66d373bc9b18aa47209a1d8c2fc163ed72740c74e90868419a2fad12d9c9e0aec52942c05 
+gskshare[3]: 0x5118cb40b295744ccdbf0e05f31f3876e448f36d58288d2a18e49e99c5aa1bff 
+
+--- PASS: TestSchnorrCreateGpk4Nodes (0.00s)
+PASS
+
+storeman.signData({pk:"0x82e5d4ad633e9e028b283e52338e4fe4c5467091fd4f5d9aec74cb78c25738be1154a9b1cff44b7fe935e774da7a9fad873b76323573138bc361a9cfdb6a20d2",data:"0x1234",Curve:"0x00"})
+
+
+
+bn 256
+
+=== RUN   TestSchnorrCreateGpk4NodesBN
+gpk: 0x1761e90a6287d8e771373074626befaf4a46e6e3a2d45f8b7a2ec5361f1de7a102d43cd0d14e5a438d754c01d0d94cf2a8ff8fd9df49c9f7291975c831bcb983 
+workingPk[0]:0x0425fa6a4190ddc87d9f9dd986726cafb901e15c21aafd2ed729efed1200c73de89f1657726631d29733f4565a97dc00200b772b4bc2f123a01e582e7e56b80cf8
+x[0]: 0x16934cefc4af6f12a82fb904a24a776b13df0337cf4e43bc1452913b63ae71f2 
+y[0] before mod: 0x46f79b62a5e10f3c607ffebb23cbcfc83c12eb804907b44d583486cf53ae71f3 
+gpkshare[0]: 0x17a4f5c4add16108a4ab16fc1635635af0df9798176459ca3cd58a15ceb64d4808651a691e5f89ed012ee076bc39bff193064b852ce11741f0110a81c6d876d7 
+gskshare[0]: 0x5a7923a1eca58361ba627cb39e83b6e26fc514090d429df4f296b3c9125c32d6 
+
+workingPk[1]:0x04be3b7fd88613dc272a36f4de570297f5f33b87c26de3060ad04e2ea697e13125a2454acd296e1879a7ddd0084d9e4e724fca9ef610b21420978476e2632a1782
+x[1]: 0x0f9e72ae0f668e7cf1ae475db8b4ebea7e207c419f01f5d1ca32010ef6caeb3b 
+y[1] before mod: 0x0f9e72ae0f668e7cf1ae475db8b4ebea7e207c419f01f5d1ca32010ef6caeb3b 
+gpkshare[1]: 0x21d6c67187a5b0ea57aea16564c822a02e0594f63f8cb8c766f369af1df5ef06155493e41cff2cdd2c889d6f86643b36ffa096437d0c8b078afeb2559cb5067b 
+gskshare[1]: 0x70f5fdceb9d3d7442628479d8cbd9da3abe28a08a88f6477084740bd704630a4 
+
+workingPk[2]:0x0495e8fd461c37f1db5da62bfbee2ad305d77e57fbef917ec8109e6425e942fb60ddc28b1edfdbcda1aa5ace3160b458b9d3d5b1fe306b4d09a030302a08e2db93
+x[2]: 0x2e45e030ba51615def753e5ab12971e8f573cf47dd771d9758a160788c47d048 
+y[2] before mod: 0x8f0e7d167cb4a1b16015c9c7b42c22a345db9fd8d0e9feb9e0654ba06c47d04a 
+gpkshare[2]: 0x29e8f30b8d4b4877786f17da375024b4c55bc2cbaaf9b8b7c9357001d45245bc1f4ae822a2acbbf4fb1e56332b21b0e3d632a16e6ffaa66406472b61272cd70e 
+gskshare[2]: 0x48852ab57a33421453103162023e03d500d7c48b3a28a5704ae4ba87a311f471 
+
+workingPk[3]:0x04ccd16e96a70a5b496ff1cec869902b6a8ffa00715897937518f1c9299726f7090bc36cc23c1d028087eb0988c779663e996391f290631317fc22f84fa9bf2467
+x[3]: 0x1beb21042087f95fae095d6b09fc737ca12ce0c63894dc500f11a35a79b7784a 
+y[3] before mod: 0x4c4f6f7701b999896659a3218b7dcbd9c960c90eb24e4ce152f398ee69b7784b 
+gpkshare[3]: 0x2ed2b939573e814a09a1ddba6df2d9562dcba37f1d3454ad73bb4759fd8f68b917f60716ad9f1d3d6eb27339e43ed1a9346200d9ef43230fa681bd8806a260cb 
+gskshare[3]: 0x560d4b7454827624a47da45970b071f0a7baf0975ac88345855baa3200820f48 
+
+storeman.signData({pk:"0x1761e90a6287d8e771373074626befaf4a46e6e3a2d45f8b7a2ec5361f1de7a102d43cd0d14e5a438d754c01d0d94cf2a8ff8fd9df49c9f7291975c831bcb983",data:"0x4321",Curve:"0x01"})
+
+
+
+
+{
+    "grpInfo":[
+        {
+            "grpId":"0x0000000000000000000000000000000000000031353839393533323738313235",
+            "leaderInx":"0",
+            "totalNumber":"4",
+            "thresholdNumber":"3",
+            "grpElms":[
+                {
+                    "index":"0",
+                    "workingPk":"0x25fa6a4190ddc87d9f9dd986726cafb901e15c21aafd2ed729efed1200c73de89f1657726631d29733f4565a97dc00200b772b4bc2f123a01e582e7e56b80cf8",
+                    "nodeId":"0xed214e8ce499d92a2085e7e6041b4f081c7d29d8770057fc705a131d2918fcdb737e23980bdd11fa86f5d824ea1f8a35333ac6f99246464dd4d19adac9da21d1"
+                },
+                {
+                    "index":"1",
+                    "workingPk":"0xbe3b7fd88613dc272a36f4de570297f5f33b87c26de3060ad04e2ea697e13125a2454acd296e1879a7ddd0084d9e4e724fca9ef610b21420978476e2632a1782",
+                    "nodeId":"0xe6d15450a252e2209574a98585785a79c160746fa282a8ab9d4658c381093928eda1f03e70606dd4eee6402389c619ac9f725c63e5b80b947730d31152ce6612"
+                },
+                {
+                    "index":"2",
+                    "workingPk":"0x95e8fd461c37f1db5da62bfbee2ad305d77e57fbef917ec8109e6425e942fb60ddc28b1edfdbcda1aa5ace3160b458b9d3d5b1fe306b4d09a030302a08e2db93",
+                    "nodeId":"0xf938ff60f1e8ebea4c229d894c98418e90c149814ed7909c3dd47cb015cd1f15d71722121a0cc646a0576e29372bfbd6037fe2c5b6ed68214da50318eebb13e1"
+                },
+                {
+                    "index":"3",
+                    "workingPk":"0xccd16e96a70a5b496ff1cec869902b6a8ffa00715897937518f1c9299726f7090bc36cc23c1d028087eb0988c779663e996391f290631317fc22f84fa9bf2467",
+                    "nodeId":"0x3d7346cf5ac1dfa9beace3f93b215acc8cf4bb2b1653f50649e803a60e91c7dc41d9f491afbc0199633caaa298233139d53ac64556c51ea654d52eca70b5e9c7"
+                }],
+             "grpCurves":[
+                		{
+                				"gpk":"0x82e5d4ad633e9e028b283e52338e4fe4c5467091fd4f5d9aec74cb78c25738be1154a9b1cff44b7fe935e774da7a9fad873b76323573138bc361a9cfdb6a20d2",
+                				"curveType":"0",
+                				"pkShares":[
+                						{
+                							"index":"0",
+                							"pkShare":"0xf716e789cd79d106343b8e9c3ac494865d02241337cf6ce8df4df6548ec1eccc900963c639664b1667df09d322a8e5c8a9185a09742f96b204b4fcc59dae7fab"
+                						},
+                						{
+                							"index":"1",
+                							"pkShare":"0xd4c19e1b392d4bf86eaae5ff0df5a36a6f356945fc4bbe1550bb6676a4c857027481164e1cc5e2c82e0c94327d359c25010ea4761e626409249f11ef78917e2d"
+                						},
+                						{
+                							"index":"2",
+                							"pkShare":"0xa20a1ea3930da9ef5205323b57e80e04a790e744e5cb9fd20889f5f4f845d1d506c7c429747987048ec8801b35a6949736cc5b24c06fd2c151e650e4d166cefc"
+                						},
+                						{
+                							"index":"3",
+                							"pkShare":"0x7b5707c17c1e7e181c99e028370d79cf80dc83e4ce7ed9d18807b5d66d373bc9b18aa47209a1d8c2fc163ed72740c74e90868419a2fad12d9c9e0aec52942c05"
+                						}
+                					]
+                		},
+                		{
+                				"gpk":"0x1761e90a6287d8e771373074626befaf4a46e6e3a2d45f8b7a2ec5361f1de7a102d43cd0d14e5a438d754c01d0d94cf2a8ff8fd9df49c9f7291975c831bcb983",               				
+                				"curveType":"1",
+                				"pkShares":[
+                						{
+                							"index":"0",
+                							"pkShare":"0x17a4f5c4add16108a4ab16fc1635635af0df9798176459ca3cd58a15ceb64d4808651a691e5f89ed012ee076bc39bff193064b852ce11741f0110a81c6d876d7"
+                						},
+                						{
+                							"index":"1",
+                							"pkShare":"0x21d6c67187a5b0ea57aea16564c822a02e0594f63f8cb8c766f369af1df5ef06155493e41cff2cdd2c889d6f86643b36ffa096437d0c8b078afeb2559cb5067b"
+                						},
+                						{
+                							"index":"2",
+                							"pkShare":"0x29e8f30b8d4b4877786f17da375024b4c55bc2cbaaf9b8b7c9357001d45245bc1f4ae822a2acbbf4fb1e56332b21b0e3d632a16e6ffaa66406472b61272cd70e"
+                						},
+                						{
+                							"index":"3",
+                							"pkShare":"0x2ed2b939573e814a09a1ddba6df2d9562dcba37f1d3454ad73bb4759fd8f68b917f60716ad9f1d3d6eb27339e43ed1a9346200d9ef43230fa681bd8806a260cb"
+                						}
+                					]
+                		}
+                	]
+        }        
+      ]
+}
