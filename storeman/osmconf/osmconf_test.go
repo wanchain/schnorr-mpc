@@ -443,4 +443,16 @@ func TestPtToAddress(t *testing.T) {
 		addr:0xd4C2EC4ECbab27e78dA4a53153635D7efD5c11c
 	*/
 
+	smpc := schnorrmpc.NewSkSchnorrMpc()
+	smpcBn := schnorrmpcbn.NewBnSchnorrMpc()
+
+	pt1, _ := smpc.StringToPt("0x8e5d083446a88b52336a567b2076acd32f4b07e4cd63269d15fb65f6de24c2eeeaab93d49f00c1edfb5f04dbcba13c88167b7c8ff72d52a7865fea7a97831a66")
+	if smpc.IsOnCurve(pt1) {
+		fmt.Printf("%v on sec 256 curve\n", "0x8e5d083446a88b52336a567b2076acd32f4b07e4cd63269d15fb65f6de24c2eeeaab93d49f00c1edfb5f04dbcba13c88167b7c8ff72d52a7865fea7a97831a66")
+	}
+
+	pt2, _ := smpcBn.StringToPt("0x2b5b641aba435cf4b2efe2fec472b2f5f582b4fa6ab6628b5d424cb6f97571ed23682deff501fef58e9aac607a6635ea2a4659bcc5fd07c5d775830eb30146ab")
+	if smpcBn.IsOnCurve(pt2) {
+		fmt.Printf("%v on bn 256 curve\n", "0x2b5b641aba435cf4b2efe2fec472b2f5f582b4fa6ab6628b5d424cb6f97571ed23682deff501fef58e9aac607a6635ea2a4659bcc5fd07c5d775830eb30146ab")
+	}
 }

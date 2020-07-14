@@ -388,7 +388,10 @@ func StringtoPk(str string) (*ecdsa.PublicKey, error) {
 	if len(pkBytes) != pkLength {
 		return nil, errors.New(fmt.Sprintf("len(pkBytes)= %v error. ", len(pkBytes)))
 	}
-	pk := crypto.ToECDSAPub(pkBytes)
+
+	pk65Bytes := schcomm.Add04Prefix(pkBytes)
+
+	pk := crypto.ToECDSAPub(pk65Bytes)
 	return pk, nil
 }
 
