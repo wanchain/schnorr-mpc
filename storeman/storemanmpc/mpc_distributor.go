@@ -287,13 +287,25 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 		}
 	}
 
+	//var smpc mpcprotocol.SchnorrMPCer
+	//switch int(curveType) {
+	//case mpcprotocol.SK256Curve:
+	//	smpc = schnorrmpc.NewSkSchnorrMpc()
+	//case mpcprotocol.BN256Curve:
+	//	smpc = schnorrmpcbn.NewBnSchnorrMpc()
+	//default:
+	//	smpc = schnorrmpc.NewSkSchnorrMpc()
+	//}
+
 	var address common.Address
 	var gpkString string
 	if ctxType == mpcprotocol.MpcSignLeader {
 		for _, item := range preSetValue {
 			if item.Key == mpcprotocol.MpcGpkBytes {
 				//todo for bn256
-				address, err = schnorrmpc.PkToAddress(item.ByteValue)
+				//address, err = schnorrmpc.PkToAddress(item.ByteValue)
+
+				address, err = schcomm.BytesToAdd(item.ByteValue)
 				if err != nil {
 					if !schcomm.PocTest {
 						return []byte{}, err

@@ -178,6 +178,16 @@ func (ssm *SkSchnorrMpc) Lagrange(f []big.Int, x []big.Int, degree int) big.Int 
 	return lagrange(f, x, degree)
 }
 
+func (ssm *SkSchnorrMpc) PtToAddress(pt mpcprotocol.CurvePointer) (common.Address, error) {
+	ptTemp, ok := pt.(*ecdsa.PublicKey)
+	if !ok {
+		errStr := fmt.Sprintf("From CurvePointer to PublicKey, error:%s", mpcprotocol.ErrTypeAssertFail)
+		log.SyslogErr(errStr)
+		return common.Address{}, mpcprotocol.ErrTypeAssertFail
+	}
+	return PkToAddress(crypto.FromECDSAPub(ptTemp))
+}
+
 func (ssm *SkSchnorrMpc) LagrangeECC(sig []mpcprotocol.CurvePointer, x []big.Int, degree int) mpcprotocol.CurvePointer {
 
 	sigSec256 := make([]*ecdsa.PublicKey, 0)

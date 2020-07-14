@@ -2,7 +2,9 @@ package osmconf
 
 import (
 	"fmt"
+	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
+	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
 	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpcbn"
@@ -17,8 +19,6 @@ const KeystoreDir = "/home/jacob/mpc_poc/data1/keystore"
 //const selfNodeId = "0xed214e8ce499d92a2085e7e6041b4f081c7d29d8770057fc705a131d2918fcdb737e23980bdd11fa86f5d824ea1f8a35333ac6f99246464dd4d19adac9da21d1"
 const selfNodeId = "0xe6d15450a252e2209574a98585785a79c160746fa282a8ab9d4658c381093928eda1f03e70606dd4eee6402389c619ac9f725c63e5b80b947730d31152ce6612"
 const pwdPath = "/home/jacob/mpc_poc/data1/pwd"
-
-const pwd = "123456"
 
 func TestGetOsmConf(t *testing.T) {
 	osf := GetOsmConf()
@@ -46,6 +46,14 @@ func Initialize() {
 	osm.SetSelfNodeId(&nodeId)
 
 	osm.SetPwdPath(pwdPath)
+
+	am, _, _ := makeAccountManagerMock(KeystoreDir)
+	osm.SetAccountManger(am)
+	selfNodeId := "0xed214e8ce499d92a2085e7e6041b4f081c7d29d8770057fc705a131d2918fcdb737e23980bdd11fa86f5d824ea1f8a35333ac6f99246464dd4d19adac9da21d1"
+
+	var nodeId1 discover.NodeID
+	copy(nodeId1[:], hexutil.MustDecode(selfNodeId))
+	osm.SetSelfNodeId(&nodeId1)
 
 }
 func TestGetThresholdNum(t *testing.T) {
@@ -166,17 +174,6 @@ func TestGetSelfNodeId(t *testing.T) {
 func TestGetSelfPrvKey(t *testing.T) {
 	Initialize()
 	osm := GetOsmConf()
-
-	am, _, err := makeAccountManagerMock(KeystoreDir)
-	if err != nil {
-		t.Fatalf("fail:%s", err.Error())
-	}
-	osm.SetAccountManger(am)
-	selfNodeId := "0xed214e8ce499d92a2085e7e6041b4f081c7d29d8770057fc705a131d2918fcdb737e23980bdd11fa86f5d824ea1f8a35333ac6f99246464dd4d19adac9da21d1"
-
-	var nodeId discover.NodeID
-	copy(nodeId[:], hexutil.MustDecode(selfNodeId))
-	osm.SetSelfNodeId(&nodeId)
 
 	prv, err := osm.GetSelfPrvKey()
 	if err != nil {
@@ -408,4 +405,42 @@ func TestInterSecByIndexes(t *testing.T) {
 			fmt.Printf("%v>>>>>>>>%v\n", i, b)
 		}
 	}
+}
+
+func TestOsmConf_GetPrivateShare(t *testing.T) {
+	Initialize()
+	osm := GetOsmConf()
+	prv1, err := osm.GetPrivateShare(mpcprotocol.SK256Curve)
+	if err != nil {
+		t.Fatalf("fail:%s", err.Error())
+	}
+	fmt.Printf("prv1:%v\n", hexutil.Encode(prv1.Bytes()))
+
+	prv2, err := osm.GetPrivateShare(mpcprotocol.BN256Curve)
+	if err != nil {
+		t.Fatalf("fail:%s", err.Error())
+	}
+	fmt.Printf("prv2:%v\n", hexutil.Encode(prv2.Bytes()))
+}
+
+//func TestLoadStoremanAddress(t *testing.T){
+//	curveType := mpcprotocol.BN256Curve
+//	gpkString := "0x2ab2e3655ebd58b188f9ed3ba466e3ae39f4f6e9bcbe80e355be8f1ccd222f97175ebb6b000cb43a3aa6e69dd05d1710719559b17983a0067420de99f3c3cd9f"
+//}
+
+func PtToAddress(pubBytes []byte) (common.Address, error) {
+	//addr := common.BytesToAddress(crypto.Keccak256(pubBytes[1:])[12:])
+	addr := common.BytesToAddress(crypto.Keccak256(pubBytes[0:])[12:])
+	fmt.Printf("addr:%v\n", addr.String())
+	return addr, nil
+}
+
+func TestPtToAddress(t *testing.T) {
+	PtToAddress(hexutil.MustDecode("0x8e5d083446a88b52336a567b2076acd32f4b07e4cd63269d15fb65f6de24c2eeeaab93d49f00c1edfb5f04dbcba13c88167b7c8ff72d52a7865fea7a97831a66"))
+	PtToAddress(hexutil.MustDecode("0x2b5b641aba435cf4b2efe2fec472b2f5f582b4fa6ab6628b5d424cb6f97571ed23682deff501fef58e9aac607a6635ea2a4659bcc5fd07c5d775830eb30146ab"))
+	/*
+		addr:0x18eAa85DAd576d672c1699E8C41667D57603754B
+		addr:0xd4C2EC4ECbab27e78dA4a53153635D7efD5c11c
+	*/
+
 }

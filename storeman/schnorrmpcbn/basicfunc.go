@@ -4,7 +4,9 @@ import (
 	Rand "crypto/rand"
 	"errors"
 	"fmt"
+	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
+	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/crypto/bn256/cloudflare"
 	"github.com/wanchain/schnorr-mpc/log"
 	schcomm "github.com/wanchain/schnorr-mpc/storeman/schnorrcomm"
@@ -198,6 +200,15 @@ func (bsm *BnSchnorrMpc) LagrangeECC(sig []mpcprotocol.CurvePointer, x []big.Int
 	}
 
 	return lagrangeECC(sigSecBn, x, degree)
+}
+
+func (ssm *BnSchnorrMpc) PtToAddress(pt mpcprotocol.CurvePointer) (common.Address, error) {
+	ptBytes, err := ssm.MarshPt(pt)
+	if err != nil {
+		return common.Address{}, err
+	}
+	addr := common.BytesToAddress(crypto.Keccak256(ptBytes[0:])[12:])
+	return addr, nil
 }
 
 // Generate a random polynomial, its constant item is nominated

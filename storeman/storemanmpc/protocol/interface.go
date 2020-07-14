@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"github.com/wanchain/schnorr-mpc/common"
 	"math/big"
 )
 
@@ -70,4 +71,6 @@ type SchnorrMPCer interface {
 	SplitPksFromBytes(buf []byte) ([]CurvePointer, error)
 
 	EvalByPolyG([]CurvePointer, uint16, *big.Int) (CurvePointer, error)
+
+	PtToAddress(CurvePointer) (common.Address, error)
 }

@@ -3,6 +3,7 @@ package schnorrcomm
 import (
 	"crypto/ecdsa"
 	Rand "crypto/rand"
+	"github.com/wanchain/schnorr-mpc/common"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
 	"math/big"
@@ -69,4 +70,9 @@ func UintRand(MaxValue uint64) (uint64, error) {
 	}
 
 	return num.Uint64(), nil
+}
+
+func BytesToAdd(pubBytes []byte) (common.Address, error) {
+	addr := common.BytesToAddress(crypto.Keccak256(pubBytes[0:])[12:])
+	return addr, nil
 }
