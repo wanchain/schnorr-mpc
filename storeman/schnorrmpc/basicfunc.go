@@ -363,10 +363,17 @@ func lagrange(f []big.Int, x []big.Int, degree int) big.Int {
 }
 
 func PkToAddress(PkBytes []byte) (common.Address, error) {
-	if len(PkBytes) != pkLength {
-		return common.Address{}, errors.New("invalid pk address")
+	//if len(PkBytes) != pkLength {
+	//	return common.Address{}, errors.New("invalid pk address")
+	//}
+	var pk65Bytes []byte
+	if len(PkBytes) == 64 {
+		pk65Bytes = schcomm.Add04Prefix(PkBytes)
+	} else {
+		pk65Bytes = PkBytes
 	}
-	pk := crypto.ToECDSAPub(PkBytes[:])
+	//pk := crypto.ToECDSAPub(PkBytes[:])
+	pk := crypto.ToECDSAPub(pk65Bytes)
 	address := crypto.PubkeyToAddress(*pk)
 	return address, nil
 }

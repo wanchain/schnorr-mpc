@@ -305,6 +305,8 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 				//todo for bn256
 				pt, err := smpc.UnMarshPt(item.ByteValue)
 				if err != nil {
+					log.SyslogErr("createRequestMpcContext", "UnMarshPt error", err.Error())
+
 					if !schcomm.PocTest {
 						return []byte{}, err
 					}
@@ -312,6 +314,8 @@ func (mpcServer *MpcDistributor) createRequestMpcContext(ctxType int, preSetValu
 				//address, err = schnorrmpc.PkToAddress(item.ByteValue)
 				address, err = smpc.PtToAddress(pt)
 				if err != nil {
+					log.SyslogErr("createRequestMpcContext", "PtToAddress error", err.Error())
+
 					if !schcomm.PocTest {
 						return []byte{}, err
 					}
