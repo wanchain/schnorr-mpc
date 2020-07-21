@@ -124,7 +124,10 @@ func (req *MpcPolycmStep) CreateMessage() []mpcprotocol.StepMessage {
 	}
 
 	h := sha256.Sum256(buf.Bytes())
-	prv, _ := osmconf.GetOsmConf().GetSelfPrvKey()
+	prv, err := osmconf.GetOsmConf().GetSelfPrvKey()
+	if err != nil {
+		return nil
+	}
 	r, s, _ := schcomm.SignInternalData(prv, h[:])
 
 	msg.Data = make([]big.Int, 2)

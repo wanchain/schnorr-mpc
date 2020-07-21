@@ -52,7 +52,10 @@ func (addStep *MpcRStep) CreateMessage() []mpcprotocol.StepMessage {
 	}
 	h := sha256.Sum256(seedBytes)
 
-	prv, _ := osmconf.GetOsmConf().GetSelfPrvKey()
+	prv, err := osmconf.GetOsmConf().GetSelfPrvKey()
+	if err != nil {
+		return nil
+	}
 	r, s, _ := schcomm.SignInternalData(prv, h[:])
 	message[0].Data = make([]big.Int, 2)
 	message[0].Data[0] = *r

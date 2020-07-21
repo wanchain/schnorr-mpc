@@ -51,7 +51,11 @@ func (msStep *MpcSStep) CreateMessage() []mpcprotocol.StepMessage {
 		pointer := msStep.messages[i].(*mpcSGenerator)
 
 		h := sha256.Sum256(pointer.seed.Bytes())
-		prv, _ := osmconf.GetOsmConf().GetSelfPrvKey()
+		prv, err := osmconf.GetOsmConf().GetSelfPrvKey()
+		if err != nil {
+			log.SyslogInfo("MpcSStep::CreateMessage", "GetSelfPrvKey error", err.Error())
+			return nil
+		}
 		r, s, _ := schcomm.SignInternalData(prv, h[:])
 
 		message[i].Data = make([]big.Int, 3)

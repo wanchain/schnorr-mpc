@@ -56,7 +56,10 @@ func (ptStep *MpcRRcvInterStep) CreateMessage() []mpcprotocol.StepMessage {
 	buf.Write(ptStep.rcvCol.Bytes())
 	h := sha256.Sum256(buf.Bytes())
 
-	prv, _ := osmconf.GetOsmConf().GetSelfPrvKey()
+	prv, err := osmconf.GetOsmConf().GetSelfPrvKey()
+	if err != nil {
+		return nil
+	}
 	r, s, _ := schcomm.SignInternalData(prv, h[:])
 
 	message[0].Data = make([]big.Int, 3)
