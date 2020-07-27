@@ -448,3 +448,15 @@ func TestSkSchnorrMpc_SkG(t *testing.T) {
 	fmt.Println(smpcer.PtToHexString(pt3))
 	fmt.Println(smpcer.PtToHexString(pt4))
 }
+
+func TestPkToAddress(t *testing.T) {
+	addr0, _ := PkToAddress(hexutil.MustDecode(string("0x25fa6a4190ddc87d9f9dd986726cafb901e15c21aafd2ed729efed1200c73de89f1657726631d29733f4565a97dc00200b772b4bc2f123a01e582e7e56b80cf8")))
+	addr1, _ := PkToAddress(hexutil.MustDecode(string("0xccd16e96a70a5b496ff1cec869902b6a8ffa00715897937518f1c9299726f7090bc36cc23c1d028087eb0988c779663e996391f290631317fc22f84fa9bf2467")))
+	addr2, _ := PkToAddress(hexutil.MustDecode(string("0x95e8fd461c37f1db5da62bfbee2ad305d77e57fbef917ec8109e6425e942fb60ddc28b1edfdbcda1aa5ace3160b458b9d3d5b1fe306b4d09a030302a08e2db93")))
+	addr3, _ := PkToAddress(hexutil.MustDecode(string("0xbe3b7fd88613dc272a36f4de570297f5f33b87c26de3060ad04e2ea697e13125a2454acd296e1879a7ddd0084d9e4e724fca9ef610b21420978476e2632a1782")))
+
+	fmt.Println(addr0.String())
+	fmt.Println(addr1.String())
+	fmt.Println(addr2.String())
+	fmt.Println(addr3.String())
+}

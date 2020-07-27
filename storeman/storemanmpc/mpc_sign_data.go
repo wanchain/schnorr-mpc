@@ -78,7 +78,10 @@ func generateTxSignMpc(mpc *MpcContext, firstStep MpcStepFunc, readyStep MpcStep
 	rrcvJudgeStep.SetWaiting(int(peerCurCount + 1))
 
 	RStep := step.CreateMpcRStep(&mpc.peers, accTypeStr)
-	RStep.SetWaiting(int(threshold))
+	//since RPKShare is used to check the content of sshare, so it should collect all node's RPK.
+	//otherwise, when check sshare content system can not find the RPKShare.
+	rrcvJudgeStep.SetWaiting(int(peerCurCount + 1))
+	//RStep.SetWaiting(int(threshold))
 
 	SStep := step.CreateMpcSStep(&mpc.peers, []string{mpcprotocol.MpcPrivateShare}, []string{mpcprotocol.MpcS})
 	SStep.SetWaiting(int(threshold))

@@ -79,11 +79,20 @@ func (msg *mpcSGenerator) initialize(peers *[]mpcprotocol.PeerInfo, result mpcpr
 		return err
 	}
 
+	//log.Info("@@@@@@ SchnorrSign @@@@@@",
+	//	"M", hexutil.Encode(MBytes),
+	//	"m", hexutil.Encode(m.Bytes()),
+	//	"gpkShare", smpcer.PtToHexString(gpkShare),
+	//	"rpkShare", smpcer.PtToHexString(rpkShare))
+
 	log.Info("@@@@@@ SchnorrSign @@@@@@",
 		"M", hexutil.Encode(MBytes),
 		"m", hexutil.Encode(m.Bytes()),
 		"gpkShare", smpcer.PtToHexString(gpkShare),
-		"rpkShare", smpcer.PtToHexString(rpkShare))
+		"rpkShare", smpcer.PtToHexString(rpkShare),
+		"rskShare", hexutil.Encode(rskShare[0].Bytes()),
+		"gskShare", hexutil.Encode(gskShare[0].Bytes()),
+		"sigShare", hexutil.Encode(sigShare.Bytes()))
 
 	_, grpIdString, _ := osmconf.GetGrpId(result)
 

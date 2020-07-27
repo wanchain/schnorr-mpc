@@ -403,6 +403,8 @@ func (mpcServer *MpcDistributor) loadStoremanAddress(curveType uint8, gpkStr str
 	}
 	gpkShare, _ := smpcer.SkG(&value.privateShare)
 	log.SyslogInfo("loadStoremanAddress", "gpkShare", smpcer.PtToHexString(gpkShare))
+	//todo should delete
+	log.SyslogInfo("loadStoremanAddress", "privateShare", hexutil.Encode(value.privateShare.Bytes()))
 
 	return &MpcValue{mpcprotocol.MpcPrivateShare, []big.Int{value.privateShare}, nil}, nil
 }
