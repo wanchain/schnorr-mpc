@@ -9,6 +9,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
 	schcomm "github.com/wanchain/schnorr-mpc/storeman/schnorrcomm"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
+	"github.com/wanchain/schnorr-mpc/storeman/validator"
 	"math/big"
 	"strconv"
 )
@@ -156,6 +157,8 @@ func (rsj *MpcRSkJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool {
 	rsj.RSlshCount++
 	log.SyslogErr("MpcRSkJudgeStep", "bContentCheck", bContentCheck, "bVerifySig", bVerifySig, "rsj.RSlshCount", rsj.RSlshCount)
 	rsj.saveSlshProof(bSnderWrong, &sigs[0], &sigs[1], &sij, &r, &s, senderIndex, rcvIndex, int(rsj.RSlshCount), grpId, pgBytes, uint16(len(pks)))
+
+	validator.IncMaliceCount(grpIdString, validator.GetMalicIndex(bSnderWrong, uint16(senderIndex), uint16(rcvIndex)))
 
 	return true
 }

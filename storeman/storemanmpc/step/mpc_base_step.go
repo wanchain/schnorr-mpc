@@ -3,7 +3,9 @@ package step
 import (
 	"github.com/wanchain/schnorr-mpc/log"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
+	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
+	"github.com/wanchain/schnorr-mpc/storeman/validator"
 	"time"
 )
 
@@ -113,7 +115,7 @@ func (step *BaseStep) HandleMessage(msger mpcprotocol.GetMessageInterface) error
 				"should step", step.stepId,
 				"receive step", msg.StepId)
 		} else {
-			if step.waiting > 0 && msger.HandleMessage(msg) {
+			if step.waiting > 0 && msger.HandleMessage(msg) && !step.CheckMalicSm(msg) {
 
 				delete(step.notRecvPeers, *msg.PeerID)
 
@@ -126,6 +128,16 @@ func (step *BaseStep) HandleMessage(msger mpcprotocol.GetMessageInterface) error
 	}
 
 	return nil
+}
+
+func (step *BaseStep) CheckMalicSm(msg *mpcprotocol.StepMessage) bool {
+	_, grpIdString, _ := osmconf.GetGrpId(step.mpcResult)
+	inx, _ := osmconf.GetOsmConf().GetInxByNodeId(grpIdString, msg.PeerID)
+	b, err := validator.IsMalice(grpIdString, inx)
+	if err != nil {
+		log.SyslogWarning("BaseStep::CheckMalicSm", "grpId", grpIdString, "index", inx)
+	}
+	return b
 }
 
 func (step *BaseStep) getPeerIndex(peerID *discover.NodeID) int {

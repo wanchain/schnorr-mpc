@@ -8,6 +8,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/storeman/osmconf"
 	schcomm "github.com/wanchain/schnorr-mpc/storeman/schnorrcomm"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
+	"github.com/wanchain/schnorr-mpc/storeman/validator"
 	"math/big"
 	"strconv"
 )
@@ -155,6 +156,7 @@ func (ssj *MpcSSahreJudgeStep) HandleMessage(msg *mpcprotocol.StepMessage) bool 
 
 	ssj.saveSlshProof(bSnderWrong, m, &sshare, &r, &s, senderIndex, rcvIndex, int(ssj.SSlshCount), rpkShare, gpkShare, grpId)
 
+	validator.IncMaliceCount(grpIdString, validator.GetMalicIndex(bSnderWrong, uint16(senderIndex), uint16(rcvIndex)))
 	return true
 }
 

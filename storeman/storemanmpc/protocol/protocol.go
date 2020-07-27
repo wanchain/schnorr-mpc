@@ -14,6 +14,8 @@ const (
 	MpcSignPeer
 )
 
+const MaxMalice = 2
+
 const (
 	SK256Curve = iota + 0
 	BN256Curve
