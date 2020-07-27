@@ -221,13 +221,27 @@ func (msStep *MpcSStep) FinishStep(result mpcprotocol.MpcResultInterface, mpc mp
 	allIndex, _ := osmconf.GetOsmConf().GetGrpElemsInxes(grpIdString)
 	// add leader in incentive list, because leader collect the sshare data, once leader collects threshold signature,
 	// it will ignore the data from itself.
-	msStep.sshareOKIndex = append(msStep.sshareOKIndex, uint16(0))
+	findLeader := false
+	for _, myIndex := range msStep.sshareOKIndex {
+		if myIndex == uint16(0) {
+			findLeader = true
+			break
+		}
+	}
+	if !findLeader {
+		msStep.sshareOKIndex = append(msStep.sshareOKIndex, uint16(0))
+	}
 	tempIndex := osmconf.Difference(*allIndex, msStep.sshareOKIndex)
 	msStep.sshareNOIndex = osmconf.Difference(tempIndex, msStep.sshareKOIndex)
 
 	okIndex := make([]big.Int, len(msStep.sshareOKIndex))
 	koIndex := make([]big.Int, len(msStep.sshareKOIndex))
 	noIndex := make([]big.Int, len(msStep.sshareNOIndex))
+
+	log.SyslogDebug(">>>>>>MpcSStep", "allIndex", allIndex)
+	log.SyslogDebug(">>>>>>MpcSStep", "sshareOKIndex", msStep.sshareOKIndex)
+	log.SyslogDebug(">>>>>>MpcSStep", "sshareKOIndex", msStep.sshareKOIndex)
+	log.SyslogDebug(">>>>>>MpcSStep", "sshareNOIndex", msStep.sshareNOIndex)
 
 	for i, value := range msStep.sshareOKIndex {
 		okIndex[i].SetInt64(int64(value))
