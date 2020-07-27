@@ -71,6 +71,10 @@ func (mpcCtx *MpcContext) buildSucc(sr *mpcprotocol.SignedResult) (interface{}, 
 
 	okIndexes, _ := mpcResult.GetValue(mpcprotocol.SOKIndex)
 
+	// add leader in incentive list, because leader collect the sshare data, once leader collects threshold signature,
+	// it will ignore the data from itself.
+	okIndexes = append(okIndexes, *schcomm.BigZero)
+
 	OkIndexesStr, _ := osmconf.BuildStrByIndexes(&okIndexes)
 	log.SyslogInfo("buildSuccSR.getMpcResult", "okIndexes", OkIndexesStr)
 
