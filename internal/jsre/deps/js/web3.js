@@ -13774,6 +13774,11 @@ module.exports = Wan;
         call: 'storeman_peers',
         params: 0
       });
+        var freshGrpInfo = new Method ({
+            name: 'freshGrpInfo',
+            call: 'storeman_freshGrpInfo',
+            params: 0
+        });
       return [
           version,
           createGpk,
@@ -13783,6 +13788,7 @@ module.exports = Wan;
           getDataForApprove,
           approveData,
           peers,
+          freshGrpInfo,
       ];
     };
     var properties = function () {

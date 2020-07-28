@@ -328,6 +328,16 @@ func (sa *StoremanAPI) Peers(ctx context.Context) []*p2p.PeerInfo {
 	return ps
 }
 
+func (sa *StoremanAPI) FreshGrpInfo(ctx context.Context) error {
+	log.SyslogInfo("FreshGrpInfo begin")
+	err := osmconf.GetOsmConf().FreshCnf(osmconf.GetOsmConf().GrpInfoPath())
+	if err != nil {
+		log.SyslogErr("FreshGrpInfo error", "error", err.Error())
+	}
+	log.SyslogInfo("FreshGrpInfo end")
+	return err
+}
+
 func (sa *StoremanAPI) SignDataByApprove(ctx context.Context, data mpcprotocol.SendData) (result interface{}, err error) {
 
 	sa.sm.mpcDistributor.SetCurPeerCount(uint16(len(sa.sm.peers)))

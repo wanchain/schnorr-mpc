@@ -132,6 +132,8 @@ func (cnf *OsmConf) LoadCnf(confPath string) error {
 	filePath := confPath
 
 	cnf.wrLock.Lock()
+	// clear group info
+	cnf.GrpInfoMap = make(map[string]GrpInfoItem)
 
 	b, err := ioutil.ReadFile(filePath)
 	if err != nil {
@@ -446,6 +448,10 @@ func (cnf *OsmConf) SetFilePath(path string) error {
 	}
 	cnf.confPath = path
 	return nil
+}
+
+func (cnf *OsmConf) GrpInfoPath() string {
+	return cnf.confPath
 }
 
 func (cnf *OsmConf) GetGpkPwd(gpk string) (string, error) {

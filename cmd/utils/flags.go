@@ -575,7 +575,7 @@ func SetP2PConfig(ctx *cli.Context, cfg *p2p.Config) {
 		if err != nil {
 			panic(err)
 		}
-		// todo error handle
+
 		osmconf.GetOsmConf().SetFilePath(grpInfoPath)
 		err = osmconf.GetOsmConf().LoadCnf(grpInfoPath)
 		if err != nil {
