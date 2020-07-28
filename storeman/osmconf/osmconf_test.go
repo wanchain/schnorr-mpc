@@ -6,6 +6,7 @@ import (
 	"github.com/wanchain/schnorr-mpc/common/hexutil"
 	"github.com/wanchain/schnorr-mpc/crypto"
 	"github.com/wanchain/schnorr-mpc/p2p/discover"
+	"github.com/wanchain/schnorr-mpc/storeman/schnorrcomm"
 	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpc"
 	"github.com/wanchain/schnorr-mpc/storeman/schnorrmpcbn"
 	mpcprotocol "github.com/wanchain/schnorr-mpc/storeman/storemanmpc/protocol"
@@ -360,7 +361,12 @@ func TestBuildDataByIndexes(t *testing.T) {
 	bigs := []big.Int{big0, *bg1, *bg2, *bg3}
 	ret, _ := BuildDataByIndexes(&bigs)
 
-	fmt.Printf("%v", ret)
+	fmt.Printf("%v\n", ret)
+
+	retBig, _ := BuildDataByIndexes(nil)
+	fmt.Println(hexutil.Encode(retBig.Bytes()))
+	fmt.Println(hexutil.Encode(schnorrcomm.BigZero.Bytes()))
+	fmt.Println(hexutil.Encode(schnorrcomm.BigOne.Bytes()))
 }
 
 func TestSwitch(t *testing.T) {

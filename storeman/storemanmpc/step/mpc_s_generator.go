@@ -128,7 +128,8 @@ func (msg *mpcSGenerator) calculateResult() error {
 		"Need nodes number:", threshold,
 		"Now nodes number:", len(sigshares))
 	if len(sigshares) < int(threshold) {
-		return mpcprotocol.ErrSNW
+		//return mpcprotocol.ErrSNW
+		return mpcprotocol.ErrTooLessDataCollected
 	}
 
 	result := msg.smpcer.Lagrange(sigshares, seeds[:], int(degree))

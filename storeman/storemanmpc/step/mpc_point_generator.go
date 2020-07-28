@@ -92,7 +92,9 @@ func (point *mpcPointGenerator) calculateResult() error {
 		"Need nodes number:", threshold,
 		"Now nodes number:", len(gpkshares))
 	if len(gpkshares) < int(threshold) {
-		return mpcprotocol.ErrRNW
+		//since now, system only slash the malice action, No work is not a malice action.
+		//return mpcprotocol.ErrRNW
+		return mpcprotocol.ErrTooLessDataCollected
 	}
 
 	smpcer := point.smcer
