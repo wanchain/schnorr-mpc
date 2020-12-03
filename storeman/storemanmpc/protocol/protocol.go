@@ -43,9 +43,9 @@ const (
 	GetPeersInfo
 	NumberOfMessageCodes
 	MPCTimeOut = time.Second * 100
-	PName      = "storeman"
+	PName      = "storeman-btc-osm"
 	PVer       = uint64(500)
-	PVerStr    = "5.0.0"
+	PVerStr    = "5.1.0"
 )
 
 const (
