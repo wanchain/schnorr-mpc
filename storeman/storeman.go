@@ -144,12 +144,24 @@ func (sm *Storeman) MaxMessageSize() uint32 {
 	return uint32(1024 * 1024)
 }
 
+func (sm *Storeman)getLeaderIndex() uint32{
+	leaderIndex := 0
+	for index, m := range sm.cfg.StoremanNodes {
+		leaderIndex = index
+		strip := m.IP.String()
+		if m.TCP != 0 && strip != "0.0.0.0" {
+			break
+		}
+	}
+	return uint32(leaderIndex)
+}
 // runMessageLoop reads and processes inbound messages directly to merge into client-global state.
 func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 
 	log.SyslogInfo("runMessageLoop begin")
 	defer log.SyslogInfo("runMessageLoop exit")
 
+	leaderIndex := sm.getLeaderIndex()
 	for {
 		// fetch the next packet
 		packet, err := rw.ReadMsg()
@@ -181,9 +193,8 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 			allp := &StrmanAllPeers{make([]string, 0), make([]string, 0), make([]string, 0)}
 
 			for _, smpr := range sm.peers {
-
 				if sm.peersPort[smpr.Peer.ID()] == "" ||
-					smpr.Peer.ID().String() == sm.cfg.StoremanNodes[0].ID.String() {
+					smpr.Peer.ID().String() == sm.cfg.StoremanNodes[leaderIndex].ID.String() {
 					continue
 				}
 
@@ -221,9 +232,8 @@ func (sm *Storeman) runMessageLoop(p *Peer, rw p2p.MsgReadWriter) error {
 			}
 
 			for i := 0; i < len(allp.Port); i++ {
-
 				if allp.Nodeid[i] == sm.server.Self().ID.String() ||
-					allp.Nodeid[i] == sm.cfg.StoremanNodes[0].ID.String() {
+					allp.Nodeid[i] == sm.cfg.StoremanNodes[leaderIndex].ID.String() {
 					continue
 				}
 
@@ -301,14 +311,16 @@ func (sm *Storeman) checkPeerInfo() {
 	// Start the tickers for the updates
 	keepQuest := time.NewTicker(mpcprotocol.KeepaliveCycle * time.Second)
 
-	leaderIndex := 0
-	for index, m := range sm.cfg.StoremanNodes {
-		leaderIndex = index
-		strip := m.IP.String()
-		if m.TCP != 0 && strip != "0.0.0.0" {
-			break
-		}
-	}
+	//leaderIndex := 0
+	//for index, m := range sm.cfg.StoremanNodes {
+	//	leaderIndex = index
+	//	strip := m.IP.String()
+	//	if m.TCP != 0 && strip != "0.0.0.0" {
+	//		break
+	//	}
+	//}
+
+	leaderIndex := sm.getLeaderIndex()
 
 	//leaderid, err := discover.BytesID(sm.cfg.StoremanNodes[0].ID.Bytes())
 	leaderid, err := discover.BytesID(sm.cfg.StoremanNodes[leaderIndex].ID.Bytes())
