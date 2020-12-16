@@ -44,8 +44,8 @@ const (
 	NumberOfMessageCodes
 	MPCTimeOut = time.Second * 100
 	PName      = "storeman"
-	PVer       = uint64(500)
-	PVerStr    = "5.0.0"
+	PVer       = uint64(505)
+	PVerStr    = "5.0.5"
 )
 
 const (
