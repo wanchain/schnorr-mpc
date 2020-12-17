@@ -490,7 +490,19 @@ func (srv *Server) Start() (err error) {
 
 	dynPeers := srv.maxDialedConns()
 
-	dialer := newDialState(srv.StaticNodes, srv.StoremanNodes[0:1], srv.BootstrapNodes[0:0], srv.ntab, dynPeers, srv.NetRestrict)
+
+	leaderIndex := 0
+	for index, m := range srv.StoremanNodes {
+		leaderIndex = index
+		strip := m.IP.String()
+		if m.TCP != 0 && strip != "0.0.0.0" {
+			break
+		}
+	}
+
+
+	//dialer := newDialState(srv.StaticNodes, srv.StoremanNodes[0:1], srv.BootstrapNodes[0:0], srv.ntab, dynPeers, srv.NetRestrict)
+	dialer := newDialState(srv.StaticNodes, srv.StoremanNodes[leaderIndex:leaderIndex+1], srv.BootstrapNodes[0:0], srv.ntab, dynPeers, srv.NetRestrict)
 
 	// handshake
 	srv.ourHandshake = &protoHandshake{Version: baseProtocolVersion, Name: srv.Name, ID: discover.PubkeyID(&srv.PrivateKey.PublicKey)}
