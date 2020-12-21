@@ -465,7 +465,8 @@ func (sa *StoremanAPI) SignDataByApprove(ctx context.Context, data mpcprotocol.S
 		return mpcprotocol.SignedResult{R: []byte{}, S: []byte{}}, err
 	}
 
-	return mpcprotocol.SignedResult{R: signed[0:65], S: signed[65:]}, nil
+	//return mpcprotocol.SignedResult{R: signed[0:65], S: signed[65:]}, nil
+	return mpcprotocol.SignedResult{R: signed[0:65], S: common.LeftPadBytes(signed[65:],32)}, nil
 }
 
 func (sa *StoremanAPI) SignData(ctx context.Context, data mpcprotocol.SendData) (result mpcprotocol.SignedResult, err error) {
@@ -487,8 +488,8 @@ func (sa *StoremanAPI) SignData(ctx context.Context, data mpcprotocol.SendData) 
 		log.SyslogErr("SignMpcTransaction end", "err", err.Error())
 		return mpcprotocol.SignedResult{R: []byte{}, S: []byte{}}, err
 	}
-
-	return mpcprotocol.SignedResult{R: signed[0:65], S: signed[65:]}, nil
+	//return mpcprotocol.SignedResult{R: signed[0:65], S: signed[65:]}, nil
+	return mpcprotocol.SignedResult{R: signed[0:65], S: common.LeftPadBytes(signed[65:],32)}, nil
 }
 
 func (sa *StoremanAPI) AddValidData(ctx context.Context, data mpcprotocol.SendData) error {
